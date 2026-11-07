@@ -729,17 +729,22 @@ app.get('/api/registrations', async (req, res) => {
   }
 });
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`[IncuxAI Backend] Server listening at http://localhost:${PORT}`);
-  console.log(`[IncuxAI Backend] Health check: http://localhost:${PORT}/api/health`);
-  console.log(`[IncuxAI Backend] Database status: ${isSupabaseConfigured ? 'Supabase (' + supabaseUrl + ')' : 'Local JSON Store'}`);
-});
+// Start server if run directly (local / Render / Railway)
+if (require.main === module) {
+  const server = app.listen(PORT, () => {
+    console.log(`[IncuxAI Backend] Server listening at http://localhost:${PORT}`);
+    console.log(`[IncuxAI Backend] Health check: http://localhost:${PORT}/api/health`);
+    console.log(`[IncuxAI Backend] Database status: ${isSupabaseConfigured ? 'Supabase (' + supabaseUrl + ')' : 'Local JSON Store'}`);
+  });
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`[IncuxAI Backend] Port ${PORT} is currently in use. Stop the existing process or set PORT in the environment.`);
-  } else {
-    console.error('[IncuxAI Backend] Server error:', err);
-  }
-});
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`[IncuxAI Backend] Port ${PORT} is currently in use. Stop the existing process or set PORT in the environment.`);
+    } else {
+      console.error('[IncuxAI Backend] Server error:', err);
+    }
+  });
+}
+
+// Export for serverless environments (Vercel, AWS Lambda)
+module.exports = app;
