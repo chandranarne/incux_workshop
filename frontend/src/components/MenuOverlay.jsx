@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowUpRight, Sparkles, User, Shield, Sun, Moon } from 'lucide-react';
+import { X, ArrowUpRight, Sparkles, User, Shield, Sun, Moon, LogIn } from 'lucide-react';
 import { siteConfig } from '../data/config';
 import { useTheme } from '../context/ThemeContext';
 
@@ -83,7 +83,7 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
               {siteConfig.brand.wordmark}
             </a>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Theme Mode Toggle Inside Menu Top */}
               <button
                 onClick={toggleTheme}
@@ -104,13 +104,42 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
                 )}
               </button>
 
+              {/* Login / Register Button (Beside Dark Mode) */}
+              {!currentUser ? (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenAuth();
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-xs uppercase tracking-wider shadow-sm hover:scale-105 transition-all cursor-pointer"
+                >
+                  <LogIn className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Login / Register</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenPortal();
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-full border text-xs font-mono font-bold transition-all bg-[#FACC15]/15 border-[#FACC15]/40 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] cursor-pointer shadow-sm"
+                >
+                  {currentUser.role === 'admin' ? (
+                    <Shield className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
+                  ) : (
+                    <User className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
+                  )}
+                  <span>{currentUser.name.split(' ')[0]}</span>
+                </button>
+              )}
+
               <motion.button
                 ref={closeBtnRef}
                 onClick={onClose}
                 whileHover={{ rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
                 aria-label="Close menu"
-                className="w-12 h-12 rounded-full bg-black/5 dark:bg-[#141414] border border-black/10 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:bg-[#FACC15] hover:text-[#0A0A0A] transition-colors duration-200 flex items-center justify-center cursor-pointer shadow-sm"
+                className="w-12 h-12 rounded-full bg-black/5 dark:bg-[#141414] border border-black/10 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:bg-[#FACC15] hover:text-[#0A0A0A] transition-colors duration-200 flex items-center justify-center cursor-pointer shadow-sm shrink-0"
               >
                 <X className="w-5 h-5" />
               </motion.button>
@@ -168,22 +197,12 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
                     <button
                       onClick={() => {
                         onClose();
-                        onOpenAuth('candidate');
+                        onOpenAuth();
                       }}
                       className="px-6 py-3.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-sm uppercase tracking-wider shadow-lg shadow-yellow-500/25 hover:scale-105 transition-all cursor-pointer flex items-center gap-2"
                     >
-                      <User className="w-4 h-4" />
-                      <span>Candidate Login / Register</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        onClose();
-                        onOpenAuth('admin');
-                      }}
-                      className="px-5 py-3.5 rounded-full bg-black/5 dark:bg-[#141414] border border-black/15 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] text-xs font-mono uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-sm hover:scale-105 transition-all"
-                    >
-                      <Shield className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
-                      <span>Admin Login</span>
+                      <LogIn className="w-4 h-4" />
+                      <span>Login / Register</span>
                     </button>
                   </div>
                 )}

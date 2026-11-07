@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { X, User, Shield, Lock, Mail, Building, Phone, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, User, Lock, Mail, Building, ArrowRight, AlertCircle } from 'lucide-react';
 import { loginUser, registerCandidate } from '../services/api';
 
-export default function AuthModal({ isOpen, onClose, onAuthSuccess, defaultRole = 'candidate' }) {
-  const [role, setRole] = useState(defaultRole); // 'candidate' or 'admin'
-  const [isRegistering, setIsRegistering] = useState(false); // for candidate signup
+export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -29,7 +28,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, defaultRole 
     setLoading(true);
 
     try {
-      if (role === 'candidate' && isRegistering) {
+      if (isRegistering) {
         const res = await registerCandidate(formData);
         onAuthSuccess(res.user);
         onClose();
@@ -59,54 +58,13 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, defaultRole 
         {/* Modal Header */}
         <div className="mb-6">
           <h3 className="font-headline font-bold text-2xl text-neutral-950 dark:text-[#F5F5F5]">
-            {role === 'admin'
-              ? 'Administrator Portal'
-              : isRegistering
-              ? 'Sign Up'
-              : 'Sign In'}
+            {isRegistering ? 'Create Account' : 'Sign In'}
           </h3>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-            {role === 'admin'
-              ? 'Manage workshops, approve collaboration requests, and view candidates.'
-              : 'Register for live workshops and competitive hackathons.'}
+            {isRegistering
+              ? 'Register to access workshops, hackathons, and certifications.'
+              : 'Enter your email and password to access your platform dashboard.'}
           </p>
-        </div>
-
-        {/* Role Switcher Tabs */}
-        <div className="flex p-1 rounded-xl bg-neutral-100 dark:bg-[#0A0A0A] mb-6 border border-black/10 dark:border-[#262626]">
-          <button
-            type="button"
-            onClick={() => {
-              setRole('candidate');
-              setIsRegistering(false);
-              setError('');
-            }}
-            className={`flex-1 py-2 rounded-lg text-xs font-mono font-medium flex items-center justify-center gap-2 transition-all cursor-pointer ${
-              role === 'candidate'
-                ? 'bg-[#FACC15] text-[#0A0A0A] shadow-md shadow-yellow-500/20 font-black'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-[#FACC15]'
-            }`}
-          >
-            <User className="w-3.5 h-3.5" />
-            <span>Candidate</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setRole('admin');
-              setIsRegistering(false);
-              setError('');
-            }}
-            className={`flex-1 py-2 rounded-lg text-xs font-mono font-medium flex items-center justify-center gap-2 transition-all cursor-pointer ${
-              role === 'admin'
-                ? 'bg-[#FACC15] text-[#0A0A0A] shadow-md shadow-yellow-500/20 font-black'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-[#FACC15]'
-            }`}
-          >
-            <Shield className="w-3.5 h-3.5" />
-            <span>Administrator</span>
-          </button>
         </div>
 
 
@@ -120,7 +78,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, defaultRole 
 
         {/* Auth Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5">
-          {role === 'candidate' && isRegistering && (
+          {isRegistering && (
             <div>
               <label className="block text-xs font-mono text-neutral-700 dark:text-neutral-300 mb-1">
                 Full Name *
@@ -176,7 +134,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, defaultRole 
             </div>
           </div>
 
-          {role === 'candidate' && isRegistering && (
+          {isRegistering && (
             <div>
               <label className="block text-xs font-mono text-neutral-700 dark:text-neutral-300 mb-1">
                 College / Institution Name
@@ -204,47 +162,45 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, defaultRole 
               <span>Authenticating...</span>
             ) : (
               <>
-                <span>
-                  {role === 'admin'
-                    ? 'Enter Admin Console'
-                    : isRegistering
-                    ? 'Sign Up'
-                    : 'Sign In'}
-                </span>
+                <span>{isRegistering ? 'Create Account' : 'Sign In'}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
         </form>
 
-        {/* Toggle between Login and Register for Candidates */}
-        {role === 'candidate' && (
-          <div className="mt-5 pt-4 border-t border-black/10 dark:border-[#262626] text-center text-xs font-mono">
-            {isRegistering ? (
-              <p className="text-neutral-600 dark:text-neutral-400">
-                Already registered?{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsRegistering(false)}
-                  className="text-amber-600 dark:text-[#FACC15] font-bold underline ml-1 hover:opacity-80"
-                >
-                  Sign in here
-                </button>
-              </p>
-            ) : (
-              <p className="text-neutral-600 dark:text-neutral-400">
-                New candidate?{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsRegistering(true)}
-                  className="text-amber-600 dark:text-[#FACC15] font-bold underline ml-1 hover:opacity-80"
-                >
-                  Create free account
-                </button>
-              </p>
-            )}
-          </div>
-        )}
+        {/* Toggle between Login and Register */}
+        <div className="mt-5 pt-4 border-t border-black/10 dark:border-[#262626] text-center text-xs font-mono">
+          {isRegistering ? (
+            <p className="text-neutral-600 dark:text-neutral-400">
+              Already registered?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegistering(false);
+                  setError('');
+                }}
+                className="text-amber-600 dark:text-[#FACC15] font-bold underline ml-1 hover:opacity-80 cursor-pointer"
+              >
+                Sign in here
+              </button>
+            </p>
+          ) : (
+            <p className="text-neutral-600 dark:text-neutral-400">
+              Don't have an account?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegistering(true);
+                  setError('');
+                }}
+                className="text-amber-600 dark:text-[#FACC15] font-bold underline ml-1 hover:opacity-80 cursor-pointer"
+              >
+                Create free account
+              </button>
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

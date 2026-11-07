@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Quote, CheckCircle2, Sparkles, Award, MapPin } from 'lucide-react';
+import { Quote, CheckCircle2, Sparkles } from 'lucide-react';
 import { studentReviews } from '../data/reviews';
 
 function ReviewCard({ review }) {
@@ -33,17 +33,8 @@ function ReviewCard({ review }) {
           </div>
         </div>
 
-        {/* Rating and Workshop Badge */}
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-3.5 pt-2 border-t border-black/10 dark:border-[#262626]">
-          <div className="flex items-center gap-1">
-            {[...Array(review.rating)].map((_, i) => (
-              <Star key={i} className="w-3.5 h-3.5 fill-[#FACC15] text-[#EAB308]" />
-            ))}
-            <span className="text-xs font-mono font-bold text-neutral-900 dark:text-[#F5F5F5] ml-1">
-              5.0
-            </span>
-          </div>
-
+        {/* Workshop Focus Badge */}
+        <div className="flex items-center justify-between gap-2 mb-3.5 pt-2 border-t border-black/10 dark:border-[#262626]">
           <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-[#FACC15]/15 dark:bg-[#FACC15]/10 border border-[#FACC15]/30 text-neutral-900 dark:text-[#FACC15] font-semibold tracking-wider uppercase">
             {review.tag}
           </span>
@@ -95,19 +86,6 @@ export default function ReviewsSection() {
             <p className="mt-4 text-base sm:text-lg text-neutral-700 dark:text-neutral-300 font-normal leading-relaxed">
               Real testimonials from student developers, researchers, and campus leads who experienced our hands-on engineering immersions.
             </p>
-          </div>
-
-          {/* Quick Metrics Badge Banner */}
-          <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
-            <div className="px-4 py-2.5 rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] shadow-sm flex items-center gap-2">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 fill-[#FACC15] text-[#EAB308]" />
-                ))}
-              </div>
-              <span className="font-bold text-neutral-900 dark:text-[#F5F5F5]">4.96 / 5.0</span>
-              <span className="text-neutral-500 dark:text-neutral-400">Average Rating</span>
-            </div>
           </div>
         </div>
       </div>

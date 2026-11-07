@@ -51,7 +51,6 @@ export default function App() {
   });
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authDefaultRole, setAuthDefaultRole] = useState('candidate');
   const [isPortalOpen, setIsPortalOpen] = useState(false);
 
   // App data state (defaults to local data, updates from backend if available)
@@ -94,8 +93,7 @@ export default function App() {
     setIsPortalOpen(false);
   };
 
-  const openAuthWithRole = (role) => {
-    setAuthDefaultRole(role);
+  const openAuth = () => {
     setIsAuthModalOpen(true);
   };
 
@@ -113,7 +111,7 @@ export default function App() {
       <MenuOverlay
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
-        onOpenAuth={openAuthWithRole}
+        onOpenAuth={openAuth}
         onOpenPortal={() => setIsPortalOpen(true)}
         currentUser={currentUser}
       />
@@ -122,16 +120,15 @@ export default function App() {
       <Navbar
         onOpenMenu={() => setIsMenuOpen(true)}
         currentUser={currentUser}
-        onOpenAuth={openAuthWithRole}
+        onOpenAuth={openAuth}
         onOpenPortal={() => setIsPortalOpen(true)}
       />
 
-      {/* Authentication Modal (Candidate & Admin) */}
+      {/* Authentication Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onAuthSuccess={handleAuthSuccess}
-        defaultRole={authDefaultRole}
       />
 
       {/* Interactive Candidate & Admin Management Portal */}
@@ -156,7 +153,7 @@ export default function App() {
         {/* Live Workshop Registration & Location Request Portal Section */}
         <UpcomingWorkshopsSection
           onOpenPortal={() => setIsPortalOpen(true)}
-          onOpenAuth={openAuthWithRole}
+          onOpenAuth={openAuth}
           currentUser={currentUser}
         />
 
@@ -184,7 +181,7 @@ export default function App() {
 
       {/* Floating Interactive Connect Widget (Inspired by glowlogics.in) */}
       <FloatingConnectWidget
-        onOpenAuth={openAuthWithRole}
+        onOpenAuth={openAuth}
         onOpenPortal={() => setIsPortalOpen(true)}
         currentUser={currentUser}
       />
