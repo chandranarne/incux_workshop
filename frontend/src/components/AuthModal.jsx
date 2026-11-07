@@ -45,12 +45,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, defaultRole 
     }
   };
 
-  const handleQuickLogin = (email, password, loginRole) => {
-    setRole(loginRole);
-    setIsRegistering(false);
-    setFormData((prev) => ({ ...prev, email, password }));
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-md p-6 sm:p-8 rounded-3xl bg-[#FDFCFA] dark:bg-[#141414] backdrop-blur-xl border border-black/10 dark:border-[#262626] shadow-2xl">
@@ -115,28 +109,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, defaultRole 
           </button>
         </div>
 
-        {/* Quick Demo Login Presets */}
-        <div className="mb-5 p-3 rounded-xl bg-white dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-xs font-mono">
-          <span className="text-[10px] text-neutral-500 dark:text-neutral-400 block uppercase font-bold mb-1.5">
-            // Quick Demo Credentials:
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('admin@incuxai.com', 'admin123', 'admin')}
-              className="px-2.5 py-1 rounded bg-neutral-100 dark:bg-[#1A1A1A] hover:bg-[#FACC15] hover:text-[#0A0A0A] text-neutral-800 dark:text-[#F5F5F5] text-[11px] transition-colors"
-            >
-              Demo Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('rahul@student.edu', 'password123', 'candidate')}
-              className="px-2.5 py-1 rounded bg-neutral-100 dark:bg-[#1A1A1A] hover:bg-[#FACC15] hover:text-[#0A0A0A] text-neutral-800 dark:text-[#F5F5F5] text-[11px] transition-colors"
-            >
-              Demo Candidate
-            </button>
-          </div>
-        </div>
 
         {/* Error Notification */}
         {error && (
