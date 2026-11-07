@@ -29,12 +29,10 @@ import {
 } from '../services/api';
 
 export default function PortalModal({ isOpen, onClose, user, onLogout }) {
-  if (!isOpen || !user) return null;
-
-  const isAdmin = user.role === 'admin';
+  const isAdmin = user?.role === 'admin';
 
   // Navigation tab
-  const [activeTab, setActiveTab] = useState(isAdmin ? 'post-workshop' : 'browse-workshops');
+  const [activeTab, setActiveTab] = useState('browse-workshops');
 
   // Datasets
   const [workshops, setWorkshops] = useState([]);
@@ -57,6 +55,7 @@ export default function PortalModal({ isOpen, onClose, user, onLogout }) {
 
   // Load portal data
   const loadData = async () => {
+    if (!user) return;
     setLoading(true);
     try {
       const wsList = await fetchUpcomingWorkshops();
@@ -77,8 +76,13 @@ export default function PortalModal({ isOpen, onClose, user, onLogout }) {
   };
 
   useEffect(() => {
-    loadData();
-  }, [user]);
+    if (isOpen && user) {
+      setActiveTab(user.role === 'admin' ? 'post-workshop' : 'browse-workshops');
+      loadData();
+    }
+  }, [isOpen, user]);
+
+  if (!isOpen || !user) return null;
 
   // Flash message helper
   const notify = (type, text) => {
