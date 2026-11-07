@@ -171,7 +171,7 @@ export default function WorkshopVideoPlayer() {
       <div className="relative aspect-video w-full bg-black">
         <video
           ref={videoRef}
-          src="/video.mp4"
+          src="https://mpcxwgcjqyyfwtzdohfi.supabase.co/storage/v1/object/public/videos/video.mp4"
           autoPlay={!hasWatchedFullVideo}
           muted
           playsInline
@@ -181,7 +181,10 @@ export default function WorkshopVideoPlayer() {
           onLoadedMetadata={handleLoadedMetadata}
           onClick={togglePlay}
           className="w-full h-full object-cover cursor-pointer"
-        />
+        >
+          <source src="https://mpcxwgcjqyyfwtzdohfi.supabase.co/storage/v1/object/public/videos/video.mp4" type="video/mp4" />
+          <source src="/video.mp4" type="video/mp4" />
+        </video>
 
         {/* Ambient Top Shadow / Gradient for Badge Readability */}
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/70 via-black/20 to-transparent pointer-events-none transition-opacity" />
