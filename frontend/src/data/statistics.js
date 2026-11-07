@@ -1,6 +1,6 @@
 export const impactStatsData = {
   headline: "Impact Measured in Experiences",
-  subtitle: "3,075 verified student participations across 21 specialized sessions in Andhra Pradesh and Telangana.",
+  subtitle: "3,075+ verified student participations across 21 specialized sessions across India.",
   footnote: "Note: '3,075 Total Participants' reflects verified cumulative attendance across 21 sessions.",
   sessionSummary: [
     { type: "Workshops", sessions: 13, participants: "1,975", highlight: "Collegiate & Online Deep Dives" },

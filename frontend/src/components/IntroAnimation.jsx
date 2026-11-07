@@ -159,14 +159,6 @@ export default function IntroAnimation({ onComplete }) {
               />
             </motion.div>
           </motion.div>
-
-          {/* Skip Button */}
-          <button
-            onClick={handleComplete}
-            className="absolute bottom-8 right-8 text-xs font-mono uppercase tracking-wider text-neutral-400 hover:text-[#FACC15] transition-colors px-4 py-2 rounded-full border border-neutral-700 hover:border-[#FACC15]/60 bg-[#141414]/80 backdrop-blur-md cursor-pointer"
-          >
-            Skip [ESC]
-          </button>
         </motion.div>
       )}
     </AnimatePresence>

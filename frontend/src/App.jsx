@@ -8,12 +8,13 @@ import UpcomingWorkshopsSection from './components/UpcomingWorkshopsSection';
 import CompanyGrid from './components/CompanyGrid';
 import ImpactStats from './components/ImpactStats';
 import FeaturedWorkshops from './components/FeaturedWorkshops';
-import Expertise from './components/Expertise';
-import HowWeWork from './components/HowWeWork';
+import FaqSection from './components/FaqSection';
 import About from './components/About';
 import ReviewsSection from './components/ReviewsSection';
+import ContactCTA from './components/ContactCTA';
 import Footer from './components/Footer';
 import FloatingConnectWidget from './components/FloatingConnectWidget';
+import CustomCursor from './components/CustomCursor';
 
 import AuthModal from './components/AuthModal';
 import PortalModal from './components/PortalModal';
@@ -21,8 +22,7 @@ import PortalModal from './components/PortalModal';
 import { workshopCards, featuredWorkshops } from './data/workshops';
 import { companiesData } from './data/companies';
 import { impactStatsData } from './data/statistics';
-import { expertiseData } from './data/expertise';
-import { fetchWorkshops, fetchCompanies, fetchStats, fetchExpertise } from './services/api';
+import { fetchWorkshops, fetchCompanies, fetchStats } from './services/api';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -59,7 +59,6 @@ export default function App() {
   const [featured, setFeatured] = useState(featuredWorkshops);
   const [companies, setCompanies] = useState(companiesData);
   const [stats, setStats] = useState(impactStatsData);
-  const [expertise, setExpertise] = useState(expertiseData);
 
   useEffect(() => {
     // Fetch dynamic data from Express backend API
@@ -74,9 +73,6 @@ export default function App() {
 
         const statsRes = await fetchStats();
         if (statsRes) setStats(statsRes);
-
-        const expRes = await fetchExpertise();
-        if (expRes) setExpertise(expRes);
       } catch (err) {
         console.log('[IncuxAI] Operating with local static datasets.');
       }
@@ -105,6 +101,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#FDFCFA] dark:bg-[#0A0A0A] text-[#0A0A0A] dark:text-[#F5F5F5] selection:bg-[#FACC15] selection:text-[#0A0A0A] transition-colors duration-200">
+      {/* Animated Yellow Ball Cursor Follower at Cursor Tip */}
+      <CustomCursor />
+
       {/* 1. Intro Animation (Plays once per page load, character/word reveal, 2-3s) */}
       {!introFinished && (
         <IntroAnimation onComplete={() => setIntroFinished(true)} />
@@ -167,17 +166,17 @@ export default function App() {
         {/* Section 5: Our Impact (Contrasting background, count-up) */}
         <ImpactStats data={stats} />
 
-        {/* Section 6: Featured Workshops (Asymmetric editorial layout) */}
+        {/* Featured Workshops */}
         <FeaturedWorkshops workshops={featured} />
 
-        {/* Section 7: Workshop Expertise (15 topics in 5 groups with crystal-clear tabs) */}
-        <Expertise data={expertise} />
-
-        {/* Section 8: How We Work (Understand, Design, Deliver, Extend) */}
-        <HowWeWork />
+        {/* Frequently Asked Questions */}
+        <FaqSection />
 
         {/* Creative Scrolling Student Reviews Section */}
         <ReviewsSection />
+
+        {/* Contact Us & Institutional Collaboration Section */}
+        <ContactCTA />
       </main>
 
       {/* Section 11: Footer (With giant subtle incuxai watermark) */}

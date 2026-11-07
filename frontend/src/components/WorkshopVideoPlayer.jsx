@@ -1,18 +1,25 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Sparkles } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Sparkles, RotateCcw } from 'lucide-react';
 
 export default function WorkshopVideoPlayer() {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [showControls, setShowControls] = useState(false);
+  const [hasWatchedFullVideo, setHasWatchedFullVideo] = useState(() => {
+    try {
+      return localStorage.getItem('incuxai_video_watched') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
 
-  // Guarantee muted autoplay without music on mount across all browsers
+  // Guarantee muted autoplay without music on mount across all browsers IF not already watched
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -21,6 +28,12 @@ export default function WorkshopVideoPlayer() {
     video.defaultMuted = true;
     setIsMuted(true);
 
+    // If user has already watched the full video previously, do not force auto-playing again
+    if (hasWatchedFullVideo) {
+      setIsPlaying(false);
+      return;
+    }
+
     const playPromise = video.play();
     if (playPromise !== undefined) {
       playPromise
@@ -28,17 +41,16 @@ export default function WorkshopVideoPlayer() {
           setIsPlaying(true);
         })
         .catch((err) => {
-          // Autoplay fallback if browser requires user gesture
           console.warn('Autoplay prevented or deferred:', err);
           setIsPlaying(false);
         });
     }
 
-    // Auto resume playing if scrolled back into view
+    // Auto resume playing if scrolled back into view (only if not ended)
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && video.paused && !video.ended) {
+          if (entry.isIntersecting && video.paused && !video.ended && !hasWatchedFullVideo) {
             video.play().catch(() => {});
             setIsPlaying(true);
           }
@@ -49,7 +61,24 @@ export default function WorkshopVideoPlayer() {
 
     observer.observe(video);
     return () => observer.disconnect();
-  }, []);
+  }, [hasWatchedFullVideo]);
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setHasWatchedFullVideo(true);
+    try {
+      localStorage.setItem('incuxai_video_watched', 'true');
+    } catch (e) {}
+  };
+
+  const handleRewatch = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = 0;
+    video.play().then(() => {
+      setIsPlaying(true);
+    }).catch(() => {});
+  };
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -143,11 +172,11 @@ export default function WorkshopVideoPlayer() {
         <video
           ref={videoRef}
           src="/video.mp4"
-          autoPlay
+          autoPlay={!hasWatchedFullVideo}
           muted
-          loop
           playsInline
           preload="auto"
+          onEnded={handleEnded}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onClick={togglePlay}
@@ -191,17 +220,31 @@ export default function WorkshopVideoPlayer() {
           </button>
         </div>
 
-        {/* Center Play/Pause Overlay Indicator on Hover or when Paused */}
+        {/* Center Play/Pause/Rewatch Overlay Indicator */}
         <div
-          onClick={togglePlay}
+          onClick={hasWatchedFullVideo && !isPlaying ? handleRewatch : togglePlay}
           className={`absolute inset-0 flex items-center justify-center cursor-pointer transition-opacity duration-300 ${
             !isPlaying ? 'opacity-100 bg-black/40' : showControls ? 'opacity-90 bg-transparent' : 'opacity-0'
           }`}
         >
           {!isPlaying && (
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#FACC15] text-[#0A0A0A] flex items-center justify-center shadow-2xl transform hover:scale-110 transition-transform">
-              <Play className="w-8 h-8 sm:w-10 sm:h-10 ml-1 fill-current" />
-            </div>
+            hasWatchedFullVideo ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRewatch();
+                }}
+                className="px-6 py-3.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-sm tracking-wider uppercase flex items-center gap-2.5 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              >
+                <RotateCcw className="w-5 h-5 stroke-[2.5]" />
+                <span>Rewatch Video</span>
+              </button>
+            ) : (
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#FACC15] text-[#0A0A0A] flex items-center justify-center shadow-2xl transform hover:scale-110 transition-transform">
+                <Play className="w-8 h-8 sm:w-10 sm:h-10 ml-1 fill-current" />
+              </div>
+            )
           )}
         </div>
 

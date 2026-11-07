@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+﻿import React, { useEffect, useState, useRef } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -184,7 +184,7 @@ export default function ImpactStats({ data = impactStatsData }) {
         <div className="max-w-3xl mb-8 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-[#141414]/90 border border-black/10 dark:border-yellow-400/30 text-xs font-mono text-[#0A0A0A] dark:text-[#FACC15] uppercase tracking-widest mb-4 font-bold shadow-xs">
             <Sparkles className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
-            <span>Section 05 // Students Reached</span>
+            <span>Students Reached</span>
           </div>
           <h2 className="font-headline font-black text-4xl sm:text-5xl md:text-6xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight leading-tight">
             {data.headline}
@@ -207,116 +207,10 @@ export default function ImpactStats({ data = impactStatsData }) {
           ))}
         </div>
 
-        {/* Verified Students Reached Session Breakdown Table */}
-        <div className="mt-10 p-6 sm:p-8 rounded-3xl bg-white/95 dark:bg-[#141414]/95 backdrop-blur-md border border-black/10 dark:border-[#262626] shadow-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-black/10 dark:border-[#262626]">
-            <div>
-              <span className="text-xs font-mono uppercase tracking-wider text-[#EAB308] dark:text-[#FACC15] font-bold block mb-1">
-                SESSION TELEMETRY // VERIFIED METRICS
-              </span>
-              <h3 className="font-headline font-bold text-xl sm:text-2xl text-[#0A0A0A] dark:text-[#F5F5F5]">
-                Students Reached by Session Type
-              </h3>
-            </div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FACC15]/15 dark:bg-[#1A1A1A] text-[#0A0A0A] dark:text-[#FACC15] font-mono text-xs font-bold border border-[#FACC15]/30">
-              <span className="w-2 h-2 rounded-full bg-[#FACC15] animate-pulse" />
-              <span>21 SESSIONS • 3,075 PARTICIPANTS</span>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left font-mono text-sm">
-              <thead>
-                <tr className="border-b border-black/10 dark:border-[#262626] text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                  <th className="pb-3.5 font-bold">Session type</th>
-                  <th className="pb-3.5 font-bold text-center">Sessions</th>
-                  <th className="pb-3.5 font-bold text-right">Participants</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/5 dark:divide-[#262626]/60">
-                {/* Workshops */}
-                <tr className="hover:bg-[#FACC15]/5 dark:hover:bg-white/5 transition-colors">
-                  <td className="py-4 font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center">
-                      <Layers className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="block text-sm font-bold">Workshops</span>
-                      <span className="block text-[11px] text-neutral-500 dark:text-neutral-400 font-normal">Collegiate &amp; Online Hands-On Immersions</span>
-                    </div>
-                  </td>
-                  <td className="py-4 text-center font-bold text-neutral-800 dark:text-neutral-200 text-base">
-                    13
-                  </td>
-                  <td className="py-4 text-right font-headline font-black text-lg text-neutral-950 dark:text-[#FACC15]">
-                    1,975
-                  </td>
-                </tr>
-
-                {/* Guest lectures */}
-                <tr className="hover:bg-[#FACC15]/5 dark:hover:bg-white/5 transition-colors">
-                  <td className="py-4 font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center">
-                      <Users className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="block text-sm font-bold">Guest lectures</span>
-                      <span className="block text-[11px] text-neutral-500 dark:text-neutral-400 font-normal">Google &amp; Walmart Executive Keynotes</span>
-                    </div>
-                  </td>
-                  <td className="py-4 text-center font-bold text-neutral-800 dark:text-neutral-200 text-base">
-                    6
-                  </td>
-                  <td className="py-4 text-right font-headline font-black text-lg text-neutral-950 dark:text-[#FACC15]">
-                    650
-                  </td>
-                </tr>
-
-                {/* Hackathons */}
-                <tr className="hover:bg-[#FACC15]/5 dark:hover:bg-white/5 transition-colors">
-                  <td className="py-4 font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center">
-                      <Award className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="block text-sm font-bold">Hackathons</span>
-                      <span className="block text-[11px] text-neutral-500 dark:text-neutral-400 font-normal">24-48h Build Sprints &amp; Police AI Hackathon</span>
-                    </div>
-                  </td>
-                  <td className="py-4 text-center font-bold text-neutral-800 dark:text-neutral-200 text-base">
-                    2
-                  </td>
-                  <td className="py-4 text-right font-headline font-black text-lg text-neutral-950 dark:text-[#FACC15]">
-                    450
-                  </td>
-                </tr>
-
-                {/* All events (Total) */}
-                <tr className="bg-[#FACC15]/15 dark:bg-[#FACC15]/10 border-t-2 border-[#FACC15]">
-                  <td className="py-4.5 font-bold text-neutral-950 dark:text-white flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-[#FACC15] text-[#0A0A0A] flex items-center justify-center font-bold shadow-sm">
-                      <Calendar className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="block text-base font-extrabold text-[#0A0A0A] dark:text-[#F5F5F5]">All events</span>
-                      <span className="block text-xs text-neutral-600 dark:text-neutral-300 font-normal">Cumulative Total Across All Formats</span>
-                    </div>
-                  </td>
-                  <td className="py-4.5 text-center font-black text-neutral-950 dark:text-[#FACC15] text-lg">
-                    21
-                  </td>
-                  <td className="py-4.5 text-right font-headline font-black text-2xl text-[#0A0A0A] dark:text-[#FACC15]">
-                    3,075
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Interactive India Map Showcasing Reached States (Telangana & Andhra Pradesh) */}
+{/* Interactive India Map Showcasing Reached States (Telangana & Andhra Pradesh) */}
         <IndiaReachMap />
       </div>
     </section>
   );
 }
+

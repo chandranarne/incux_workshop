@@ -4,7 +4,7 @@ import { impactStatsData } from '../data/statistics';
 import { expertiseData } from '../data/expertise';
 import { siteConfig } from '../data/config';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env?.VITE_API_BASE || 'http://localhost:5000/api';
 
 export const fetchWorkshops = async () => {
   try {

@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowUpRight, Sparkles, User, Shield } from 'lucide-react';
+import { X, ArrowUpRight, Sparkles, User, Shield, Sun, Moon } from 'lucide-react';
 import { siteConfig } from '../data/config';
+import { useTheme } from '../context/ThemeContext';
 
 export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal, currentUser }) {
   const closeBtnRef = useRef(null);
+  const { isDark, toggleTheme } = useTheme();
 
   // Lock background scroll when open & handle Escape key
   useEffect(() => {
@@ -81,7 +83,27 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
               {siteConfig.brand.wordmark}
             </a>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              {/* Theme Mode Toggle Inside Menu Top */}
+              <button
+                onClick={toggleTheme}
+                type="button"
+                aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-full border text-xs font-mono font-bold transition-all bg-black/5 dark:bg-[#141414] border-black/15 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] cursor-pointer shadow-sm hover:scale-105"
+              >
+                {isDark ? (
+                  <>
+                    <Sun className="w-4 h-4 text-[#FACC15]" />
+                    <span>Light Mode</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon className="w-4 h-4 text-[#0A0A0A]" />
+                    <span>Dark Mode</span>
+                  </>
+                )}
+              </button>
+
               <motion.button
                 ref={closeBtnRef}
                 onClick={onClose}

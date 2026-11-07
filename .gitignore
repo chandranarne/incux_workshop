@@ -1,4 +1,7 @@
 node_modules/
+**/node_modules/
+dist/
+**/dist/
 *.log
 .DS_Store
 .vscode/
@@ -6,4 +9,9 @@ node_modules/
 # Media & Large Videos (exceeds GitHub 100MB limit)
 *.mp4
 video.mp4
+
+# Environment Variables
+.env
+.env.*
+!.env.example
 

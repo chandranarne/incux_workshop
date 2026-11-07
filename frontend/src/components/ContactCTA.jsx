@@ -121,7 +121,7 @@ export default function ContactCTA() {
           <div className="contact-left-col lg:col-span-5">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FACC15]/15 dark:bg-[#FACC15]/10 backdrop-blur-md border border-[#FACC15]/30 text-xs font-mono text-neutral-900 dark:text-[#FACC15] uppercase tracking-widest mb-4 font-semibold shadow-xs">
               <span className="w-2 h-2 rounded-full bg-[#FACC15]" />
-              <span>Section 10 // Institutional Partnership</span>
+              <span>Institutional Partnership</span>
             </div>
 
             <h2 className="font-headline font-bold text-3xl sm:text-5xl text-neutral-950 dark:text-[#F5F5F5] tracking-tight leading-tight">

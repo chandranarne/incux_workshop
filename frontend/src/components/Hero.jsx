@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ArrowDownRight, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowDownRight, ChevronDown, ChevronLeft, ChevronRight, Eye, Grid } from 'lucide-react';
 import { siteConfig } from '../data/config';
 import realCampusCohort from '../assets/real_campus_cohort.jpg';
 import realHandsOnLab from '../assets/real_hands_on_lab.jpg';
@@ -19,7 +19,6 @@ const workshopGallery = [
     title: "Collegiate Engineering Immersion",
     location: "Telangana & Andhra Pradesh Campuses",
     highlight: "3,075+ Engineers Mentored",
-    // Desktop layout: ~80% width, max 460px, 300px height (aspect ratio ~1.53:1), slight left offset
     desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-start lg:ml-[5%] xl:ml-[8%]"
   },
   {
@@ -31,7 +30,6 @@ const workshopGallery = [
     title: "Hands-On Systems & Code Labs",
     location: "Advanced Compute & Systems Labs",
     highlight: "Live IDE Debugging",
-    // Desktop layout: ~80% width, max 460px, 300px height, offset to the right
     desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-end lg:mr-[4%] xl:mr-[8%]"
   },
   {
@@ -43,7 +41,6 @@ const workshopGallery = [
     title: "AI x Anantapur Police Hackathon",
     location: "Anantapur & Regional Technical Hubs",
     highlight: "Real-World AI Solutions",
-    // Desktop layout: ~80% width, max 460px, 310px height, shifted slightly left-center
     desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[310px] self-start lg:ml-[10%] xl:ml-[14%]"
   },
   {
@@ -55,7 +52,6 @@ const workshopGallery = [
     title: "Auditorium Masterclass & Honors",
     location: "Campus Technical Auditoriums",
     highlight: "Executive Mentorship",
-    // Desktop layout: ~80% width, max 460px, 300px height, shifted to the right
     desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-end lg:mr-[6%] xl:mr-[10%]"
   },
   {
@@ -67,12 +63,19 @@ const workshopGallery = [
     title: "University Practitioner Bootcamps",
     location: "University Engineering Campuses",
     highlight: "Multi-Day Bootcamps",
-    // Desktop layout: centered anchor
     desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-center"
   }
 ];
 
 export default function Hero() {
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('incuxai_hero_viewed', 'true');
+    } catch (e) {}
+  }, []);
+
   const scrollToWork = () => {
     document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -175,40 +178,79 @@ export default function Hero() {
               <span>Explore Our Work</span>
               <ArrowDownRight className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:translate-y-1" />
             </button>
-
-            <div className="flex items-center gap-2.5 text-xs font-mono text-[#0A0A0A]/80 dark:text-[#FACC15]/90 pl-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Active 2026 Cohorts</span>
-            </div>
           </motion.div>
 
         </div>
 
         {/* ========================================================================= */}
-        {/* RIGHT SECTION: Vertically Scrolling Workshop Gallery (57% on LG, 60% Tab) */}
+        {/* RIGHT SECTION: Workshop Photo Gallery (Adaptive: Full on First Visit, Compact on Return) */}
         {/* ========================================================================= */}
-        <div className="w-full md:w-[60%] lg:w-[57%] px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 md:pt-24 lg:pt-28 pb-16 lg:pb-24 flex flex-col gap-6 lg:gap-8 z-10">
-          
-          {workshopGallery.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0.92, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-12% 0px" }}
-              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-              className={`relative rounded-2xl overflow-hidden shadow-2xl border border-black/15 dark:border-[#262626] bg-neutral-950 group ${
-                item.desktopClass
-              } max-md:w-full max-md:h-[250px] max-md:max-w-none max-md:self-center`}
-            >
-              <img
-                src={item.image}
-                alt={item.title}
-                className="w-full h-full object-cover filter saturate-105 group-hover:scale-105 transition-transform duration-700 ease-out"
-                loading={index < 2 ? "eager" : "lazy"}
-              />
-            </motion.div>
-          ))}
+        <div className="w-full md:w-[60%] lg:w-[57%] px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 md:pt-16 pb-12 flex flex-col justify-center z-10">
+          {/* Compact Featured Reel */}
+          <div className="relative rounded-3xl overflow-hidden border border-black/15 dark:border-[#262626] bg-neutral-950 shadow-2xl p-2 sm:p-3">
+            <div className="relative h-[300px] sm:h-[380px] lg:h-[420px] rounded-2xl overflow-hidden bg-neutral-900 group">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={activePhotoIdx}
+                  src={workshopGallery[activePhotoIdx].image}
+                  alt={workshopGallery[activePhotoIdx].title}
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.02 }}
+                  transition={{ duration: 0.4 }}
+                  className="w-full h-full object-cover"
+                />
+              </AnimatePresence>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
+              
+              {/* Overlay details */}
+              <div className="absolute bottom-4 left-4 right-4 text-white flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="px-2.5 py-1 rounded-full bg-[#FACC15] text-[#0A0A0A] text-[10px] font-mono font-bold uppercase tracking-wider inline-block mb-1.5 shadow-sm">
+                    {workshopGallery[activePhotoIdx].tag}
+                  </span>
+                  <h3 className="font-headline font-bold text-base sm:text-lg text-white truncate">
+                    {workshopGallery[activePhotoIdx].title}
+                  </h3>
+                  <p className="text-xs font-mono text-white/75 truncate">
+                    {workshopGallery[activePhotoIdx].location} • {workshopGallery[activePhotoIdx].highlight}
+                  </p>
+                </div>
+                
+                {/* Prev / Next buttons */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => setActivePhotoIdx((prev) => (prev - 1 + workshopGallery.length) % workshopGallery.length)}
+                    aria-label="Previous photo"
+                    className="w-9 h-9 rounded-full bg-black/60 hover:bg-[#FACC15] hover:text-[#0A0A0A] text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer border border-white/10"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setActivePhotoIdx((prev) => (prev + 1) % workshopGallery.length)}
+                    aria-label="Next photo"
+                    className="w-9 h-9 rounded-full bg-black/60 hover:bg-[#FACC15] hover:text-[#0A0A0A] text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer border border-white/10"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
 
+            {/* Photo selector indicator dots */}
+            <div className="flex items-center justify-center gap-2 pt-3 pb-1">
+              {workshopGallery.map((item, idx) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActivePhotoIdx(idx)}
+                  className={`h-2 rounded-full transition-all cursor-pointer ${
+                    activePhotoIdx === idx ? 'w-8 bg-[#FACC15]' : 'w-2 bg-neutral-600 hover:bg-neutral-400'
+                  }`}
+                  title={item.title}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
       </div>

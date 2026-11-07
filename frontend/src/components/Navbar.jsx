@@ -65,10 +65,10 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
             </div>
           </a>
 
-          {/* Actions: Portals, Theme Toggle & Menu Button */}
+          {/* Actions: Active User Avatar & Menu Button (Login, Admin, and Theme are inside Menu) */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* User Auth / Portal Status Button */}
-            {currentUser ? (
+            {/* User Auth / Portal Status Button (if logged in) */}
+            {currentUser && (
               <button
                 onClick={onOpenPortal}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-mono font-bold transition-all shadow-sm cursor-pointer bg-[#FACC15]/10 hover:bg-[#FACC15]/20 dark:bg-[#FACC15]/15 dark:hover:bg-[#FACC15]/25 border-[#FACC15]/40 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] hover:shadow-md active:scale-95"
@@ -78,56 +78,17 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
                 ) : (
                   <User className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
                 )}
-                <span className="max-w-[120px] truncate">{currentUser.name.split(' ')[0]} (Portal)</span>
+                <span className="max-w-[120px] truncate">{currentUser.name.split(' ')[0]}</span>
               </button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => onOpenAuth('candidate')}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-mono font-bold transition-all shadow-sm cursor-pointer bg-[#FACC15] hover:bg-[#EAB308] border-[#FACC15] text-[#0A0A0A] hover:shadow-md hover:shadow-yellow-500/20 active:scale-95"
-                >
-                  <LogIn className="w-3.5 h-3.5 text-[#0A0A0A]" />
-                  <span className="hidden sm:inline">Candidate</span> Login
-                </button>
-                <button
-                  onClick={() => onOpenAuth('admin')}
-                  className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-mono font-bold transition-all cursor-pointer bg-[#FDFCFA] hover:bg-neutral-100 dark:bg-[#141414] dark:hover:bg-[#1F1F1F] border-black/15 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] shadow-sm active:scale-95"
-                  title="Admin Portal"
-                >
-                  <Shield className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
-                  <span>Admin</span>
-                </button>
-              </div>
             )}
-
-            {/* Light / Dark Mode Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              type="button"
-              aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-mono font-medium transition-all duration-200 cursor-pointer shadow-sm bg-black/5 dark:bg-[#141414] border-black/15 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15]"
-            >
-              {isDark ? (
-                <>
-                  <Sun className="w-4 h-4 text-[#FACC15]" />
-                  <span className="hidden sm:inline">Light</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-4 h-4 text-[#0A0A0A]" />
-                  <span className="hidden sm:inline">Dark</span>
-                </>
-              )}
-            </button>
 
             {/* Menu button themed in Yellow and Black */}
             <button
               onClick={onOpenMenu}
               aria-label="Open full-screen navigation menu"
-              className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] border border-[#0A0A0A] dark:border-[#FACC15] font-headline font-bold text-xs uppercase tracking-wider shadow-lg shadow-black/20 dark:shadow-yellow-500/20 transition-all duration-200 active:scale-95 cursor-pointer"
+              className="group flex items-center gap-2 px-4 py-2 sm:py-2.5 rounded-full bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] border border-[#0A0A0A] dark:border-[#FACC15] font-headline font-bold text-xs uppercase tracking-wider shadow-lg shadow-black/20 dark:shadow-yellow-500/20 transition-all duration-200 active:scale-95 cursor-pointer"
             >
-              <span className="hidden sm:inline">Menu</span>
+              <span>Menu</span>
               <Menu className="w-4 h-4 stroke-[2.5] text-[#FACC15] dark:text-[#0A0A0A] group-hover:rotate-90 transition-transform duration-300" />
             </button>
           </div>

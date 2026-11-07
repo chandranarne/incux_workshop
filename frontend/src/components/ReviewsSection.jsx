@@ -86,7 +86,7 @@ export default function ReviewsSection() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FACC15]/15 dark:bg-[#FACC15]/10 backdrop-blur-md border border-[#FACC15]/30 text-xs font-mono text-neutral-900 dark:text-[#FACC15] uppercase tracking-widest mb-4 font-bold shadow-xs">
               <Sparkles className="w-3.5 h-3.5 text-[#FACC15]" />
-              <span>Section // Student Campus Experiences</span>
+              <span>Student Campus Experiences</span>
             </div>
             <h2 className="font-headline font-black text-3xl sm:text-5xl md:text-6xl text-neutral-950 dark:text-[#F5F5F5] tracking-tight leading-tight">
               What Engineers <br className="hidden sm:inline" />

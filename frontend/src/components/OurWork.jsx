@@ -111,7 +111,7 @@ export default function OurWork({ cards = [] }) {
           <div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-[#141414]/90 backdrop-blur-md border border-black/10 dark:border-yellow-400/30 text-xs font-mono text-[#0A0A0A] dark:text-[#FACC15] uppercase tracking-widest mb-4 font-bold shadow-xs">
               <span className="w-2 h-2 rounded-full bg-[#FACC15]" />
-              <span>Section 03 // Workshop Formats</span>
+              <span>Workshop Formats</span>
             </div>
             <h2 className="font-headline font-black text-3xl sm:text-5xl md:text-6xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight leading-tight">
               Where Ideas Become <br />
