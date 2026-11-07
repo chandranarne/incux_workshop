@@ -3,7 +3,8 @@ import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { impactStatsData } from '../data/statistics';
-import { Sparkles, Activity, MoveHorizontal } from 'lucide-react';
+import { Sparkles, Activity, Layers, Users, Calendar, Award } from 'lucide-react';
+import IndiaReachMap from './IndiaReachMap';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -34,12 +35,14 @@ function SwipeableCounterCard({ stat, index, activeHoveredIndex, setActiveHovere
     const card = cardRef.current;
     if (!card) return;
 
-    // Reset to 0 and count up when triggered
+    // Reset to 0 and count up smoothly in 3 to 4 seconds (3.5s)
     setCurrentValue(0);
     const statTarget = { val: 0 };
+    const countDuration = stat.value >= 100 ? 3.5 : 2.0;
+
     const tween = gsap.to(statTarget, {
       val: stat.value,
-      duration: 1.5,
+      duration: countDuration,
       delay: index * 0.08,
       ease: "power2.out",
       scrollTrigger: {
@@ -99,45 +102,39 @@ function SwipeableCounterCard({ stat, index, activeHoveredIndex, setActiveHovere
       className="cursor-grab active:cursor-grabbing select-none h-full"
     >
       <div
-        className={`impact-card flex flex-col justify-between p-8 rounded-3xl bg-white dark:bg-[#200807] border transition-all duration-300 shadow-xl group relative overflow-hidden h-full min-h-[230px] ${
+        className={`impact-card flex flex-col justify-between p-8 rounded-3xl bg-white dark:bg-[#141414] border transition-all duration-300 shadow-xl group relative overflow-hidden h-full min-h-[230px] ${
           isHovered
-            ? 'border-[#590907] dark:border-[#E8D2B5] shadow-glow-burgundy shadow-2xl'
-            : 'border-[#A5A79B]/30 dark:border-[#590907]/50'
+            ? 'border-[#FACC15] dark:border-[#FACC15] shadow-glow-yellow shadow-2xl'
+            : 'border-black/10 dark:border-[#262626]'
         }`}
       >
         {/* Glow orb following swipe */}
-        <div className="absolute top-0 right-0 w-36 h-36 bg-[#590907]/10 dark:bg-[#E8D2B5]/10 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
+        <div className="absolute top-0 right-0 w-36 h-36 bg-[#FACC15]/10 dark:bg-[#FACC15]/10 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
 
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#590907] dark:text-[#E8D2B5] block font-bold flex items-center gap-1.5 bg-[#FAF6F0] dark:bg-[#140303] px-2.5 py-1 rounded-md border border-[#A5A79B]/30 dark:border-[#590907]/40">
-              <span className="w-2 h-2 rounded-full bg-[#590907] dark:bg-[#E8D2B5]" />
-              PROGRAM OUTCOME
+            <span className="text-xs font-mono uppercase tracking-widest text-[#0A0A0A] dark:text-[#FACC15] block font-bold flex items-center gap-1.5 bg-[#F8F8F5] dark:bg-[#0A0A0A] px-2.5 py-1 rounded-md border border-black/10 dark:border-[#262626]">
+              <span className="w-2 h-2 rounded-full bg-[#FACC15]" />
+              {stat.badge || "PROGRAM OUTCOME"}
             </span>
-            <Activity className="w-4 h-4 text-[#590907] dark:text-[#E8D2B5] opacity-80 group-hover:opacity-100 transition-opacity" />
+            <Activity className="w-4 h-4 text-[#EAB308] dark:text-[#FACC15] opacity-80 group-hover:opacity-100 transition-opacity" />
           </div>
 
-          <div className="font-headline font-extrabold text-5xl sm:text-6xl text-[#1C0707] dark:text-[#F7F1E6] tracking-tight flex items-baseline">
+          <div className="font-headline font-extrabold text-5xl sm:text-6xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight flex items-baseline">
             <span>
-              {currentValue}
+              {currentValue.toLocaleString()}
             </span>
-            <span className="text-[#590907] dark:text-[#E8D2B5] font-mono ml-1 text-4xl font-bold">{stat.suffix}</span>
+            <span className="text-[#EAB308] dark:text-[#FACC15] font-mono ml-1 text-4xl font-bold">{stat.suffix}</span>
           </div>
         </div>
 
-        <div className="relative z-10 mt-8 pt-5 border-t border-[#A5A79B]/20 dark:border-[#590907]/30">
-          <h4 className="font-headline font-bold text-xl text-[#1C0707] dark:text-[#F7F1E6] leading-snug group-hover:text-[#590907] dark:group-hover:text-[#E8D2B5] transition-colors">
+        <div className="relative z-10 mt-8 pt-5 border-t border-black/10 dark:border-[#262626]">
+          <h4 className="font-headline font-bold text-xl text-[#0A0A0A] dark:text-[#F5F5F5] leading-snug group-hover:text-[#EAB308] dark:group-hover:text-[#FACC15] transition-colors">
             {stat.label}
           </h4>
-          <p className="text-sm text-[#590907]/75 dark:text-[#E8D2B5]/75 mt-1.5 leading-relaxed font-body font-medium">
+          <p className="text-sm text-[#525252] dark:text-[#A3A3A3] mt-1.5 leading-relaxed font-body font-medium">
             {stat.caption}
           </p>
-        </div>
-
-        {/* Dynamic Swipe Indicator Cue on Hover */}
-        <div className="absolute bottom-2 right-4 text-[10px] font-mono text-[#590907] dark:text-[#E8D2B5]/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-          <MoveHorizontal className="w-3 h-3" />
-          <span>Swipeable</span>
         </div>
       </div>
     </motion.div>
@@ -179,24 +176,20 @@ export default function ImpactStats({ data = impactStatsData }) {
     <section
       id="impact"
       ref={sectionRef}
-      className="relative w-full bg-[#FAF6F0] dark:bg-[#140303] py-24 sm:py-32 border-t border-[#A5A79B]/30 dark:border-[#590907]/40 overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-16 sm:py-24 border-t border-black/10 dark:border-yellow-400/20 overflow-hidden transition-colors duration-200"
       aria-label="Our Impact"
     >
-      {/* Background ambient orbs */}
-      <div className="absolute top-1/2 left-1/4 w-96 h-96 rounded-full bg-[#590907]/15 dark:bg-[#590907]/25 blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-[#E8D2B5]/20 dark:bg-[#E8D2B5]/10 blur-[140px] pointer-events-none" />
-
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="max-w-3xl mb-14 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-[#200807]/90 border border-[#A5A79B]/40 dark:border-[#590907]/50 text-xs font-mono text-[#590907] dark:text-[#E8D2B5] uppercase tracking-widest mb-4 font-bold shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-[#590907] dark:text-[#E8D2B5]" />
-            <span>Section 05 // Student Reach</span>
+        <div className="max-w-3xl mb-8 sm:mb-12">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-[#141414]/90 border border-black/10 dark:border-yellow-400/30 text-xs font-mono text-[#0A0A0A] dark:text-[#FACC15] uppercase tracking-widest mb-4 font-bold shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
+            <span>Section 05 // Students Reached</span>
           </div>
-          <h2 className="font-headline font-extrabold text-4xl sm:text-5xl md:text-6xl text-[#1C0707] dark:text-[#F7F1E6] tracking-tight leading-tight">
+          <h2 className="font-headline font-black text-4xl sm:text-5xl md:text-6xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight leading-tight">
             {data.headline}
           </h2>
-          <p className="mt-4 text-base sm:text-xl text-[#590907]/80 dark:text-[#E8D2B5]/85 font-medium leading-relaxed">
+          <p className="mt-3 text-base sm:text-lg text-neutral-600 dark:text-neutral-300 font-body">
             {data.subtitle}
           </p>
         </div>
@@ -213,6 +206,116 @@ export default function ImpactStats({ data = impactStatsData }) {
             />
           ))}
         </div>
+
+        {/* Verified Students Reached Session Breakdown Table */}
+        <div className="mt-10 p-6 sm:p-8 rounded-3xl bg-white/95 dark:bg-[#141414]/95 backdrop-blur-md border border-black/10 dark:border-[#262626] shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-black/10 dark:border-[#262626]">
+            <div>
+              <span className="text-xs font-mono uppercase tracking-wider text-[#EAB308] dark:text-[#FACC15] font-bold block mb-1">
+                SESSION TELEMETRY // VERIFIED METRICS
+              </span>
+              <h3 className="font-headline font-bold text-xl sm:text-2xl text-[#0A0A0A] dark:text-[#F5F5F5]">
+                Students Reached by Session Type
+              </h3>
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FACC15]/15 dark:bg-[#1A1A1A] text-[#0A0A0A] dark:text-[#FACC15] font-mono text-xs font-bold border border-[#FACC15]/30">
+              <span className="w-2 h-2 rounded-full bg-[#FACC15] animate-pulse" />
+              <span>21 SESSIONS • 3,075 PARTICIPANTS</span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left font-mono text-sm">
+              <thead>
+                <tr className="border-b border-black/10 dark:border-[#262626] text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                  <th className="pb-3.5 font-bold">Session type</th>
+                  <th className="pb-3.5 font-bold text-center">Sessions</th>
+                  <th className="pb-3.5 font-bold text-right">Participants</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/5 dark:divide-[#262626]/60">
+                {/* Workshops */}
+                <tr className="hover:bg-[#FACC15]/5 dark:hover:bg-white/5 transition-colors">
+                  <td className="py-4 font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center">
+                      <Layers className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="block text-sm font-bold">Workshops</span>
+                      <span className="block text-[11px] text-neutral-500 dark:text-neutral-400 font-normal">Collegiate &amp; Online Hands-On Immersions</span>
+                    </div>
+                  </td>
+                  <td className="py-4 text-center font-bold text-neutral-800 dark:text-neutral-200 text-base">
+                    13
+                  </td>
+                  <td className="py-4 text-right font-headline font-black text-lg text-neutral-950 dark:text-[#FACC15]">
+                    1,975
+                  </td>
+                </tr>
+
+                {/* Guest lectures */}
+                <tr className="hover:bg-[#FACC15]/5 dark:hover:bg-white/5 transition-colors">
+                  <td className="py-4 font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center">
+                      <Users className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="block text-sm font-bold">Guest lectures</span>
+                      <span className="block text-[11px] text-neutral-500 dark:text-neutral-400 font-normal">Google &amp; Walmart Executive Keynotes</span>
+                    </div>
+                  </td>
+                  <td className="py-4 text-center font-bold text-neutral-800 dark:text-neutral-200 text-base">
+                    6
+                  </td>
+                  <td className="py-4 text-right font-headline font-black text-lg text-neutral-950 dark:text-[#FACC15]">
+                    650
+                  </td>
+                </tr>
+
+                {/* Hackathons */}
+                <tr className="hover:bg-[#FACC15]/5 dark:hover:bg-white/5 transition-colors">
+                  <td className="py-4 font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center">
+                      <Award className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="block text-sm font-bold">Hackathons</span>
+                      <span className="block text-[11px] text-neutral-500 dark:text-neutral-400 font-normal">24-48h Build Sprints &amp; Police AI Hackathon</span>
+                    </div>
+                  </td>
+                  <td className="py-4 text-center font-bold text-neutral-800 dark:text-neutral-200 text-base">
+                    2
+                  </td>
+                  <td className="py-4 text-right font-headline font-black text-lg text-neutral-950 dark:text-[#FACC15]">
+                    450
+                  </td>
+                </tr>
+
+                {/* All events (Total) */}
+                <tr className="bg-[#FACC15]/15 dark:bg-[#FACC15]/10 border-t-2 border-[#FACC15]">
+                  <td className="py-4.5 font-bold text-neutral-950 dark:text-white flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#FACC15] text-[#0A0A0A] flex items-center justify-center font-bold shadow-sm">
+                      <Calendar className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="block text-base font-extrabold text-[#0A0A0A] dark:text-[#F5F5F5]">All events</span>
+                      <span className="block text-xs text-neutral-600 dark:text-neutral-300 font-normal">Cumulative Total Across All Formats</span>
+                    </div>
+                  </td>
+                  <td className="py-4.5 text-center font-black text-neutral-950 dark:text-[#FACC15] text-lg">
+                    21
+                  </td>
+                  <td className="py-4.5 text-right font-headline font-black text-2xl text-[#0A0A0A] dark:text-[#FACC15]">
+                    3,075
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Interactive India Map Showcasing Reached States (Telangana & Andhra Pradesh) */}
+        <IndiaReachMap />
       </div>
     </section>
   );

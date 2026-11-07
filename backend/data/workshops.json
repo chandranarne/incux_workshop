@@ -44,6 +44,15 @@
       "description": "Multi-day immersion programs taking engineering students from foundational models to autonomous agent deployment.",
       "tag": "5-Day Deep Dive",
       "highlight": "Capstone Projects"
+    },
+    {
+      "id": "hackathons",
+      "title": "AI Hackathons & Sprints",
+      "category": "Build Challenges",
+      "location": "Regional Campuses & Tech Hubs",
+      "description": "High-energy 24-hour and 48-hour competitive engineering hackathons where student developer squads tackle real corporate challenge statements with live code commits.",
+      "tag": "24-48 Hr Sprints",
+      "highlight": "2 Editions • 450+ Hackers"
     }
   ],
   "featured": [
@@ -100,14 +109,14 @@
       "summary": "Regional engineering workshop focusing on practical AI agents, autonomous pipelines, and defensive security measures."
     },
     {
-      "id": "gitam-bootcamp",
-      "title": "Five-day AI Bootcamp, GITAM University",
-      "dates": "Date to be confirmed",
-      "participants": "300",
+      "id": "ai-bootcamp-college",
+      "title": "Five-day AI Bootcamp, Geethanjali College",
+      "dates": "Completed Edition",
+      "participants": "300+",
       "participantsNumeric": 300,
-      "speaker": "Trainer details needed",
-      "speakerRole": "Enterprise Industry Mentors",
-      "location": "GITAM University, Hyderabad, Telangana",
+      "speaker": "Rakesh Sir, Rohith Sir, Saibaba Sir, Yaswanth Sir",
+      "speakerRole": "Lead AI Trainers & Enterprise Mentors",
+      "location": "Geethanjali College Campus, Hyderabad, Telangana",
       "prominence": "standard",
       "association": null,
       "summary": "Five-day intensive immersive bootcamp covering end-to-end modern AI system development, hands-on lab sprints, and project reviews."

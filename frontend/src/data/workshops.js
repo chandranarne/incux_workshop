@@ -53,6 +53,17 @@ export const workshopCards = [
     tag: "5-Day Deep Dive",
     highlight: "Capstone Projects",
     gradient: "from-rose-600/20 via-transparent to-transparent"
+  },
+  {
+    id: "hackathons",
+    number: "06",
+    title: "AI Hackathons & Sprints",
+    category: "Build Challenges",
+    location: "Regional Campuses & Tech Hubs",
+    description: "High-energy 24-hour and 48-hour competitive engineering hackathons where student developer squads tackle real corporate challenge statements with live code commits.",
+    tag: "24-48 Hr Sprints",
+    highlight: "2 Editions • 450+ Hackers",
+    gradient: "from-yellow-600/20 via-transparent to-transparent"
   }
 ];
 
@@ -102,12 +113,12 @@ export const featuredWorkshops = [
     badge: "Campus Workshop"
   },
   {
-    id: "gitam-bootcamp",
-    title: "Five-day AI Bootcamp, GITAM University, Hyderabad",
-    dates: "Date to be confirmed",
-    participants: "300",
-    speaker: "Trainer details needed",
-    location: "GITAM University, Hyderabad",
+    id: "ai-bootcamp-college",
+    title: "Five-day AI Bootcamp, Geethanjali College",
+    dates: "Completed Edition",
+    participants: "300+",
+    speaker: "Rakesh Sir, Rohith Sir, Saibaba Sir, Yaswanth Sir",
+    location: "Geethanjali College Campus, Hyderabad",
     prominent: false,
     association: null,
     badge: "5-Day Intensive Bootcamp"

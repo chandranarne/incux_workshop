@@ -26,9 +26,9 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
       <div
         className="fixed top-0 left-0 right-0 h-[3px] z-50 pointer-events-none transition-all duration-75"
         style={{
-          background: 'linear-gradient(90deg, #590907 0%, #781210 35%, #A5A79B 70%, #E8D2B5 100%)',
+          background: 'linear-gradient(90deg, #FACC15 0%, #EAB308 50%, #FBBF24 100%)',
           width: `${scrollProgress}%`,
-          boxShadow: '0 0 12px rgba(89, 9, 7, 0.6)'
+          boxShadow: '0 0 12px rgba(250, 204, 21, 0.7)'
         }}
         aria-hidden="true"
       />
@@ -36,7 +36,7 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
       <header
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
           scrolled
-            ? 'bg-[#FAF6F0]/90 dark:bg-[#140303]/90 backdrop-blur-xl border-b border-[#A5A79B]/30 dark:border-[#590907]/40 py-3.5 shadow-lg dark:shadow-2xl'
+            ? 'bg-[#FDFCFA]/90 dark:bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-black/10 dark:border-yellow-400/20 py-3.5 shadow-lg dark:shadow-2xl'
             : 'bg-transparent py-5'
         }`}
       >
@@ -44,23 +44,22 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
           {/* Brand Wordmark with AI Pulsing Emblem */}
           <a
             href="#hero"
-            className="group flex items-center gap-3 focus-visible:outline-[#590907]"
+            className="group flex items-center gap-3 focus-visible:outline-[#FACC15]"
             aria-label="IncuxAI Home"
           >
-            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-tr from-[#590907] via-[#A5A79B] to-[#E8D2B5] p-[1px] shadow-sm group-hover:shadow-glow-burgundy transition-all">
-              <div className="w-full h-full rounded-[11px] bg-[#FAF6F0] dark:bg-[#140303] flex items-center justify-center">
-                <span className="font-headline font-black text-transparent bg-clip-text bg-gradient-to-r from-[#590907] to-[#781210] dark:from-[#E8D2B5] dark:to-[#A5A79B] text-lg leading-none">
+            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FACC15] via-[#EAB308] to-[#0A0A0A] p-[1px] shadow-sm group-hover:shadow-glow-yellow transition-all">
+              <div className="w-full h-full rounded-[11px] bg-[#FDFCFA] dark:bg-[#0A0A0A] flex items-center justify-center">
+                <span className="font-headline font-black text-transparent bg-clip-text bg-gradient-to-r from-[#0A0A0A] to-[#333333] dark:from-[#FACC15] dark:to-[#FEF08A] text-lg leading-none">
                   I
                 </span>
               </div>
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#590907] dark:bg-[#E8D2B5]" />
             </div>
 
             <div className="flex flex-col">
-              <span className="font-headline font-bold text-xl tracking-tighter text-[#1C0707] dark:text-[#F7F1E6] group-hover:text-[#590907] dark:group-hover:text-[#E8D2B5] transition-colors">
+              <span className="font-headline font-bold text-xl tracking-tighter text-[#0A0A0A] dark:text-[#F5F5F5] group-hover:text-[#EAB308] dark:group-hover:text-[#FACC15] transition-colors">
                 {siteConfig.brand.wordmark}
               </span>
-              <span className="text-[10px] font-mono tracking-widest text-[#590907]/70 dark:text-[#E8D2B5]/80 uppercase -mt-1 hidden sm:block">
+              <span className="text-[10px] font-mono tracking-widest text-[#0A0A0A]/70 dark:text-[#FACC15]/80 uppercase -mt-1 hidden sm:block">
                 Workshop Initiative
               </span>
             </div>
@@ -72,12 +71,12 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
             {currentUser ? (
               <button
                 onClick={onOpenPortal}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-mono font-bold transition-all shadow-sm cursor-pointer bg-[#590907]/10 hover:bg-[#590907]/20 dark:bg-[#E8D2B5]/10 dark:hover:bg-[#E8D2B5]/20 border-[#590907]/30 dark:border-[#E8D2B5]/30 text-[#590907] dark:text-[#E8D2B5] hover:border-[#590907] dark:hover:border-[#E8D2B5] hover:shadow-md active:scale-95"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-mono font-bold transition-all shadow-sm cursor-pointer bg-[#FACC15]/10 hover:bg-[#FACC15]/20 dark:bg-[#FACC15]/15 dark:hover:bg-[#FACC15]/25 border-[#FACC15]/40 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] hover:shadow-md active:scale-95"
               >
                 {currentUser.role === 'admin' ? (
-                  <Shield className="w-3.5 h-3.5 text-[#590907] dark:text-[#E8D2B5]" />
+                  <Shield className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
                 ) : (
-                  <User className="w-3.5 h-3.5 text-[#590907] dark:text-[#E8D2B5]" />
+                  <User className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
                 )}
                 <span className="max-w-[120px] truncate">{currentUser.name.split(' ')[0]} (Portal)</span>
               </button>
@@ -85,17 +84,17 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onOpenAuth('candidate')}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-mono font-bold transition-all shadow-sm cursor-pointer bg-[#590907] hover:bg-[#781210] border-[#590907] text-[#E8D2B5] hover:shadow-md hover:shadow-[#590907]/30 active:scale-95"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-mono font-bold transition-all shadow-sm cursor-pointer bg-[#FACC15] hover:bg-[#EAB308] border-[#FACC15] text-[#0A0A0A] hover:shadow-md hover:shadow-yellow-500/20 active:scale-95"
                 >
-                  <LogIn className="w-3.5 h-3.5 text-[#E8D2B5]" />
+                  <LogIn className="w-3.5 h-3.5 text-[#0A0A0A]" />
                   <span className="hidden sm:inline">Candidate</span> Login
                 </button>
                 <button
                   onClick={() => onOpenAuth('admin')}
-                  className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-mono font-bold transition-all cursor-pointer bg-[#FAF6F0] hover:bg-[#E8D2B5]/40 dark:bg-[#1c0707] dark:hover:bg-[#250a09] border-[#A5A79B]/50 dark:border-[#590907]/60 text-[#590907] dark:text-[#E8D2B5] hover:text-[#781210] dark:hover:text-[#FAF6F0] shadow-sm active:scale-95"
+                  className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-mono font-bold transition-all cursor-pointer bg-[#FDFCFA] hover:bg-neutral-100 dark:bg-[#141414] dark:hover:bg-[#1F1F1F] border-black/15 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] shadow-sm active:scale-95"
                   title="Admin Portal"
                 >
-                  <Shield className="w-3.5 h-3.5 text-[#590907] dark:text-[#E8D2B5]" />
+                  <Shield className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
                   <span>Admin</span>
                 </button>
               </div>
@@ -107,29 +106,29 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
               type="button"
               aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-mono font-medium transition-all duration-200 cursor-pointer shadow-sm bg-[#E8D2B5]/30 dark:bg-[#1c0707] border-[#A5A79B]/50 dark:border-[#590907]/50 text-[#1C0707] dark:text-[#E8D2B5] hover:border-[#590907] dark:hover:border-[#E8D2B5]"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-mono font-medium transition-all duration-200 cursor-pointer shadow-sm bg-black/5 dark:bg-[#141414] border-black/15 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15]"
             >
               {isDark ? (
                 <>
-                  <Sun className="w-4 h-4 text-[#E8D2B5]" />
+                  <Sun className="w-4 h-4 text-[#FACC15]" />
                   <span className="hidden sm:inline">Light</span>
                 </>
               ) : (
                 <>
-                  <Moon className="w-4 h-4 text-[#590907]" />
+                  <Moon className="w-4 h-4 text-[#0A0A0A]" />
                   <span className="hidden sm:inline">Dark</span>
                 </>
               )}
             </button>
 
-            {/* Menu button themed in Deep Burgundy and Warm Cream Beige */}
+            {/* Menu button themed in Yellow and Black */}
             <button
               onClick={onOpenMenu}
               aria-label="Open full-screen navigation menu"
-              className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full bg-[#590907] hover:bg-[#781210] text-[#E8D2B5] border border-[#590907] font-headline font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#590907]/30 hover:shadow-[#590907]/50 transition-all duration-200 active:scale-95 cursor-pointer"
+              className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] border border-[#0A0A0A] dark:border-[#FACC15] font-headline font-bold text-xs uppercase tracking-wider shadow-lg shadow-black/20 dark:shadow-yellow-500/20 transition-all duration-200 active:scale-95 cursor-pointer"
             >
               <span className="hidden sm:inline">Menu</span>
-              <Menu className="w-4 h-4 stroke-[2.5] text-[#E8D2B5] group-hover:rotate-90 transition-transform duration-300" />
+              <Menu className="w-4 h-4 stroke-[2.5] text-[#FACC15] dark:text-[#0A0A0A] group-hover:rotate-90 transition-transform duration-300" />
             </button>
           </div>
         </div>

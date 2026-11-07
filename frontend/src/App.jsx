@@ -104,7 +104,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF6F0] dark:bg-[#140303] text-[#1C0707] dark:text-[#F7F1E6] selection:bg-[#E8D2B5] selection:text-[#590907] transition-colors duration-200">
+    <div className="min-h-screen bg-[#FDFCFA] dark:bg-[#0A0A0A] text-[#0A0A0A] dark:text-[#F5F5F5] selection:bg-[#FACC15] selection:text-[#0A0A0A] transition-colors duration-200">
       {/* 1. Intro Animation (Plays once per page load, character/word reveal, 2-3s) */}
       {!introFinished && (
         <IntroAnimation onComplete={() => setIntroFinished(true)} />

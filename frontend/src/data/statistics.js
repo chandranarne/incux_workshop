@@ -1,35 +1,45 @@
 export const impactStatsData = {
   headline: "Impact Measured in Experiences",
-  subtitle: "Direct metrics recorded through collegiate and institutional workshop sessions.",
-  footnote: "Note: '950+ Student Participations' counts cumulative session participations (200 + 150 + 500 + 100) across 4 campus sessions, not unique students. The GITAM bootcamp attendance is reported separately and not added to this total.",
+  subtitle: "3,075 verified student participations across 21 specialized sessions in Andhra Pradesh and Telangana.",
+  footnote: "Note: '3,075 Total Participants' reflects verified cumulative attendance across 21 sessions.",
+  sessionSummary: [
+    { type: "Workshops", sessions: 13, participants: "1,975", highlight: "Collegiate & Online Deep Dives" },
+    { type: "Guest lectures", sessions: 6, participants: "650", highlight: "Executive & Domain Keynotes" },
+    { type: "Hackathons", sessions: 2, participants: "450", highlight: "24-48h Build Sprints" },
+    { type: "All events", sessions: 21, participants: "3,075", highlight: "Total Program Footprint", isTotal: true }
+  ],
   stats: [
     {
-      id: "participations",
-      value: 950,
+      id: "all-events",
+      value: 3075,
       suffix: "+",
-      label: "Student Participations",
-      caption: "Cumulative attendances across campus sessions"
+      label: "All Events",
+      badge: "21 Sessions",
+      caption: "3,075 students across 21 total sessions"
     },
     {
-      id: "workshops-reported",
-      value: 4,
-      suffix: "",
-      label: "Workshops with Reported Attendance",
-      caption: "IIT Hyderabad (2), Chalapathi College, Vijayawada"
+      id: "workshops",
+      value: 1975,
+      suffix: "+",
+      label: "Workshops",
+      badge: "13 Sessions",
+      caption: "1,975 participants in 13 hands-on workshop cohorts"
     },
     {
-      id: "states",
-      value: 2,
-      suffix: "",
-      label: "States Reached",
-      caption: "Andhra Pradesh and Telangana"
+      id: "guest-lectures",
+      value: 650,
+      suffix: "+",
+      label: "Guest Lectures",
+      badge: "6 Sessions",
+      caption: "650 participants in 6 company leadership sessions"
     },
     {
-      id: "bootcamp",
-      value: 5,
-      suffix: "-day",
-      label: "Bootcamp at GITAM",
-      caption: "Intensive multi-day AI curriculum delivered at GITAM University"
+      id: "hackathons",
+      value: 450,
+      suffix: "+",
+      label: "Hackathons",
+      badge: "2 Sessions",
+      caption: "450 participants in 2 competitive build sprints"
     }
   ]
 };

@@ -25,19 +25,19 @@ html {
 }
 
 html.light body {
-  background-color: #FAF6F0;
-  color: #1C0707;
+  background-color: #FDFCFA;
+  color: #0A0A0A;
 }
 
 html.dark body {
-  background-color: #140303;
-  color: #F7F1E6;
+  background-color: #0A0A0A;
+  color: #F5F5F5;
 }
 
 body {
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   transition: background-color 0.25s ease, color 0.25s ease;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Custom scrollbars */
@@ -47,29 +47,29 @@ body {
 }
 
 html.dark ::-webkit-scrollbar-track {
-  background: #1c0707;
+  background: #0A0A0A;
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: #45100f;
+  background: #262626;
   border-radius: 9999px;
 }
 
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #E8D2B5;
+  background: #FACC15;
 }
 
 html.light ::-webkit-scrollbar-track {
-  background: #FAF6F0;
+  background: #FDFCFA;
 }
 
 html.light ::-webkit-scrollbar-thumb {
-  background: #A5A79B;
+  background: #D4D4D4;
   border-radius: 9999px;
 }
 
 html.light ::-webkit-scrollbar-thumb:hover {
-  background: #590907;
+  background: #EAB308;
 }
 
 /* Headings */
@@ -88,12 +88,40 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Subtle glow utility */
+.glow-yellow {
+  box-shadow: 0 0 35px -5px rgba(250, 204, 21, 0.45);
+}
+
+.glow-burgundy {
+  box-shadow: 0 0 35px -5px rgba(250, 204, 21, 0.45);
+}
+
+.glow-cream {
+  box-shadow: 0 0 35px -5px rgba(250, 204, 21, 0.35);
+}
+
+.glow-sage {
+  box-shadow: 0 0 30px -5px rgba(250, 204, 21, 0.25);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 35px -5px rgba(250, 204, 21, 0.35);
+}
+
+.glow-electric {
+  box-shadow: 0 0 35px -5px rgba(250, 204, 21, 0.4);
+}
+
 .glow-lime {
-  box-shadow: 0 0 35px -5px rgba(204, 255, 0, 0.25);
+  box-shadow: 0 0 35px -5px rgba(250, 204, 21, 0.35);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 30px -5px rgba(250, 204, 21, 0.3);
 }
 
 .text-stroke-title {
-  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.18);
+  -webkit-text-stroke: 1.5px rgba(250, 204, 21, 0.2);
   color: transparent;
 }
 
@@ -102,7 +130,7 @@ a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #590907;
+  outline: 2px solid #FACC15;
   outline-offset: 3px;
 }
 
@@ -192,43 +220,19 @@ textarea:focus-visible {
   animation: pulse-ring 2.5s ease-in-out infinite;
 }
 
-.glow-burgundy {
-  box-shadow: 0 0 35px -5px rgba(89, 9, 7, 0.45);
-}
-
-.glow-cream {
-  box-shadow: 0 0 35px -5px rgba(232, 210, 181, 0.3);
-}
-
-.glow-sage {
-  box-shadow: 0 0 30px -5px rgba(165, 167, 155, 0.35);
-}
-
-.glow-cyan {
-  box-shadow: 0 0 30px -5px rgba(232, 210, 181, 0.35);
-}
-
-.glow-electric {
-  box-shadow: 0 0 30px -5px rgba(89, 9, 7, 0.4);
-}
-
-.glow-emerald {
-  box-shadow: 0 0 30px -5px rgba(165, 167, 155, 0.3);
-}
-
 /* Glassmorphism & Cyber Card Utilities */
 .glass-panel-dark {
-  background: rgba(28, 7, 7, 0.85);
+  background: rgba(10, 10, 10, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(232, 210, 181, 0.15);
+  border: 1px solid rgba(250, 204, 21, 0.18);
 }
 
 .glass-panel-light {
-  background: rgba(250, 246, 240, 0.9);
+  background: rgba(253, 252, 250, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(165, 167, 155, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .cyber-card {
@@ -241,38 +245,44 @@ textarea:focus-visible {
 }
 
 /* Gradient Text Utilities */
+.text-gradient-yellow {
+  background: linear-gradient(135deg, #FACC15 0%, #FBBF24 50%, #EAB308 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .text-gradient-burgundy {
-  background: linear-gradient(135deg, #590907 0%, #781210 50%, #9e2320 100%);
+  background: linear-gradient(135deg, #FACC15 0%, #FBBF24 50%, #EAB308 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-cream {
-  background: linear-gradient(135deg, #F7F1E6 0%, #E8D2B5 50%, #d4bea0 100%);
+  background: linear-gradient(135deg, #FEF08A 0%, #FACC15 50%, #EAB308 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-sage {
-  background: linear-gradient(135deg, #A5A79B 0%, #898f7c 100%);
+  background: linear-gradient(135deg, #D4D4D4 0%, #A3A3A3 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-cyan {
-  background: linear-gradient(135deg, #E8D2B5 0%, #d4bea0 100%);
+  background: linear-gradient(135deg, #FACC15 0%, #FEF08A 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-electric {
-  background: linear-gradient(135deg, #590907 0%, #781210 50%, #9e2320 100%);
+  background: linear-gradient(135deg, #FACC15 0%, #FBBF24 50%, #EAB308 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-ai {
-  background: linear-gradient(135deg, #590907 0%, #9e2320 40%, #A5A79B 75%, #E8D2B5 100%);
+  background: linear-gradient(135deg, #FACC15 0%, #EAB308 40%, #FEF08A 75%, #FFFFFF 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -280,20 +290,19 @@ textarea:focus-visible {
 /* Cyber Matrix Background Grid */
 .bg-cyber-grid-dark {
   background-image: 
-    linear-gradient(to right, rgba(232, 210, 181, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(89, 9, 7, 0.08) 1px, transparent 1px);
+    linear-gradient(to right, rgba(250, 204, 21, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(250, 204, 21, 0.04) 1px, transparent 1px);
   background-size: 3.5rem 3.5rem;
 }
 
 .bg-cyber-grid-light {
   background-image: 
-    linear-gradient(to right, rgba(89, 9, 7, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(165, 167, 155, 0.08) 1px, transparent 1px);
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(250, 204, 21, 0.06) 1px, transparent 1px);
   background-size: 3.5rem 3.5rem;
 }
 
 /* Top Progress Bar Gradient */
 .scroll-progress-gradient {
-  background: linear-gradient(90deg, #590907 0%, #781210 35%, #A5A79B 70%, #E8D2B5 100%);
+  background: linear-gradient(90deg, #FACC15 0%, #EAB308 50%, #FBBF24 100%);
 }
-

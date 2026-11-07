@@ -48,7 +48,7 @@ export default function Footer() {
   return (
     <footer
       id="contact"
-      className="relative w-full bg-[#FAF6F0] dark:bg-[#140303] text-neutral-800 dark:text-neutral-300 pt-20 pb-12 border-t border-[#A5A79B]/30 dark:border-[#590907]/40 overflow-hidden select-none transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] text-neutral-800 dark:text-neutral-300 pt-12 pb-8 border-t border-black/10 dark:border-[#262626] overflow-hidden select-none transition-colors duration-200"
       aria-label="Footer"
     >
       {/* 
@@ -56,37 +56,37 @@ export default function Footer() {
         Directly inspired by the user's reference image in light & dark modes
       */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
-        <span className="font-headline font-black text-[22vw] tracking-tighter text-[#590907]/[0.07] dark:text-[#E8D2B5]/[0.08] lowercase whitespace-nowrap select-none drop-shadow-sm">
+        <span className="font-headline font-black text-[22vw] tracking-tighter text-black/[0.04] dark:text-[#FACC15]/[0.05] lowercase whitespace-nowrap select-none drop-shadow-sm">
           incuxai
         </span>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 4 Clean Columns Aligned with User Reference Design */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 pb-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 pb-10">
           {/* Column 1: Our Products / Workshops */}
           <div>
-            <h4 className="font-headline font-bold text-sm sm:text-base text-[#590907] dark:text-[#E8D2B5] tracking-tight mb-4 uppercase font-mono">
+            <h4 className="font-headline font-bold text-sm sm:text-base text-amber-600 dark:text-[#FACC15] tracking-tight mb-4 uppercase font-mono">
               Our Products
             </h4>
             <ul className="space-y-2.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 font-body">
               <li>
-                <a href="#our-work" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#our-work" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   Learning Programs
                 </a>
               </li>
               <li>
-                <a href="#our-work" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#our-work" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   Workshops
                 </a>
               </li>
               <li>
-                <a href="#featured" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#featured" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   Hackathons
                 </a>
               </li>
               <li>
-                <a href="#expertise" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#expertise" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   Certifications
                 </a>
               </li>
@@ -95,30 +95,30 @@ export default function Footer() {
 
           {/* Column 2: Our Company */}
           <div>
-            <h4 className="font-headline font-bold text-sm sm:text-base text-[#590907] dark:text-[#E8D2B5] tracking-tight mb-4 uppercase font-mono">
+            <h4 className="font-headline font-bold text-sm sm:text-base text-amber-600 dark:text-[#FACC15] tracking-tight mb-4 uppercase font-mono">
               Our Company
             </h4>
             <ul className="space-y-2.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 font-body">
               <li>
-                <a href="#about" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#about" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   About Us
                 </a>
               </li>
               <li>
-                <a href="#how-we-work" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#how-we-work" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   Careers
                 </a>
               </li>
               <li>
-                <a href="#featured" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#featured" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   Event Hub
                 </a>
               </li>
               <li className="flex items-center gap-2">
-                <a href="#news" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#news" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   IncuxAI Blog
                 </a>
-                <span className="px-1.5 py-0.5 rounded-full bg-[#E8D2B5]/30 text-[#590907] dark:bg-[#590907]/40 dark:text-[#E8D2B5] text-[10px] font-mono font-semibold">
+                <span className="px-1.5 py-0.5 rounded-full bg-[#FACC15]/20 text-[#0A0A0A] dark:bg-[#FACC15]/15 dark:text-[#FACC15] text-[10px] font-mono font-semibold">
                   New
                 </span>
               </li>
@@ -127,27 +127,27 @@ export default function Footer() {
 
           {/* Column 3: Help Resources */}
           <div>
-            <h4 className="font-headline font-bold text-sm sm:text-base text-[#590907] dark:text-[#E8D2B5] tracking-tight mb-4 uppercase font-mono">
+            <h4 className="font-headline font-bold text-sm sm:text-base text-amber-600 dark:text-[#FACC15] tracking-tight mb-4 uppercase font-mono">
               Help Resources
             </h4>
             <ul className="space-y-2.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 font-body">
               <li>
-                <a href="#contact" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#contact" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   FAQ
                 </a>
               </li>
               <li>
-                <a href="#contact" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#contact" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   Support
                 </a>
               </li>
               <li>
-                <a href="#news" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#news" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="#how-we-work" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+                <a href="#how-we-work" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
                   Terms of Use
                 </a>
               </li>
@@ -156,7 +156,7 @@ export default function Footer() {
 
           {/* Column 4: Connect with Us */}
           <div>
-            <h4 className="font-headline font-bold text-sm sm:text-base text-[#590907] dark:text-[#E8D2B5] tracking-tight mb-4 uppercase font-mono">
+            <h4 className="font-headline font-bold text-sm sm:text-base text-amber-600 dark:text-[#FACC15] tracking-tight mb-4 uppercase font-mono">
               Connect with Us
             </h4>
 
@@ -167,7 +167,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Instagram"
-                className="w-8 h-8 rounded-xl bg-white dark:bg-[#200807] border border-[#A5A79B]/30 dark:border-[#590907]/40 flex items-center justify-center text-neutral-700 dark:text-[#FAF6F0] hover:text-[#590907] dark:hover:text-[#E8D2B5] hover:border-[#590907] dark:hover:border-[#E8D2B5] transition-all shadow-sm"
+                className="w-8 h-8 rounded-xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] flex items-center justify-center text-neutral-700 dark:text-[#F5F5F5] hover:text-[#0A0A0A] dark:hover:text-[#0A0A0A] hover:bg-[#FACC15] dark:hover:bg-[#FACC15] hover:border-[#FACC15] transition-all shadow-sm"
               >
                 <InstagramIcon className="w-4 h-4" />
               </a>
@@ -176,7 +176,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="LinkedIn"
-                className="w-8 h-8 rounded-xl bg-white dark:bg-[#200807] border border-[#A5A79B]/30 dark:border-[#590907]/40 flex items-center justify-center text-neutral-700 dark:text-[#FAF6F0] hover:text-[#590907] dark:hover:text-[#E8D2B5] hover:border-[#590907] dark:hover:border-[#E8D2B5] transition-all shadow-sm"
+                className="w-8 h-8 rounded-xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] flex items-center justify-center text-neutral-700 dark:text-[#F5F5F5] hover:text-[#0A0A0A] dark:hover:text-[#0A0A0A] hover:bg-[#FACC15] dark:hover:bg-[#FACC15] hover:border-[#FACC15] transition-all shadow-sm"
               >
                 <LinkedinIcon className="w-4 h-4" />
               </a>
@@ -185,7 +185,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Facebook"
-                className="w-8 h-8 rounded-xl bg-white dark:bg-[#200807] border border-[#A5A79B]/30 dark:border-[#590907]/40 flex items-center justify-center text-neutral-700 dark:text-[#FAF6F0] hover:text-[#590907] dark:hover:text-[#E8D2B5] hover:border-[#590907] dark:hover:border-[#E8D2B5] transition-all shadow-sm"
+                className="w-8 h-8 rounded-xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] flex items-center justify-center text-neutral-700 dark:text-[#F5F5F5] hover:text-[#0A0A0A] dark:hover:text-[#0A0A0A] hover:bg-[#FACC15] dark:hover:bg-[#FACC15] hover:border-[#FACC15] transition-all shadow-sm"
               >
                 <FacebookIcon className="w-4 h-4" />
               </a>
@@ -194,7 +194,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="WhatsApp"
-                className="w-8 h-8 rounded-xl bg-white dark:bg-[#200807] border border-[#A5A79B]/30 dark:border-[#590907]/40 flex items-center justify-center text-neutral-700 dark:text-[#FAF6F0] hover:text-[#590907] dark:hover:text-[#E8D2B5] hover:border-[#590907] dark:hover:border-[#E8D2B5] transition-all shadow-sm"
+                className="w-8 h-8 rounded-xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] flex items-center justify-center text-neutral-700 dark:text-[#F5F5F5] hover:text-[#0A0A0A] dark:hover:text-[#0A0A0A] hover:bg-[#FACC15] dark:hover:bg-[#FACC15] hover:border-[#FACC15] transition-all shadow-sm"
               >
                 <WhatsAppIcon className="w-4 h-4" />
               </a>
@@ -203,16 +203,16 @@ export default function Footer() {
             {/* Address & Official Contact Channels */}
             <div className="space-y-2 text-xs text-neutral-700 dark:text-neutral-300 font-body leading-relaxed">
               <p>
-                <strong className="text-neutral-900 dark:text-[#FAF6F0] block font-mono text-[11px] mb-0.5">Contact:</strong>
-                <a href="mailto:info@incuxai.com" className="text-neutral-800 dark:text-neutral-300 hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors block font-medium">
+                <strong className="text-neutral-900 dark:text-[#F5F5F5] block font-mono text-[11px] mb-0.5">Contact:</strong>
+                <a href="mailto:info@incuxai.com" className="text-neutral-800 dark:text-neutral-300 hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors block font-medium">
                   info@incuxai.com
                 </a>
-                <a href="tel:7665061289" className="text-neutral-800 dark:text-neutral-300 hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors block mt-0.5 font-medium">
+                <a href="tel:7665061289" className="text-neutral-800 dark:text-neutral-300 hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors block mt-0.5 font-medium">
                   +91 7665061289
                 </a>
               </p>
-              <p className="pt-1.5 border-t border-[#A5A79B]/30 dark:border-[#590907]/30">
-                <strong className="text-neutral-900 dark:text-[#FAF6F0] block font-mono text-[11px] mb-0.5">Address:</strong>
+              <p className="pt-1.5 border-t border-black/10 dark:border-[#262626]">
+                <strong className="text-neutral-900 dark:text-[#F5F5F5] block font-mono text-[11px] mb-0.5">Address:</strong>
                 Building No: 148, 2nd Floor, Outer Ring Rd, Regional Tech Corridor, Hyderabad, Telangana &amp; Andhra Pradesh 500081
               </p>
             </div>
@@ -220,21 +220,21 @@ export default function Footer() {
         </div>
 
         {/* Bottom Horizontal Line & Copyright Bar */}
-        <div className="pt-8 border-t border-[#A5A79B]/30 dark:border-[#590907]/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-body text-neutral-600 dark:text-neutral-400">
+        <div className="pt-8 border-t border-black/10 dark:border-[#262626] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-body text-neutral-600 dark:text-neutral-400">
           <div>
             © 2026 IncuxAI. All rights reserved.
           </div>
 
           <div className="flex items-center gap-6">
-            <a href="#how-we-work" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+            <a href="#how-we-work" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
               Terms of Use
             </a>
-            <a href="#news" className="hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors">
+            <a href="#news" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
               Privacy Policy
             </a>
             <button
               onClick={scrollToTop}
-              className="flex items-center gap-1.5 hover:text-[#590907] dark:hover:text-[#E8D2B5] transition-colors ml-2 cursor-pointer font-medium"
+              className="flex items-center gap-1.5 hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors ml-2 cursor-pointer font-medium"
               aria-label="Back to top of page"
             >
               <span>Back to top</span>

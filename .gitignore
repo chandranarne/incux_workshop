@@ -1,0 +1,9 @@
+node_modules/
+*.log
+.DS_Store
+.vscode/
+
+# Media & Large Videos (exceeds GitHub 100MB limit)
+*.mp4
+video.mp4
+

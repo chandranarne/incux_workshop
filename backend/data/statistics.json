@@ -1,35 +1,45 @@
 {
   "title": "Impact Measured in Experiences",
-  "subtitle": "Direct reach across collegiate workshops and technical immersions.",
-  "footnote": "Attendance figure represents 950+ aggregate workshop participations (200 + 150 + 500 + 100) across campus sessions. It reflects recorded session attendances rather than unique individuals.",
+  "subtitle": "3,075 verified student participations across 21 specialized sessions in Andhra Pradesh and Telangana.",
+  "footnote": "Attendance figure represents 3,075 verified workshop, keynote, and hackathon participations across 21 sessions.",
+  "sessionSummary": [
+    { "type": "Workshops", "sessions": 13, "participants": "1,975", "highlight": "Collegiate & Online Deep Dives" },
+    { "type": "Guest lectures", "sessions": 6, "participants": "650", "highlight": "Executive & Domain Keynotes" },
+    { "type": "Hackathons", "sessions": 2, "participants": "450", "highlight": "24-48h Build Sprints" },
+    { "type": "All events", "sessions": 21, "participants": "3,075", "highlight": "Total Program Footprint", "isTotal": true }
+  ],
   "stats": [
     {
-      "id": "participations",
-      "value": 950,
+      "id": "all-events",
+      "value": 3075,
       "suffix": "+",
-      "label": "Student Participations",
-      "subtext": "Recorded attendance across reported college sessions"
+      "label": "All Events",
+      "badge": "21 Sessions",
+      "subtext": "3,075 students across 21 total sessions"
     },
     {
-      "id": "reported-workshops",
-      "value": 4,
-      "suffix": "",
-      "label": "Workshops with Reported Attendance",
-      "subtext": "IIT Hyderabad (2), Chalapathi College, Vijayawada"
+      "id": "workshops",
+      "value": 1975,
+      "suffix": "+",
+      "label": "Workshops",
+      "badge": "13 Sessions",
+      "subtext": "1,975 participants in 13 hands-on workshop cohorts"
     },
     {
-      "id": "states-reached",
-      "value": 2,
-      "suffix": "",
-      "label": "States Reached",
-      "subtext": "Andhra Pradesh & Telangana academic hubs"
+      "id": "guest-lectures",
+      "value": 650,
+      "suffix": "+",
+      "label": "Guest Lectures",
+      "badge": "6 Sessions",
+      "subtext": "650 participants in 6 company leadership sessions"
     },
     {
-      "id": "bootcamp-duration",
-      "value": 5,
-      "suffix": "-Day",
-      "label": "Bootcamp at GITAM",
-      "subtext": "Intensive hands-on AI curriculum at Hyderabad campus"
+      "id": "hackathons",
+      "value": 450,
+      "suffix": "+",
+      "label": "Hackathons",
+      "badge": "2 Sessions",
+      "subtext": "450 participants in 2 competitive build sprints"
     }
   ]
 }

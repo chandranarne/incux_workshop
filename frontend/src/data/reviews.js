@@ -28,14 +28,14 @@ export const studentReviews = [
   {
     id: "rev-3",
     name: "Karthik Subramanian",
-    college: "GITAM University, Hyderabad",
+    college: "Geethanjali College of Engineering & Technology, Hyderabad",
     branch: "B.Tech Information Technology",
     workshop: "5-Day Full-Stack AI System Bootcamp",
     tag: "FULL-STACK AI",
     rating: 5,
     avatar: "KS",
     headline: "Zero theory fluff. Connected streaming AI backends with React in production.",
-    review: "We built an end-to-end full stack platform with streaming responses, authentication, and Docker deployment. The industry practitioners from top tech firms reviewed our Git pull requests live in front of the batch.",
+    review: "We built an end-to-end full stack platform with streaming responses, authentication, and Docker deployment. Rakesh Sir, Rohith Sir, Saibaba Sir, and Yaswanth Sir reviewed our Git pull requests live in front of the batch.",
     date: "August 2026"
   },
   {
