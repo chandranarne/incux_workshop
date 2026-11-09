@@ -167,11 +167,11 @@ export default function App() {
         {/* Featured Workshops */}
         <FeaturedWorkshops workshops={featured} />
 
+        {/* Creative Scrolling Student Reviews Section (Placed ABOVE FAQs as requested) */}
+        <ReviewsSection />
+
         {/* Frequently Asked Questions */}
         <FaqSection />
-
-        {/* Creative Scrolling Student Reviews Section */}
-        <ReviewsSection />
 
         {/* Contact Us & Institutional Collaboration Section */}
         <ContactCTA />
