@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Lock, Mail, Building, ArrowRight, AlertCircle } from 'lucide-react';
+import { X, User, Lock, Mail, Building, ArrowRight, AlertCircle, Phone } from 'lucide-react';
 import { loginUser, registerCandidate } from '../services/api';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode = 'register' }) {
@@ -52,19 +52,19 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md p-6 sm:p-8 rounded-3xl bg-[#FDFCFA] dark:bg-[#141414] backdrop-blur-xl border border-black/10 dark:border-[#262626] shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-md p-5 sm:p-8 rounded-3xl bg-[#FDFCFA] dark:bg-[#141414] backdrop-blur-xl border border-black/10 dark:border-[#262626] shadow-2xl max-h-[92vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-neutral-100 dark:bg-[#0A0A0A] flex items-center justify-center text-neutral-600 dark:text-[#FACC15] hover:bg-[#FACC15] hover:text-[#0A0A0A] transition-colors cursor-pointer"
+          className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-neutral-100 dark:bg-[#0A0A0A] flex items-center justify-center text-neutral-600 dark:text-[#FACC15] hover:bg-[#FACC15] hover:text-[#0A0A0A] transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Modal Header */}
-        <div className="mb-6">
-          <h3 className="font-headline font-bold text-2xl text-neutral-950 dark:text-[#F5F5F5]">
+        <div className="mb-5 sm:mb-6 pr-6">
+          <h3 className="font-headline font-bold text-xl sm:text-2xl text-neutral-950 dark:text-[#F5F5F5]">
             {isRegistering ? 'Create Account' : 'Sign In'}
           </h3>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
@@ -73,7 +73,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
               : 'Enter your email and password to access your platform dashboard.'}
           </p>
         </div>
-
 
         {/* Error Notification */}
         {error && (
@@ -84,7 +83,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
         )}
 
         {/* Auth Form */}
-        <form onSubmit={handleSubmit} className="space-y-3.5">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
           {isRegistering && (
             <div>
               <label className="block text-xs font-mono text-neutral-700 dark:text-neutral-300 mb-1">
@@ -98,9 +97,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Enter your full name"
-                  className="w-full px-3.5 py-2.5 pl-9 rounded-xl bg-white dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm text-neutral-900 dark:text-[#F5F5F5] focus:border-[#FACC15] dark:focus:border-[#FACC15] outline-none"
+                  className="w-full pl-9 pr-3.5 py-2 sm:py-2.5 rounded-xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#0A0A0A] text-neutral-900 dark:text-[#F5F5F5] text-xs sm:text-sm focus:outline-none focus:border-[#FACC15] transition-colors"
                 />
-                <User className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+                <User className="absolute left-3 top-2.5 sm:top-3 w-4 h-4 text-neutral-400 pointer-events-none" />
               </div>
             </div>
           )}
@@ -116,10 +115,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                 required
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="Enter your email"
-                className="w-full px-3.5 py-2.5 pl-9 rounded-xl bg-white dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm text-neutral-900 dark:text-[#F5F5F5] focus:border-[#FACC15] dark:focus:border-[#FACC15] outline-none"
+                placeholder="name@university.edu or gmail"
+                className="w-full pl-9 pr-3.5 py-2 sm:py-2.5 rounded-xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#0A0A0A] text-neutral-900 dark:text-[#F5F5F5] text-xs sm:text-sm focus:outline-none focus:border-[#FACC15] transition-colors"
               />
-              <Mail className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+              <Mail className="absolute left-3 top-2.5 sm:top-3 w-4 h-4 text-neutral-400 pointer-events-none" />
             </div>
           </div>
 
@@ -135,51 +134,64 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 pl-9 rounded-xl bg-white dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm text-neutral-900 dark:text-[#F5F5F5] focus:border-[#FACC15] dark:focus:border-[#FACC15] outline-none"
+                className="w-full pl-9 pr-3.5 py-2 sm:py-2.5 rounded-xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#0A0A0A] text-neutral-900 dark:text-[#F5F5F5] text-xs sm:text-sm focus:outline-none focus:border-[#FACC15] transition-colors"
               />
-              <Lock className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+              <Lock className="absolute left-3 top-2.5 sm:top-3 w-4 h-4 text-neutral-400 pointer-events-none" />
             </div>
           </div>
 
           {isRegistering && (
-            <div>
-              <label className="block text-xs font-mono text-neutral-700 dark:text-neutral-300 mb-1">
-                College / Institution Name
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  name="institution"
-                  value={formData.institution}
-                  onChange={handleChange}
-                  placeholder="Enter your college or university"
-                  className="w-full px-3.5 py-2.5 pl-9 rounded-xl bg-white dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm text-neutral-900 dark:text-[#F5F5F5] focus:border-[#FACC15] dark:focus:border-[#FACC15] outline-none"
-                />
-                <Building className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+            <>
+              <div>
+                <label className="block text-xs font-mono text-neutral-700 dark:text-neutral-300 mb-1">
+                  Institution / Organization
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="institution"
+                    value={formData.institution}
+                    onChange={handleChange}
+                    placeholder="e.g. Hindu College Guntur, IIT Hyderabad"
+                    className="w-full pl-9 pr-3.5 py-2 sm:py-2.5 rounded-xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#0A0A0A] text-neutral-900 dark:text-[#F5F5F5] text-xs sm:text-sm focus:outline-none focus:border-[#FACC15] transition-colors"
+                  />
+                  <Building className="absolute left-3 top-2.5 sm:top-3 w-4 h-4 text-neutral-400 pointer-events-none" />
+                </div>
               </div>
-            </div>
+
+              <div>
+                <label className="block text-xs font-mono text-neutral-700 dark:text-neutral-300 mb-1">
+                  Contact Mobile (WhatsApp)
+                </label>
+                <div className="relative">
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="+91 98765 43210"
+                    className="w-full pl-9 pr-3.5 py-2 sm:py-2.5 rounded-xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#0A0A0A] text-neutral-900 dark:text-[#F5F5F5] text-xs sm:text-sm focus:outline-none focus:border-[#FACC15] transition-colors"
+                  />
+                  <Phone className="absolute left-3 top-2.5 sm:top-3 w-4 h-4 text-neutral-400 pointer-events-none" />
+                </div>
+              </div>
+            </>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 mt-2 rounded-xl bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-black text-sm uppercase tracking-wider shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full mt-4 py-3 rounded-xl bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-yellow-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
-            {loading ? (
-              <span>Authenticating...</span>
-            ) : (
-              <>
-                <span>{isRegistering ? 'Create Account' : 'Sign In'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
+            <span>{loading ? 'Processing...' : isRegistering ? 'Create Account' : 'Sign In to Dashboard'}</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
-        {/* Toggle between Login and Register */}
-        <div className="mt-5 pt-4 border-t border-black/10 dark:border-[#262626] text-center text-xs font-mono">
+        {/* Mode Toggle */}
+        <div className="mt-5 text-center text-xs text-neutral-500 dark:text-neutral-400">
           {isRegistering ? (
-            <p className="text-neutral-600 dark:text-neutral-400">
+            <p>
               Already registered?{' '}
               <button
                 type="button"
@@ -187,13 +199,13 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                   setIsRegistering(false);
                   setError('');
                 }}
-                className="text-amber-600 dark:text-[#FACC15] font-bold underline ml-1 hover:opacity-80 cursor-pointer"
+                className="text-amber-600 dark:text-[#FACC15] font-semibold hover:underline cursor-pointer"
               >
                 Sign in here
               </button>
             </p>
           ) : (
-            <p className="text-neutral-600 dark:text-neutral-400">
+            <p>
               Don't have an account?{' '}
               <button
                 type="button"
@@ -201,9 +213,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                   setIsRegistering(true);
                   setError('');
                 }}
-                className="text-amber-600 dark:text-[#FACC15] font-bold underline ml-1 hover:opacity-80 cursor-pointer"
+                className="text-amber-600 dark:text-[#FACC15] font-semibold hover:underline cursor-pointer"
               >
-                Create free account
+                Register as candidate
               </button>
             </p>
           )}

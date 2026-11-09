@@ -68,78 +68,50 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
           role="dialog"
           aria-modal="true"
           aria-label="Navigation Menu"
-          className="fixed inset-0 z-50 bg-[#FDFCFA]/98 dark:bg-[#0A0A0A]/98 backdrop-blur-3xl flex flex-col justify-between p-6 sm:p-12 md:p-16 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-[#FDFCFA]/98 dark:bg-[#0A0A0A]/98 backdrop-blur-3xl flex flex-col justify-between p-5 sm:p-10 md:p-16 overflow-y-auto"
         >
           {/* Ambient background glow */}
-          <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-[#FACC15]/10 dark:bg-[#FACC15]/20 blur-[140px] pointer-events-none rounded-full" />
+          <div className="absolute top-1/4 right-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-[#FACC15]/10 dark:bg-[#FACC15]/20 blur-[140px] pointer-events-none rounded-full" />
 
-          {/* Top Header inside overlay */}
-          <div className="relative z-10 flex items-center justify-between border-b border-black/10 dark:border-yellow-400/20 pb-6">
+          {/* Top Header inside overlay: Clean & Spaced for Mobile */}
+          <div className="relative z-10 flex items-center justify-between border-b border-black/10 dark:border-yellow-400/20 pb-4 sm:pb-6">
             <a
               href="#hero"
               onClick={() => handleLinkClick('#hero')}
-              className="font-headline font-bold text-2xl tracking-tighter text-[#0A0A0A] dark:text-[#F5F5F5] flex items-center gap-2"
+              className="font-headline font-bold text-xl sm:text-2xl tracking-tighter text-[#0A0A0A] dark:text-[#F5F5F5] flex items-center gap-2"
             >
               {siteConfig.brand.wordmark}
             </a>
 
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Theme Mode Toggle Inside Menu Top */}
+              {/* Theme Mode Toggle */}
               <button
                 onClick={toggleTheme}
                 type="button"
                 aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                className="flex items-center gap-2 px-3.5 py-2.5 rounded-full border text-xs font-mono font-bold transition-all bg-black/5 dark:bg-[#141414] border-black/15 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] cursor-pointer shadow-sm hover:scale-105"
+                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-full border text-xs font-mono font-bold transition-all bg-black/5 dark:bg-[#141414] border-black/15 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] cursor-pointer shadow-sm hover:scale-105 active:scale-95"
               >
                 {isDark ? (
                   <>
-                    <Sun className="w-4 h-4 text-[#FACC15]" />
-                    <span>Light Mode</span>
+                    <Sun className="w-3.5 h-3.5 text-[#FACC15]" />
+                    <span className="hidden xs:inline">Light Mode</span>
                   </>
                 ) : (
                   <>
-                    <Moon className="w-4 h-4 text-[#0A0A0A]" />
-                    <span>Dark Mode</span>
+                    <Moon className="w-3.5 h-3.5 text-[#0A0A0A]" />
+                    <span className="hidden xs:inline">Dark Mode</span>
                   </>
                 )}
               </button>
 
-              {/* Login / Register Button (Beside Dark Mode) */}
-              {!currentUser ? (
-                <button
-                  onClick={() => {
-                    onClose();
-                    onOpenAuth('register');
-                  }}
-                  className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-xs uppercase tracking-wider shadow-sm hover:scale-105 transition-all cursor-pointer"
-                >
-                  <LogIn className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>Let's Start with a Hello!</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    onClose();
-                    onOpenPortal();
-                  }}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-full border text-xs font-mono font-bold transition-all bg-[#FACC15]/15 border-[#FACC15]/40 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] cursor-pointer shadow-sm"
-                >
-                  {currentUser.role === 'admin' ? (
-                    <Shield className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
-                  ) : (
-                    <User className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
-                  )}
-                  <span>{currentUser.name.split(' ')[0]}</span>
-                </button>
-              )}
-
+              {/* Close Button */}
               <motion.button
                 ref={closeBtnRef}
                 onClick={onClose}
                 whileHover={{ rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
                 aria-label="Close menu"
-                className="w-12 h-12 rounded-full bg-black/5 dark:bg-[#141414] border border-black/10 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:bg-[#FACC15] hover:text-[#0A0A0A] transition-colors duration-200 flex items-center justify-center cursor-pointer shadow-sm shrink-0"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/5 dark:bg-[#141414] border border-black/10 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:bg-[#FACC15] hover:text-[#0A0A0A] transition-colors duration-200 flex items-center justify-center cursor-pointer shadow-sm shrink-0"
               >
                 <X className="w-5 h-5" />
               </motion.button>
@@ -147,12 +119,12 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
           </div>
 
           {/* Center Nav Links - Staggered Motion */}
-          <nav className="relative z-10 my-auto py-8">
+          <nav className="relative z-10 my-auto py-6 sm:py-8">
             <motion.ul
               variants={navListVariants}
               initial="hidden"
               animate="visible"
-              className="space-y-3 sm:space-y-5"
+              className="space-y-2.5 sm:space-y-4"
             >
               {siteConfig.navigation.map((item, idx) => (
                 <motion.li key={item.label} variants={navItemVariants} className="overflow-hidden">
@@ -162,46 +134,46 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
                       e.preventDefault();
                       handleLinkClick(item.href);
                     }}
-                    className="group flex items-center justify-between py-1.5 text-4xl sm:text-6xl md:text-7xl font-headline font-bold text-[#0A0A0A] dark:text-[#F5F5F5] hover:text-[#EAB308] dark:hover:text-[#FACC15] transition-all tracking-tight"
+                    className="group flex items-center justify-between py-1 text-3xl sm:text-5xl md:text-6xl font-headline font-bold text-[#0A0A0A] dark:text-[#F5F5F5] hover:text-[#EAB308] dark:hover:text-[#FACC15] transition-all tracking-tight"
                   >
-                    <span className="flex items-center gap-4 sm:gap-6">
+                    <span className="flex items-center gap-3 sm:gap-6">
                       <span className="text-xs sm:text-sm font-mono text-[#EAB308] dark:text-[#FACC15] font-bold">
                         0{idx + 1}
                       </span>
-                      <span className="group-hover:translate-x-3 transition-transform duration-200">
+                      <span className="group-hover:translate-x-2 sm:group-hover:translate-x-3 transition-transform duration-200">
                         {item.label}
                       </span>
                     </span>
-                    <ArrowUpRight className="w-8 h-8 sm:w-10 sm:h-10 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-200 text-[#EAB308] dark:text-[#FACC15]" />
+                    <ArrowUpRight className="w-6 h-6 sm:w-8 sm:h-8 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-200 text-[#EAB308] dark:text-[#FACC15]" />
                   </a>
                 </motion.li>
               ))}
 
-              {/* Portal Action Inside Menu */}
-              <motion.li variants={navItemVariants} className="pt-6 border-t border-black/10 dark:border-yellow-400/20">
+              {/* Portal / Registration Action Inside Menu */}
+              <motion.li variants={navItemVariants} className="pt-4 sm:pt-6 border-t border-black/10 dark:border-yellow-400/20">
                 {currentUser ? (
                   <button
                     onClick={() => {
                       onClose();
                       onOpenPortal();
                     }}
-                    className="w-full text-left py-2 text-2xl sm:text-3xl font-headline font-bold text-[#0A0A0A] dark:text-[#FACC15] flex items-center justify-between cursor-pointer"
+                    className="w-full text-left py-2 text-xl sm:text-2xl font-headline font-bold text-[#0A0A0A] dark:text-[#FACC15] flex items-center justify-between cursor-pointer"
                   >
                     <span>Open {currentUser.role === 'admin' ? 'Admin Hub' : 'Candidate Portal'}</span>
-                    <span className="text-xs font-mono px-3.5 py-1.5 rounded-full bg-[#FACC15]/15 border border-[#FACC15]/40 text-[#0A0A0A] dark:text-[#FACC15] font-bold">
-                      Active Session
+                    <span className="text-xs font-mono px-3 py-1 rounded-full bg-[#FACC15]/15 border border-[#FACC15]/40 text-[#0A0A0A] dark:text-[#FACC15] font-bold">
+                      Active
                     </span>
                   </button>
                 ) : (
-                  <div className="flex flex-wrap items-center gap-4 py-2">
+                  <div className="py-2">
                     <button
                       onClick={() => {
                         onClose();
                         onOpenAuth('register');
                       }}
-                      className="px-6 py-3.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-sm uppercase tracking-wider shadow-lg shadow-yellow-500/25 hover:scale-105 transition-all cursor-pointer flex items-center gap-2"
+                      className="w-full sm:w-auto justify-center px-6 py-3.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-sm uppercase tracking-wider shadow-lg shadow-yellow-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
                     >
-                      <LogIn className="w-4 h-4" />
+                      <Sparkles className="w-4 h-4 fill-[#0A0A0A]" />
                       <span>Let's Start with a Hello!</span>
                     </button>
                   </div>
@@ -211,18 +183,18 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
           </nav>
 
           {/* Bottom Footer inside overlay */}
-          <div className="relative z-10 pt-6 border-t border-black/10 dark:border-yellow-400/20 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-mono">
+          <div className="relative z-10 pt-4 sm:pt-6 border-t border-black/10 dark:border-yellow-400/20 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 text-xs font-mono">
             <div>
-              <span className="text-black/60 dark:text-yellow-400/70 block mb-1 font-bold text-[11px] tracking-wider uppercase">
+              <span className="text-black/60 dark:text-yellow-400/70 block mb-0.5 font-bold text-[10px] sm:text-[11px] tracking-wider uppercase">
                 DIRECT INQUIRY &amp; MOBILE
               </span>
-              <p className="text-[#0A0A0A] dark:text-[#F5F5F5] text-sm font-semibold">
+              <p className="text-[#0A0A0A] dark:text-[#F5F5F5] text-xs sm:text-sm font-semibold">
                 info@incuxai.com • +91 7665061289
               </p>
             </div>
             <div className="flex items-center justify-start md:justify-end gap-2 text-[#EAB308] dark:text-[#FACC15]">
-              <Sparkles className="w-4 h-4 text-[#FACC15]" />
-              <span className="text-[#0A0A0A] dark:text-[#F5F5F5] font-medium text-sm">
+              <Sparkles className="w-3.5 h-3.5 text-[#FACC15]" />
+              <span className="text-[#0A0A0A] dark:text-[#F5F5F5] font-medium text-xs sm:text-sm">
                 IncuxAI Workshop Initiative 2026
               </span>
             </div>

@@ -15,10 +15,10 @@ export default function FloatingConnectWidget({ onOpenAuth, onOpenPortal, curren
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 font-body select-none">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 font-body select-none">
       {/* Expanded Popover */}
       {isOpen && (
-        <div className="mb-4 w-80 sm:w-88 rounded-3xl bg-[#FDFCFA] dark:bg-[#141414] backdrop-blur-xl border border-black/10 dark:border-[#262626] shadow-2xl p-5 animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="mb-3 sm:mb-4 w-[calc(100vw-32px)] sm:w-88 max-w-sm rounded-3xl bg-[#FDFCFA] dark:bg-[#141414] backdrop-blur-xl border border-black/10 dark:border-[#262626] shadow-2xl p-4 sm:p-5 animate-in fade-in slide-in-from-bottom-5 duration-200">
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-black/10 dark:border-[#262626]">
             <div className="flex items-center gap-2">
@@ -37,12 +37,12 @@ export default function FloatingConnectWidget({ onOpenAuth, onOpenPortal, curren
           </div>
 
           {/* Quick Body */}
-          <p className="mt-3 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-normal">
+          <p className="mt-2.5 sm:mt-3 text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-normal">
             Looking to register for upcoming cohorts or get in touch with IncuxAI?
           </p>
 
           {/* Direct Actions */}
-          <div className="mt-4 space-y-2">
+          <div className="mt-3.5 space-y-2">
             <button
               onClick={scrollToUpcoming}
               className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#0A0A0A] hover:bg-neutral-50 dark:hover:bg-[#1A1A1A] border border-black/10 dark:border-[#262626] hover:border-[#FACC15] dark:hover:border-[#FACC15] transition-all text-left group cursor-pointer"
@@ -60,7 +60,7 @@ export default function FloatingConnectWidget({ onOpenAuth, onOpenPortal, curren
                   </div>
                 </div>
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-neutral-400 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 text-neutral-400 group-hover:text-amber-600 dark:group-hover:text-[#FACC15] transition-colors" />
             </button>
 
             <button
@@ -69,52 +69,49 @@ export default function FloatingConnectWidget({ onOpenAuth, onOpenPortal, curren
             >
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-xl bg-[#FACC15]/15 text-amber-600 dark:text-[#FACC15] flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Send className="w-3.5 h-3.5" />
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-neutral-900 dark:text-[#F5F5F5] group-hover:text-amber-600 dark:group-hover:text-[#FACC15] transition-colors">
-                    Direct Contact &amp; Inquiries
+                    Host a Workshop
                   </div>
                   <div className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
-                    Reach Out Directly
+                    University &amp; College Inquiries
                   </div>
                 </div>
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-neutral-400 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 text-neutral-400 group-hover:text-amber-600 dark:group-hover:text-[#FACC15] transition-colors" />
             </button>
           </div>
 
-          {/* Quick Contacts Footer */}
-          <div className="mt-4 pt-3 border-t border-black/10 dark:border-[#262626] flex items-center justify-between text-[11px] font-mono text-neutral-600 dark:text-neutral-300">
-            <a
-              href="mailto:info@incuxai.com"
-              className="flex items-center gap-1.5 hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors"
-            >
-              <Mail className="w-3 h-3" />
-              <span>info@incuxai.com</span>
-            </a>
-            <a
-              href="https://wa.me/917665061289"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors font-semibold"
-            >
-              <Phone className="w-3 h-3" />
+          {/* Quick Contact info */}
+          <div className="mt-3.5 pt-3 border-t border-black/10 dark:border-[#262626] flex items-center justify-between text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
+            <span className="flex items-center gap-1.5">
+              <Phone className="w-3 h-3 text-[#FACC15]" />
               <span>+91 7665061289</span>
-            </a>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Mail className="w-3 h-3 text-[#FACC15]" />
+              <span>info@incuxai.com</span>
+            </span>
           </div>
         </div>
       )}
 
-      {/* Floating Trigger Pill */}
+      {/* Floating Toggle Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="group relative flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-full bg-[#0A0A0A] dark:bg-[#FACC15] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-bold text-xs uppercase tracking-wider shadow-2xl shadow-yellow-500/20 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-[#FACC15]/40"
-        aria-label="Toggle quick connect widget"
+        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#0A0A0A] dark:bg-[#FACC15] text-[#FACC15] dark:text-[#0A0A0A] shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-[#FACC15]/30 group"
+        aria-label="Toggle contact help menu"
       >
-        <span className="w-2.5 h-2.5 rounded-full bg-[#FACC15] dark:bg-[#0A0A0A]"></span>
-        <span>{isOpen ? 'Close' : 'Connect with Us'}</span>
-        <MessageSquare className="w-4 h-4 ml-0.5 transition-transform group-hover:rotate-12" />
+        {isOpen ? (
+          <X className="w-5 h-5 sm:w-6 sm:h-6" />
+        ) : (
+          <div className="relative">
+            <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-[#0A0A0A] animate-pulse" />
+          </div>
+        )}
       </button>
     </div>
   );
