@@ -143,7 +143,7 @@ export default function App() {
       {/* Main Content: 11 Sections in Exact Fixed Order + Live Registration Portal */}
       <main>
         {/* Section 2: Hero */}
-        <Hero />
+        <Hero onOpenRegistration={openAuth} />
 
         {/* Section: Bridging Education & Industry (Directly below landing page) */}
         <About onOpenRegistration={openAuth} />

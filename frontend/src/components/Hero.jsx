@@ -1,105 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowDownRight, ChevronDown, ChevronLeft, ChevronRight, Eye, Grid, Sparkles, MapPin, Users } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowDownRight, Sparkles, Code, Users, Award, BookOpen, Compass } from 'lucide-react';
 import { siteConfig } from '../data/config';
-import realCampusCohort from '../assets/real_campus_cohort.jpg';
-import realHandsOnLab from '../assets/real_hands_on_lab.jpg';
-import realHackathon2k26 from '../assets/real_hackathon_2k26.jpg';
-import realStageCertifications from '../assets/real_stage_certifications.jpg';
-import realStaircaseSprint from '../assets/real_staircase_sprint.jpg';
-import guestLectureSpeakerImg from '../assets/guest_lecture_speaker.jpg';
-import aiPresentationSpeakerImg from '../assets/ai_presentation_speaker.jpg';
-import campusOutdoorCohortImg from '../assets/campus_outdoor_cohort.jpg';
-import staircaseCohortImg from '../assets/staircase_group_cohort.jpg';
-import staircaseWideImg from '../assets/staircase_group_wide.jpg';
+import { eventPhotos, allEventPhotos } from '../data/eventPhotos';
 
-// Watermark photos array for ambient background streams
-const watermarkPhotos = [
-  guestLectureSpeakerImg,
-  campusOutdoorCohortImg,
-  aiPresentationSpeakerImg,
-  staircaseCohortImg,
-  staircaseWideImg,
-  realCampusCohort,
-  realHandsOnLab,
-  realHackathon2k26,
-  realStageCertifications,
-  realStaircaseSprint
-];
-
-// Real authentic workshop photographs provided by the user with asymmetric editorial layout parameters
-const workshopGallery = [
-  {
-    id: 1,
-    image: aiPresentationSpeakerImg,
-    category: "GENERATIVE AI",
-    tag: "CAMPUS MASTERCLASS",
-    number: "01",
-    title: "Generative AI & Career Opportunities",
-    location: "Hindu College of Engineering & Tech, Guntur",
-    highlight: "150 Engineers • Tech Mahindra Speaker",
-    desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-start lg:ml-[5%] xl:ml-[8%]"
-  },
-  {
-    id: 2,
-    image: guestLectureSpeakerImg,
-    category: "CORE ENGINEERING",
-    tag: "LIVE CLASSROOM SESSION",
-    number: "02",
-    title: "Java Programming Fundamentals",
-    location: "Hindu College of Engineering & Tech, Guntur",
-    highlight: "65 Students • Backend Developer Lead",
-    desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-end lg:mr-[4%] xl:mr-[8%]"
-  },
-  {
-    id: 3,
-    image: campusOutdoorCohortImg,
-    category: "CAMPUS FOOTPRINT",
-    tag: "COLLEGIATE COHORT",
-    number: "03",
-    title: "NLP & Enterprise Systems Cohort",
-    location: "Campus Technical Auditoriums",
-    highlight: "Deloitte & TCS Industry Mentors",
-    desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[310px] self-start lg:ml-[10%] xl:ml-[14%]"
-  },
-  {
-    id: 4,
-    image: staircaseCohortImg,
-    category: "LEADERSHIP & HONORS",
-    tag: "MASTERCLASS SPRINT",
-    number: "04",
-    title: "Soft Skills & Personality Development",
-    location: "Hindu College, Guntur",
-    highlight: "300+ Students • TCS Delivery Manager",
-    desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-end lg:mr-[6%] xl:mr-[10%]"
-  },
-  {
-    id: 5,
-    image: realHandsOnLab,
-    category: "100% PRACTICAL LABS",
-    tag: "PRODUCTION LABS",
-    number: "05",
-    title: "Hands-On Systems & Code Labs",
-    location: "Advanced Compute & Systems Labs",
-    highlight: "Live IDE Debugging",
-    desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-center"
-  },
-  {
-    id: 6,
-    image: realHackathon2k26,
-    category: "COMPETITIVE SPRINT",
-    tag: "AI HACKATHON 2K26",
-    number: "06",
-    title: "AI x Regional Hackathon Sprints",
-    location: "Regional Technical Hubs",
-    highlight: "Real-World AI Solutions",
-    desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[310px] self-start"
-  }
-];
-
-export default function Hero() {
-  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
-
+export default function Hero({ onOpenRegistration }) {
   useEffect(() => {
     try {
       localStorage.setItem('incuxai_hero_viewed', 'true');
@@ -123,60 +28,90 @@ export default function Hero() {
     })
   };
 
+  // Divide photos into distinct sets for unique scrolling streams
+  const stream1 = allEventPhotos.slice(0, 10);
+  const stream2 = allEventPhotos.slice(10, 20);
+  const stream3 = allEventPhotos.slice(20, 30);
+  const stream4 = allEventPhotos.slice(30, 40);
+  const streamHorizontal1 = allEventPhotos.slice(0, 15);
+  const streamHorizontal2 = allEventPhotos.slice(15, 30);
+
   return (
     <section
       id="hero"
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] transition-colors duration-200 overflow-hidden"
+      className="relative w-full min-h-[92vh] lg:min-h-screen bg-[#FDFCFA] dark:bg-[#0A0A0A] transition-colors duration-200 overflow-hidden flex flex-col justify-between"
       aria-label="Hero Section"
     >
       {/* ========================================================================= */}
-      {/* AMBIENT WATERMARK BACKGROUND PHOTO STREAMS                                 */}
-      {/* Up-to-Down (Vertical) & Left-to-Right, Right-to-Left (Horizontal)          */}
+      {/* AMBIENT WATERMARK BACKGROUND PHOTO STREAMS (Full Hero Background Animation)*/}
+      {/* Up-to-Down, Down-to-Up (Vertical) & Left-to-Right, Right-to-Left (Horizontal)*/}
       {/* ========================================================================= */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
-        {/* Soft Vignettes for Flawless Text Readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FDFCFA]/95 via-[#FDFCFA]/80 to-[#FDFCFA]/95 dark:from-[#0A0A0A]/95 dark:via-[#0A0A0A]/85 dark:to-[#0A0A0A]/95 z-10 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#FDFCFA] via-transparent to-[#FDFCFA] dark:from-[#0A0A0A] dark:via-transparent dark:to-[#0A0A0A] z-10 pointer-events-none" />
+        {/* Soft Radial Vignettes for 100% Foreground Text Readability */}
+        <div className="absolute inset-0 bg-radial from-transparent via-[#FDFCFA]/75 to-[#FDFCFA] dark:via-[#0A0A0A]/80 dark:to-[#0A0A0A] z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#FDFCFA]/90 via-transparent to-[#FDFCFA] dark:from-[#0A0A0A]/90 dark:via-transparent dark:to-[#0A0A0A] z-10 pointer-events-none" />
 
-        {/* 1. VERTICAL WATERMARK STREAM: Up to Down (Left Column) */}
-        <div className="absolute -top-36 left-2 sm:left-8 w-44 sm:w-60 opacity-[0.14] dark:opacity-[0.10] filter grayscale contrast-125 z-0">
+        {/* 1. VERTICAL STREAM 1 (Far Left): Scrolling Up to Down */}
+        <div className="absolute -top-32 left-1 sm:left-6 w-36 sm:w-52 opacity-[0.20] dark:opacity-[0.14] filter grayscale contrast-125 z-0">
           <div className="animate-watermark-down flex flex-col gap-5">
-            {watermarkPhotos.concat(watermarkPhotos).map((img, idx) => (
-              <div key={`vm-l-${idx}`} className="w-full h-32 sm:h-44 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
-                <img src={img} alt="Campus Workshop Watermark" className="w-full h-full object-cover" />
+            {stream1.concat(stream1).map((img, idx) => (
+              <div key={`stream1-${idx}`} className="w-full h-28 sm:h-40 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
+                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
         </div>
 
-        {/* 2. VERTICAL WATERMARK STREAM: Up to Down (Right Column) */}
-        <div className="absolute -top-24 right-2 sm:right-12 w-48 sm:w-64 opacity-[0.13] dark:opacity-[0.09] filter grayscale contrast-125 z-0 hidden md:block">
-          <div className="animate-watermark-down flex flex-col gap-5" style={{ animationDelay: '-12s', animationDuration: '40s' }}>
-            {watermarkPhotos.slice().reverse().concat(watermarkPhotos).map((img, idx) => (
-              <div key={`vm-r-${idx}`} className="w-full h-36 sm:h-48 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
-                <img src={img} alt="Campus Workshop Watermark" className="w-full h-full object-cover" />
+        {/* 2. VERTICAL STREAM 2 (Mid-Left): Scrolling Down to Up */}
+        <div className="absolute -top-24 left-[24%] sm:left-[26%] w-36 sm:w-52 opacity-[0.16] dark:opacity-[0.11] filter grayscale contrast-125 z-0 hidden md:block">
+          <div className="animate-watermark-up flex flex-col gap-5">
+            {stream2.concat(stream2).map((img, idx) => (
+              <div key={`stream2-${idx}`} className="w-full h-28 sm:h-40 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
+                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
         </div>
 
-        {/* 3. HORIZONTAL WATERMARK STREAM: Left to Right (Upper Tier) */}
-        <div className="absolute top-[12%] inset-x-0 h-28 sm:h-36 opacity-[0.12] dark:opacity-[0.08] filter grayscale contrast-125 z-0 overflow-hidden">
+        {/* 3. VERTICAL STREAM 3 (Mid-Right): Scrolling Up to Down */}
+        <div className="absolute -top-36 right-[24%] sm:right-[26%] w-36 sm:w-52 opacity-[0.16] dark:opacity-[0.11] filter grayscale contrast-125 z-0 hidden lg:block">
+          <div className="animate-watermark-down flex flex-col gap-5" style={{ animationDuration: '40s' }}>
+            {stream3.concat(stream3).map((img, idx) => (
+              <div key={`stream3-${idx}`} className="w-full h-28 sm:h-40 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
+                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. VERTICAL STREAM 4 (Far Right): Scrolling Down to Up */}
+        <div className="absolute -top-24 right-1 sm:right-6 w-36 sm:w-52 opacity-[0.20] dark:opacity-[0.14] filter grayscale contrast-125 z-0 hidden sm:block">
+          <div className="animate-watermark-up flex flex-col gap-5" style={{ animationDuration: '42s' }}>
+            {stream4.concat(stream4).map((img, idx) => (
+              <div key={`stream4-${idx}`} className="w-full h-28 sm:h-40 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
+                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 5. HORIZONTAL STREAM 1 (Upper Tier): Left to Right */}
+        <div className="absolute top-[8%] inset-x-0 h-24 sm:h-32 opacity-[0.15] dark:opacity-[0.10] filter grayscale contrast-125 z-0 overflow-hidden">
           <div className="animate-watermark-ltr flex gap-5 w-max">
-            {watermarkPhotos.concat(watermarkPhotos).map((img, idx) => (
-              <div key={`hm-ltr-${idx}`} className="w-48 sm:w-64 h-28 sm:h-36 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
-                <img src={img} alt="Campus Workshop Watermark" className="w-full h-full object-cover" />
+            {streamHorizontal1.concat(streamHorizontal1).map((img, idx) => (
+              <div key={`h-ltr-${idx}`} className="w-44 sm:w-60 h-24 sm:h-32 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
+                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
         </div>
 
-        {/* 4. HORIZONTAL WATERMARK STREAM: Right to Left (Lower Tier) */}
-        <div className="absolute bottom-[10%] inset-x-0 h-28 sm:h-36 opacity-[0.12] dark:opacity-[0.08] filter grayscale contrast-125 z-0 overflow-hidden">
+        {/* 6. HORIZONTAL STREAM 2 (Lower Tier): Right to Left */}
+        <div className="absolute bottom-[14%] inset-x-0 h-24 sm:h-32 opacity-[0.15] dark:opacity-[0.10] filter grayscale contrast-125 z-0 overflow-hidden">
           <div className="animate-watermark-rtl flex gap-5 w-max">
-            {watermarkPhotos.slice().reverse().concat(watermarkPhotos).map((img, idx) => (
-              <div key={`hm-rtl-${idx}`} className="w-48 sm:w-64 h-28 sm:h-36 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
-                <img src={img} alt="Campus Workshop Watermark" className="w-full h-full object-cover" />
+            {streamHorizontal2.concat(streamHorizontal2).map((img, idx) => (
+              <div key={`h-rtl-${idx}`} className="w-44 sm:w-60 h-24 sm:h-32 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
+                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
@@ -191,159 +126,127 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* 
-        Nedbase-Style 2-Column Split Layout:
-        - Left Section (Desktop: 43% width, 100vh height, position: sticky, top: 0)
-        - Right Section (Desktop: 57% width, vertically scrolling workshop photographs)
-      */}
-      <div className="relative z-10 max-w-[1600px] mx-auto flex flex-col md:flex-row items-start">
+      {/* ========================================================================= */}
+      {/* HERO FOREGROUND CONTENT (Centered & Editorial Framing with Impact Grid)   */}
+      {/* ========================================================================= */}
+      <div className="relative z-20 max-w-5xl mx-auto px-6 sm:px-10 lg:px-12 pt-16 sm:pt-24 lg:pt-28 pb-12 flex flex-col items-center text-center my-auto">
         
-        {/* ========================================================================= */}
-        {/* LEFT SECTION: Stationary Sticky Hero Content (43% on LG, 40% on Tablet)  */}
-        {/* ========================================================================= */}
-        <div className="w-full md:w-[40%] lg:w-[43%] md:sticky md:top-0 md:h-screen flex flex-col justify-center px-6 sm:px-10 lg:px-[6%] xl:px-[8%] py-12 lg:py-16 z-20 shrink-0">
-          
-          {/* Main Heading: 38px–52px Desktop */}
-          <h1 className="font-headline font-black text-3xl sm:text-4xl lg:text-[40px] xl:text-[48px] tracking-tight text-[#0A0A0A] dark:text-[#F5F5F5] leading-[1.08]">
-            <motion.span
-              custom={0}
-              initial="hidden"
-              animate="visible"
-              variants={lineVariants}
-              className="block uppercase tracking-tight text-[#0A0A0A] dark:text-[#FACC15]"
-            >
-              Workshops
-            </motion.span>
-            <motion.span
-              custom={1}
-              initial="hidden"
-              animate="visible"
-              variants={lineVariants}
-              className="block text-[#0A0A0A] dark:text-[#F5F5F5]"
-            >
-              that turn knowledge
-            </motion.span>
-            <motion.span
-              custom={2}
-              initial="hidden"
-              animate="visible"
-              variants={lineVariants}
-              className="block font-light italic font-serif text-[#0A0A0A]/90 dark:text-[#F5F5F5]"
-            >
-              into{' '}
-              <span className="not-italic font-headline font-black text-transparent bg-clip-text bg-gradient-to-r from-[#EAB308] via-[#FACC15] to-[#EAB308] dark:from-[#FACC15] dark:via-[#FEF08A] dark:to-[#FACC15]">
-                real-world skills.
-              </span>
-            </motion.span>
-          </h1>
+        {/* Subtle Pre-header Pill */}
+        <motion.div
+          initial={{ opacity: 0, y: -15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#0A0A0A]/5 dark:bg-[#FACC15]/10 border border-black/10 dark:border-[#FACC15]/30 backdrop-blur-md mb-6 shadow-xs"
+        >
+          <span className="w-2 h-2 rounded-full bg-[#EAB308] dark:bg-[#FACC15] animate-pulse" />
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-neutral-900 dark:text-[#FACC15]">
+            Enterprise-Grade Campus Workshops &amp; Hackathons
+          </span>
+        </motion.div>
 
-          {/* Description */}
-          <motion.p
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.3 }}
-            className="mt-4 text-[15px] lg:text-[16px] text-[#404040] dark:text-[#D4D4D4] font-normal leading-relaxed max-w-md"
+        {/* Main Heading */}
+        <h1 className="font-headline font-black text-4xl sm:text-6xl lg:text-7xl tracking-tight text-[#0A0A0A] dark:text-[#F5F5F5] leading-[1.06] max-w-4xl">
+          <motion.span
+            custom={0}
+            initial="hidden"
+            animate="visible"
+            variants={lineVariants}
+            className="block uppercase tracking-tight text-[#0A0A0A] dark:text-[#FACC15]"
           >
-            IncuxAI bridges academic foundations and enterprise engineering demands through intensive,
-            practitioner-led workshops at colleges, universities, and technical research institutions.
-          </motion.p>
-
-          {/* High Impact Yellow & Black CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.45 }}
-            className="mt-6 flex flex-wrap items-center gap-4"
+            Workshops
+          </motion.span>
+          <motion.span
+            custom={1}
+            initial="hidden"
+            animate="visible"
+            variants={lineVariants}
+            className="block text-[#0A0A0A] dark:text-[#F5F5F5] mt-1"
           >
-            <button
-              onClick={scrollToWork}
-              className="group px-6 py-3 rounded-full bg-[#0A0A0A] hover:bg-[#1F1F1F] text-[#FACC15] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] dark:text-[#0A0A0A] font-headline font-bold text-xs sm:text-sm uppercase tracking-wider shadow-xl shadow-black/20 dark:shadow-yellow-500/25 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-3 cursor-pointer"
-            >
-              <span>Explore Our Work</span>
-              <ArrowDownRight className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:translate-y-1" />
-            </button>
-          </motion.div>
+            that turn knowledge
+          </motion.span>
+          <motion.span
+            custom={2}
+            initial="hidden"
+            animate="visible"
+            variants={lineVariants}
+            className="block font-light italic font-serif text-[#0A0A0A]/90 dark:text-[#F5F5F5] mt-1"
+          >
+            into{' '}
+            <span className="not-italic font-headline font-black text-transparent bg-clip-text bg-gradient-to-r from-[#D97706] via-[#FACC15] to-[#EAB308] dark:from-[#FACC15] dark:via-[#FEF08A] dark:to-[#FACC15]">
+              real-world skills.
+            </span>
+          </motion.span>
+        </h1>
 
-        </div>
+        {/* Subtitle / Description */}
+        <motion.p
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.3 }}
+          className="mt-6 text-base sm:text-lg lg:text-xl text-[#374151] dark:text-[#D4D4D4] font-normal leading-relaxed max-w-2xl"
+        >
+          IncuxAI bridges academic foundations and enterprise engineering demands through intensive,
+          practitioner-led workshops, competitive hackathons, and global keynote lectures at universities across India.
+        </motion.p>
 
-        {/* ========================================================================= */}
-        {/* RIGHT SECTION: Workshop Photo Gallery                                    */}
-        {/* ========================================================================= */}
-        <div className="w-full md:w-[60%] lg:w-[57%] px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 md:pt-16 pb-12 flex flex-col justify-center z-10">
-          {/* Featured Reel Card */}
-          <div className="relative rounded-3xl overflow-hidden border border-black/15 dark:border-[#262626] bg-neutral-950 shadow-2xl p-2 sm:p-3">
-            <div className="relative h-[300px] sm:h-[380px] lg:h-[420px] rounded-2xl overflow-hidden bg-neutral-900 group">
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={activePhotoIdx}
-                  src={workshopGallery[activePhotoIdx].image}
-                  alt={workshopGallery[activePhotoIdx].title}
-                  initial={{ opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.02 }}
-                  transition={{ duration: 0.4 }}
-                  className="w-full h-full object-cover"
-                />
-              </AnimatePresence>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-              
-              {/* Overlay details */}
-              <div className="absolute bottom-4 left-4 right-4 text-white flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <span className="px-2.5 py-1 rounded-full bg-[#FACC15] text-[#0A0A0A] text-[10px] font-mono font-bold uppercase tracking-wider inline-block mb-1.5 shadow-sm">
-                    {workshopGallery[activePhotoIdx].tag}
-                  </span>
-                  <h3 className="font-headline font-bold text-base sm:text-lg text-white truncate">
-                    {workshopGallery[activePhotoIdx].title}
-                  </h3>
-                  <p className="text-xs font-mono text-white/75 truncate flex items-center gap-1.5 mt-0.5">
-                    <MapPin className="w-3.5 h-3.5 text-[#FACC15] shrink-0" />
-                    <span>{workshopGallery[activePhotoIdx].location} • {workshopGallery[activePhotoIdx].highlight}</span>
-                  </p>
-                </div>
-                
-                {/* Prev / Next buttons */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    onClick={() => setActivePhotoIdx((prev) => (prev === 0 ? workshopGallery.length - 1 : prev - 1))}
-                    aria-label="Previous workshop photo"
-                    className="w-9 h-9 rounded-full bg-black/60 hover:bg-[#FACC15] hover:text-[#0A0A0A] border border-white/20 flex items-center justify-center text-white transition-all cursor-pointer"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setActivePhotoIdx((prev) => (prev === workshopGallery.length - 1 ? 0 : prev + 1))}
-                    aria-label="Next workshop photo"
-                    className="w-9 h-9 rounded-full bg-black/60 hover:bg-[#FACC15] hover:text-[#0A0A0A] border border-white/20 flex items-center justify-center text-white transition-all cursor-pointer"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
+        {/* Action CTAs */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.45 }}
+          className="mt-8 flex flex-wrap items-center justify-center gap-4"
+        >
+          {/* Primary CTA: Let's Start with a Hello! -> Opens Registration */}
+          <button
+            onClick={() => onOpenRegistration ? onOpenRegistration('register') : scrollToWork()}
+            className="group px-7 py-3.5 rounded-full bg-[#0A0A0A] hover:bg-[#1F1F1F] text-[#FACC15] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] dark:text-[#0A0A0A] font-headline font-bold text-sm uppercase tracking-wider shadow-xl shadow-black/20 dark:shadow-yellow-500/25 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-3 cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4 text-[#FACC15] dark:text-[#0A0A0A]" />
+            <span>Let's Start with a Hello!</span>
+          </button>
 
-            {/* Thumbnails row */}
-            <div className="mt-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1">
-              {workshopGallery.map((photo, idx) => (
-                <button
-                  key={photo.id}
-                  onClick={() => setActivePhotoIdx(idx)}
-                  className={`relative shrink-0 w-16 h-12 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                    activePhotoIdx === idx
-                      ? 'border-[#FACC15] scale-105 shadow-md shadow-yellow-500/20'
-                      : 'border-white/10 opacity-60 hover:opacity-100 hover:border-white/40'
-                  }`}
-                >
-                  <img src={photo.image} alt={photo.title} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
+          {/* Secondary CTA: Explore Our Work */}
+          <button
+            onClick={scrollToWork}
+            className="group px-7 py-3.5 rounded-full bg-white/80 dark:bg-white/10 hover:bg-black/5 dark:hover:bg-white/15 text-neutral-900 dark:text-white border border-black/15 dark:border-white/20 font-headline font-bold text-sm uppercase tracking-wider backdrop-blur-md hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-sm"
+          >
+            <span>Explore Our Work</span>
+            <ArrowDownRight className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:translate-y-1" />
+          </button>
+        </motion.div>
+
+        {/* Live Impact Metrics Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="mt-12 sm:mt-14 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 w-full max-w-3xl"
+        >
+          <div className="p-4 rounded-2xl bg-white/85 dark:bg-[#141414]/85 border border-black/10 dark:border-white/10 backdrop-blur-md shadow-sm">
+            <span className="block font-headline font-black text-2xl sm:text-3xl text-neutral-950 dark:text-[#FACC15]">3,075+</span>
+            <span className="text-[11px] sm:text-xs font-mono uppercase tracking-wider text-neutral-600 dark:text-neutral-400 mt-1 block">Verified Students</span>
           </div>
-        </div>
+
+          <div className="p-4 rounded-2xl bg-white/85 dark:bg-[#141414]/85 border border-black/10 dark:border-white/10 backdrop-blur-md shadow-sm">
+            <span className="block font-headline font-black text-2xl sm:text-3xl text-neutral-950 dark:text-[#FACC15]">21+</span>
+            <span className="text-[11px] sm:text-xs font-mono uppercase tracking-wider text-neutral-600 dark:text-neutral-400 mt-1 block">Intensive Sessions</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white/85 dark:bg-[#141414]/85 border border-black/10 dark:border-white/10 backdrop-blur-md shadow-sm">
+            <span className="block font-headline font-black text-2xl sm:text-3xl text-neutral-950 dark:text-[#FACC15]">10+</span>
+            <span className="text-[11px] sm:text-xs font-mono uppercase tracking-wider text-neutral-600 dark:text-neutral-400 mt-1 block">Colleges &amp; Tech Hubs</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white/85 dark:bg-[#141414]/85 border border-black/10 dark:border-white/10 backdrop-blur-md shadow-sm">
+            <span className="block font-headline font-black text-2xl sm:text-3xl text-neutral-950 dark:text-[#FACC15]">100%</span>
+            <span className="text-[11px] sm:text-xs font-mono uppercase tracking-wider text-neutral-600 dark:text-neutral-400 mt-1 block">Industrial Sandboxes</span>
+          </div>
+        </motion.div>
+
       </div>
 
-      {/* Ticker / Highlights Marquee */}
-      <div className="relative z-10 w-full border-t border-black/10 dark:border-yellow-400/20 py-4 bg-white/75 dark:bg-[#0A0A0A]/75 backdrop-blur-md">
+      {/* Ticker / Highlights Marquee at Hero Bottom */}
+      <div className="relative z-20 w-full border-t border-black/10 dark:border-yellow-400/20 py-3.5 bg-white/85 dark:bg-[#0A0A0A]/85 backdrop-blur-md mt-auto">
         <div className="select-none overflow-hidden mask-gradient-x">
           <div className="flex w-max animate-marquee gap-8 sm:gap-12 px-4 text-xs font-mono font-bold tracking-wider uppercase text-[#0A0A0A]/80 dark:text-[#F5F5F5]/80">
             {[
