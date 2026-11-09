@@ -221,16 +221,16 @@ export default function Hero({ onOpenRegistration }) {
         <div className="select-none overflow-hidden mask-gradient-x">
           <div className="flex w-max animate-marquee gap-6 sm:gap-12 px-4 text-[11px] sm:text-xs font-mono font-bold tracking-wider uppercase text-[#0A0A0A]/80 dark:text-[#F5F5F5]/80">
             {[
-              "3,075+ Verified Student Participants",
-              "21 Specialised Technical Sessions",
+              "4,855+ Verified Student Participants",
+              "31 Specialised Technical Sessions",
               "Frontier GenAI & Agentic Architectures",
               "IIT Hyderabad Campus Cohorts",
               "Hindu College Guntur Guest Lectures",
               "Hands-on Industrial Code Sandboxes",
               "Enterprise Mentorship: Google • Walmart • Tech Mahindra • Deloitte • TCS"
             ].concat([
-              "3,075+ Verified Student Participants",
-              "21 Specialised Technical Sessions",
+              "4,855+ Verified Student Participants",
+              "31 Specialised Technical Sessions",
               "Frontier GenAI & Agentic Architectures",
               "IIT Hyderabad Campus Cohorts",
               "Hindu College Guntur Guest Lectures",

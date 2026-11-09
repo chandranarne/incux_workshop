@@ -47,8 +47,7 @@ export const workshopFormatDetails = {
     gallery: [
       { image: auditoriumImg, caption: 'Auditorium Session at IIT Hyderabad with 200+ attendees' },
       { image: w03, caption: 'Generative AI & Agentic Workflow Design Lab' },
-      { image: w06, caption: 'Full-Stack Agentic AI Immersion Cohort' },
-      { image: staircaseCohortImg, caption: 'Grand Cohort Commemoration at IIT Research Block' }
+      { image: w06, caption: 'Full-Stack Agentic AI Immersion Cohort' }
     ],
     overview: 'Workshops @ IIT are premier technical deep-dives conducted directly inside the world-class laboratories and auditoriums of Indian Institutes of Technology. Developed in coordination with IIT research scholars and seasoned industry architects, these cohorts bridge the gap between abstract academic math and real-world industrial software execution.',
     howItHelps: [

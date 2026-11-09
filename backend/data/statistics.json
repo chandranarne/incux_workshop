@@ -1,45 +1,45 @@
 {
   "title": "Impact Measured in Experiences",
-  "subtitle": "3,075+ verified student participations across 21 specialized sessions across India.",
-  "footnote": "Attendance figure represents 3,075 verified workshop, keynote, and hackathon participations across 21 sessions.",
+  "subtitle": "4,855+ verified student participations across 31 specialized sessions across India.",
+  "footnote": "Attendance figure represents 4,855 verified workshop, keynote, and hackathon participations across 31 sessions. Workshop metrics represent the combined count of both online and offline collegiate workshops.",
   "sessionSummary": [
-    { "type": "Workshops", "sessions": 13, "participants": "1,975", "highlight": "Collegiate & Online Deep Dives" },
-    { "type": "Guest lectures", "sessions": 6, "participants": "650", "highlight": "Executive & Domain Keynotes" },
-    { "type": "Hackathons", "sessions": 2, "participants": "450", "highlight": "24-48h Build Sprints" },
-    { "type": "All events", "sessions": 21, "participants": "3,075", "highlight": "Total Program Footprint", "isTotal": true }
+    { "type": "Workshops (Online & Offline)", "sessions": 18, "participants": "3,125", "highlight": "Combined Online & Offline Deep Dives" },
+    { "type": "Guest lectures", "sessions": 10, "participants": "1,180", "highlight": "Executive & Domain Keynotes" },
+    { "type": "Hackathons", "sessions": 3, "participants": "550", "highlight": "24-48h Build Sprints" },
+    { "type": "All events", "sessions": 31, "participants": "4,855", "highlight": "Total Program Footprint", "isTotal": true }
   ],
   "stats": [
     {
       "id": "all-events",
-      "value": 3075,
+      "value": 4855,
       "suffix": "+",
       "label": "All Events",
-      "badge": "21 Sessions",
-      "subtext": "3,075 students across 21 total sessions"
+      "badge": "31 Sessions",
+      "subtext": "4,855 students across 31 total sessions"
     },
     {
       "id": "workshops",
-      "value": 1975,
+      "value": 3125,
       "suffix": "+",
-      "label": "Workshops",
-      "badge": "13 Sessions",
-      "subtext": "1,975 participants in 13 hands-on workshop cohorts"
+      "label": "Workshops (Online & Offline)",
+      "badge": "18 Sessions",
+      "subtext": "3,125 participants in 18 combined online and offline workshop cohorts"
     },
     {
       "id": "guest-lectures",
-      "value": 650,
+      "value": 1180,
       "suffix": "+",
       "label": "Guest Lectures",
-      "badge": "6 Sessions",
-      "subtext": "650 participants in 6 company leadership sessions"
+      "badge": "10 Sessions",
+      "subtext": "1,180 participants in 10 company leadership sessions"
     },
     {
       "id": "hackathons",
-      "value": 450,
+      "value": 550,
       "suffix": "+",
       "label": "Hackathons",
-      "badge": "2 Sessions",
-      "subtext": "450 participants in 2 competitive build sprints"
+      "badge": "3 Sessions",
+      "subtext": "550 participants in 3 competitive build sprints"
     }
   ]
 }

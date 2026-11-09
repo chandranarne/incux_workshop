@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Building, CheckCircle2, Navigation, ChevronLeft, ChevronRight, School, ArrowRight } from 'lucide-react';
+import { Sparkles, Building, CheckCircle2, Navigation, ChevronLeft, ChevronRight, School, ArrowRight, Info } from 'lucide-react';
 import indiaMapPaths from '../data/indiaMapPaths.json';
+import incuxaiLogo from '../assets/incuxai_official_logo.jpg';
 
 // Import all 10 cropped college logo images
 import gprecLogo from '../assets/colleges/gprec.png';
@@ -108,10 +109,59 @@ const partnerColleges = [
   }
 ];
 
+// State Student Participation Tiers
+const CORE_HUB_STATES = ['IN-AP', 'IN-TG']; // Andhra Pradesh & Telangana (Kept in signature cyan blue)
+
+const HIGH_STUDENT_STATES = [
+  'IN-KA', // Karnataka (Bangalore Tech Belt)
+  'IN-TN', // Tamil Nadu (Chennai, Coimbatore, Trichy)
+  'IN-MH', // Maharashtra (Mumbai, Pune)
+  'IN-KL', // Kerala (Cochin, Trivandrum)
+  'IN-DL'  // Delhi NCR
+];
+
+const MEDIUM_STUDENT_STATES = [
+  'IN-GJ', // Gujarat
+  'IN-UP', // Uttar Pradesh
+  'IN-MP', // Madhya Pradesh
+  'IN-RJ', // Rajasthan
+  'IN-WB', // West Bengal
+  'IN-OR', // Odisha
+  'IN-HR', // Haryana
+  'IN-PB', // Punjab
+  'IN-CH', // Chandigarh
+  'IN-GA', // Goa
+  'IN-PY'  // Puducherry
+];
+
+// 7 North-East states + Sikkim and other remote territories are strictly Low
+const LOW_STUDENT_STATES = [
+  // 7 North East states
+  'IN-AS', // Assam
+  'IN-AR', // Arunachal Pradesh
+  'IN-MN', // Manipur
+  'IN-ML', // Meghalaya
+  'IN-MZ', // Mizoram
+  'IN-NL', // Nagaland
+  'IN-TR', // Tripura
+  'IN-SK', // Sikkim
+  // Northern & other territories
+  'IN-JK', // Jammu and Kashmir
+  'IN-HP', // Himachal Pradesh
+  'IN-UT', // Uttarakhand
+  'IN-BR', // Bihar
+  'IN-JH', // Jharkhand
+  'IN-CT', // Chhattisgarh
+  'IN-AN', // Andaman & Nicobar
+  'IN-LD', // Lakshadweep
+  'IN-DD', // Daman and Diu
+  'IN-DN'  // Dadra and Nagar Haveli
+];
+
 export default function IndiaReachMap() {
   const [activeCollegeIdx, setActiveCollegeIdx] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const tickerRef = useRef(null);
+  const [hoveredState, setHoveredState] = useState(null);
 
   // Auto-cycle the spotlight card one by one every 3.2 seconds unless hovered
   useEffect(() => {
@@ -132,6 +182,51 @@ export default function IndiaReachMap() {
     setActiveCollegeIdx((prev) => (prev - 1 + partnerColleges.length) % partnerColleges.length);
   };
 
+  const getStateTierInfo = (stateId) => {
+    if (CORE_HUB_STATES.includes(stateId)) {
+      return {
+        tier: 'core',
+        label: 'Primary Immersion Hubs',
+        rate: 'Core Academic Centers',
+        fill: '#38bdf8', // Signature Electric Cyan
+        stroke: '#bae6fd',
+        strokeWidth: '1.6',
+        filter: 'url(#glowLightBlue)'
+      };
+    }
+    if (HIGH_STUDENT_STATES.includes(stateId)) {
+      return {
+        tier: 'high',
+        label: 'High Rate of Students',
+        rate: 'High Student Influx',
+        fill: '#facc15', // Vibrant Gold
+        stroke: '#fef08a',
+        strokeWidth: '1.3',
+        filter: 'url(#glowGold)'
+      };
+    }
+    if (MEDIUM_STUDENT_STATES.includes(stateId)) {
+      return {
+        tier: 'medium',
+        label: 'Medium Rate of Students',
+        rate: 'Moderate Attendance',
+        fill: '#818cf8', // Indigo / Periwinkle
+        stroke: '#c7d2fe',
+        strokeWidth: '1.0',
+        filter: undefined
+      };
+    }
+    return {
+      tier: 'low',
+      label: 'Low Rate of Students',
+      rate: 'Emerging Regional Presence',
+      fill: '#1e293b', // Deep Slate
+      stroke: '#334155',
+      strokeWidth: '0.7',
+      filter: undefined
+    };
+  };
+
   return (
     <div className="w-full mt-10 rounded-3xl bg-white/95 dark:bg-[#141414]/95 backdrop-blur-2xl border border-black/10 dark:border-yellow-400/30 p-6 sm:p-8 lg:p-10 shadow-2xl relative overflow-hidden">
       {/* Ambient background glow */}
@@ -142,18 +237,21 @@ export default function IndiaReachMap() {
       <div className="pb-6 border-b border-black/10 dark:border-[#262626]">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/15 dark:bg-sky-950/40 border border-sky-400/30 text-xs font-mono text-sky-700 dark:text-sky-300 font-bold uppercase tracking-wider mb-2">
           <Navigation className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-          <span>National Footprint</span>
+          <span>National Footprint &amp; Student Inflow Distribution</span>
         </div>
         <h3 className="font-headline font-extrabold text-2xl sm:text-3xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight">
           INCUXAI FOOTPRINT ACROSS INDIA
         </h3>
+        <p className="mt-1 text-xs sm:text-sm font-mono text-[#525252] dark:text-[#A3A3A3]">
+          Statistical report representing candidate participation rates by state across India.
+        </p>
       </div>
 
       {/* Interactive Map Visual + Colleges Showcase Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-6">
         
-        {/* Left Side: 4K Vector SVG India Map (Dark Blue Base + Light Blue AP & Telangana) */}
-        <div className="lg:col-span-6 flex items-center justify-center p-4 sm:p-6 rounded-2xl bg-[#090d16] border border-black/10 dark:border-[#262626] relative overflow-hidden shadow-inner">
+        {/* Left Side: 4K Vector SVG India Map with Multi-Tier Statistical Choropleth */}
+        <div className="lg:col-span-6 flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl bg-[#090d16] border border-black/10 dark:border-[#262626] relative overflow-hidden shadow-inner">
           
           {/* Subtle Grid / Technical Background */}
           <div 
@@ -163,6 +261,24 @@ export default function IndiaReachMap() {
               backgroundSize: '24px 24px'
             }}
           />
+
+          {/* Hover State Tooltip Pill */}
+          <div className="w-full mb-3 min-h-[30px] flex items-center justify-between text-[11px] font-mono px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white z-20">
+            {hoveredState ? (
+              <div className="flex items-center gap-2 truncate">
+                <span className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: hoveredState.info.fill }} />
+                <strong className="text-white">{hoveredState.name}:</strong>
+                <span style={{ color: hoveredState.info.fill }}>{hoveredState.info.label}</span>
+                <span className="text-white/40 hidden sm:inline">•</span>
+                <span className="text-white/70 hidden sm:inline">{hoveredState.info.rate}</span>
+              </div>
+            ) : (
+              <span className="text-white/60 flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-[#38bdf8]" />
+                <span>Hover over any state to inspect student participation report</span>
+              </span>
+            )}
+          </div>
 
           {/* Exact Aspect Vector Map Container */}
           <div className="relative w-full max-w-[420px] aspect-[850/964] flex items-center justify-center select-none">
@@ -174,37 +290,27 @@ export default function IndiaReachMap() {
               xmlns="http://www.w3.org/2000/svg"
             >
               <defs>
-                {/* Glow Filter for Active States */}
+                {/* Glow Filter for AP & Telangana (Core Hubs) */}
                 <filter id="glowLightBlue" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="4" result="blur" />
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
-                <linearGradient id="activeLightBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#38bdf8" />
-                  <stop offset="100%" stopColor="#0284c7" />
-                </linearGradient>
+                {/* Glow Filter for High Rate States (Gold) */}
+                <filter id="glowGold" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
                 <linearGradient id="synapseBeamGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
                   <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.4" />
                 </linearGradient>
               </defs>
 
-              {/* Render all states */}
+              {/* Render all states with customized 3-tier + core hub statistical colors */}
               <g id="india-states-layer">
                 {indiaMapPaths.map((state) => {
-                  const isTelangana = state.id === 'IN-TG';
-                  const isAndhra = state.id === 'IN-AP';
-                  const isHighlight = isTelangana || isAndhra;
-
-                  let fill = '#0a192f'; // Dark blue base map
-                  let stroke = '#1e3a8a'; // Medium dark blue borders
-                  let strokeWidth = '0.7';
-
-                  if (isHighlight) {
-                    fill = '#38bdf8'; // Light blue inside
-                    stroke = '#bae6fd'; // Bright light blue border
-                    strokeWidth = '1.6';
-                  }
+                  const info = getStateTierInfo(state.id);
+                  const isHovered = hoveredState?.id === state.id;
 
                   return (
                     <path
@@ -212,13 +318,15 @@ export default function IndiaReachMap() {
                       id={state.id}
                       data-name={state.name}
                       d={state.d}
-                      fill={fill}
-                      stroke={stroke}
-                      strokeWidth={strokeWidth}
-                      className={isHighlight ? 'transition-all duration-300 hover:brightness-125' : 'transition-colors duration-200'}
-                      filter={isHighlight ? 'url(#glowLightBlue)' : undefined}
+                      fill={isHovered ? '#ffffff' : info.fill}
+                      stroke={isHovered ? '#ffffff' : info.stroke}
+                      strokeWidth={isHovered ? '2' : info.strokeWidth}
+                      className="transition-colors duration-200 cursor-pointer"
+                      filter={info.filter}
+                      onMouseEnter={() => setHoveredState({ id: state.id, name: state.name, info })}
+                      onMouseLeave={() => setHoveredState(null)}
                     >
-                      <title>{state.name}</title>
+                      <title>{`${state.name} - ${info.label}`}</title>
                     </path>
                   );
                 })}
@@ -231,15 +339,15 @@ export default function IndiaReachMap() {
                 stroke="url(#synapseBeamGrad)"
                 strokeWidth="2.5"
                 strokeDasharray="4 3"
-                className="animate-pulse"
+                className="animate-pulse pointer-events-none"
               />
 
               {/* Subtle Regional Radial Nodes */}
-              <circle cx="372" cy="638" r="6" fill="#38bdf8" fillOpacity="0.5" className="animate-ping" />
-              <circle cx="372" cy="638" r="3" fill="#ffffff" />
+              <circle cx="372" cy="638" r="6" fill="#38bdf8" fillOpacity="0.5" className="animate-ping pointer-events-none" />
+              <circle cx="372" cy="638" r="3" fill="#ffffff" className="pointer-events-none" />
               
-              <circle cx="435" cy="692" r="6" fill="#38bdf8" fillOpacity="0.5" className="animate-ping" />
-              <circle cx="435" cy="692" r="3" fill="#ffffff" />
+              <circle cx="435" cy="692" r="6" fill="#38bdf8" fillOpacity="0.5" className="animate-ping pointer-events-none" />
+              <circle cx="435" cy="692" r="3" fill="#ffffff" className="pointer-events-none" />
             </svg>
 
             {/* PIN 1: INCUXAI LOGO PIN FOR TELANGANA STATE (Hyderabad / IIT Hyd) */}
@@ -252,13 +360,9 @@ export default function IndiaReachMap() {
                 <span className="absolute w-12 h-12 rounded-full bg-sky-400/40 animate-ping pointer-events-none" />
                 <span className="absolute w-16 h-16 rounded-full border border-sky-400/50 animate-pulse pointer-events-none" />
 
-                {/* IncuxAI Logo Emblem */}
-                <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-[1.5px] shadow-2xl bg-gradient-to-tr from-sky-400 via-sky-200 to-white shadow-[0_0_20px_rgba(56,189,248,0.9)] scale-105">
-                  <div className="w-full h-full rounded-[9px] bg-[#0A0A0A] flex items-center justify-center">
-                    <span className="font-headline font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-sky-100 text-xs leading-none">
-                      I
-                    </span>
-                  </div>
+                {/* IncuxAI Official Logo Pin */}
+                <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-[1px] shadow-2xl bg-white border border-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.9)] overflow-hidden">
+                  <img src={incuxaiLogo} alt="IncuxAI Telangana" className="w-full h-full object-cover" />
                 </div>
 
                 {/* Location Badge */}
@@ -279,13 +383,9 @@ export default function IndiaReachMap() {
                 <span className="absolute w-12 h-12 rounded-full bg-sky-400/40 animate-ping pointer-events-none" />
                 <span className="absolute w-16 h-16 rounded-full border border-sky-400/50 animate-pulse pointer-events-none" />
 
-                {/* IncuxAI Logo Emblem */}
-                <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-[1.5px] shadow-2xl bg-gradient-to-tr from-sky-400 via-sky-200 to-white shadow-[0_0_20px_rgba(56,189,248,0.9)] scale-105">
-                  <div className="w-full h-full rounded-[9px] bg-[#0A0A0A] flex items-center justify-center">
-                    <span className="font-headline font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-sky-100 text-xs leading-none">
-                      I
-                    </span>
-                  </div>
+                {/* IncuxAI Official Logo Pin */}
+                <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-[1px] shadow-2xl bg-white border border-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.9)] overflow-hidden">
+                  <img src={incuxaiLogo} alt="IncuxAI Andhra Pradesh" className="w-full h-full object-cover" />
                 </div>
 
                 {/* Location Badge */}
@@ -296,6 +396,42 @@ export default function IndiaReachMap() {
               </div>
             </div>
           </div>
+
+          {/* Statistical Report Color Legend */}
+          <div className="w-full mt-4 pt-3.5 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[10px] sm:text-[11px] font-mono z-20">
+            <div className="flex items-center gap-2 p-1.5 rounded-lg bg-white/5 border border-sky-400/20">
+              <span className="w-3.5 h-3.5 rounded-md bg-[#38bdf8] border border-[#bae6fd] shadow-sm shrink-0" />
+              <div className="truncate">
+                <span className="text-[#38bdf8] font-bold block truncate">Core Hubs</span>
+                <span className="text-white/50 text-[9px] block">AP &amp; Telangana</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 p-1.5 rounded-lg bg-white/5 border border-yellow-400/20">
+              <span className="w-3.5 h-3.5 rounded-md bg-[#facc15] border border-[#fef08a] shadow-sm shrink-0" />
+              <div className="truncate">
+                <span className="text-[#facc15] font-bold block truncate">High Rate</span>
+                <span className="text-white/50 text-[9px] block">KA, TN, MH, KL</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 p-1.5 rounded-lg bg-white/5 border border-indigo-400/20">
+              <span className="w-3.5 h-3.5 rounded-md bg-[#818cf8] border border-[#c7d2fe] shadow-sm shrink-0" />
+              <div className="truncate">
+                <span className="text-[#818cf8] font-bold block truncate">Medium Rate</span>
+                <span className="text-white/50 text-[9px] block">GJ, UP, MP, WB</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 p-1.5 rounded-lg bg-white/5 border border-slate-700">
+              <span className="w-3.5 h-3.5 rounded-md bg-[#1e293b] border border-[#334155] shadow-sm shrink-0" />
+              <div className="truncate">
+                <span className="text-neutral-300 font-bold block truncate">Low Rate</span>
+                <span className="text-white/50 text-[9px] block">7 North-East States</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* Right Side: 10 Participating Colleges One-by-One Scrolling Showcase */}

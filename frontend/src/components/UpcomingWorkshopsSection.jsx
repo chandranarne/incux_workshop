@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Sparkles, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Calendar, MapPin, Sparkles, ArrowRight } from 'lucide-react';
 import { fetchUpcomingWorkshops } from '../services/api';
 import genAiBannerImg from '../assets/generative_ai_workshop_banner.jpg';
 
@@ -12,7 +12,7 @@ const initialWorkshop = {
   location: "IIT Campus",
   seats: 120,
   registered: 42,
-  mode: "Offline Hands-on Lab",
+  mode: "Offline IIT Campus",
   speaker: "IncuxAI Senior AI Architects & Google/IIT Research Scholars",
   description: "Two-day hands-on workshop at IIT Campus. Deep-dive into LLM fine-tuning, prompt engineering pipelines, autonomous agent architectures, retrieval-augmented generation (RAG), and enterprise deployment sandboxes.",
   status: "Active",
@@ -28,7 +28,11 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, cur
         const data = await fetchUpcomingWorkshops();
         if (data && data.length > 0) {
           const genAiWs = data.find(w => w.id === 'WS-GENAI-IIT' || w.title?.toLowerCase().includes('generative ai')) || data[0];
-          setWorkshop(genAiWs);
+          setWorkshop({
+            ...genAiWs,
+            mode: 'Offline IIT Campus',
+            location: 'IIT Campus'
+          });
         } else {
           setWorkshop(initialWorkshop);
         }
@@ -77,50 +81,50 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, cur
           </div>
         </div>
 
-        {/* Live Workshop Card - Single High-Impact Showcase */}
-        <div className="max-w-4xl mx-auto">
-          <div className="group rounded-3xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] hover:border-[#FACC15] dark:hover:border-[#FACC15] transition-all duration-300 flex flex-col md:flex-row overflow-hidden shadow-2xl hover:shadow-yellow-500/10">
-            {/* Visual Header / Banner */}
-            <div className="relative md:w-1/2 h-64 md:h-auto min-h-[280px] overflow-hidden bg-neutral-900 shrink-0">
+        {/* Live Workshop Card - Full-Aspect Clean Showcase Without Any Cutoffs */}
+        <div className="max-w-3xl mx-auto">
+          <div className="group rounded-3xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] hover:border-[#FACC15] dark:hover:border-[#FACC15] transition-all duration-300 flex flex-col overflow-hidden shadow-2xl hover:shadow-yellow-500/10">
+            {/* Visual Header / Banner - 16:9 Full View So Text is 100% Uncut */}
+            <div className="relative w-full aspect-[16/9] sm:aspect-[2/1] overflow-hidden bg-neutral-950">
               <img
                 src={genAiBannerImg}
                 alt={ws.title}
-                className="w-full h-full object-cover group-hover:scale-106 transition-transform duration-700 opacity-95"
+                className="w-full h-full object-cover sm:object-cover group-hover:scale-102 transition-transform duration-700 opacity-95"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/20 pointer-events-none" />
 
               {/* Top Status Badge */}
-              <div className="absolute top-4 left-4">
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FACC15] text-[#0A0A0A] text-[11px] font-mono font-bold tracking-wider shadow-lg">
+              <div className="absolute top-3.5 sm:top-4 left-3.5 sm:left-4 z-10">
+                <span className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-[#FACC15] text-[#0A0A0A] text-[10px] sm:text-[11px] font-mono font-bold tracking-wider shadow-lg">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#0A0A0A] animate-pulse" />
                   UPCOMING COHORT
                 </span>
               </div>
 
-              {/* Mode Pill */}
-              <div className="absolute top-4 right-4">
-                <span className="px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-mono font-semibold border border-white/20">
-                  {ws.mode || 'Offline Hands-on Lab'}
+              {/* Mode Pill - Offline IIT Campus */}
+              <div className="absolute top-3.5 sm:top-4 right-3.5 sm:right-4 z-10">
+                <span className="px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-black/80 backdrop-blur-md text-[#FACC15] text-[10px] sm:text-[11px] font-mono font-bold border border-[#FACC15]/40 shadow-lg">
+                  Offline IIT Campus
                 </span>
               </div>
 
               {/* Bottom Tag */}
-              <div className="absolute bottom-4 left-4 right-4 text-white">
-                <span className="text-[10px] uppercase font-mono tracking-wider px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-sm border border-white/10 text-[#FACC15] font-bold">
+              <div className="absolute bottom-3 sm:bottom-4 left-3.5 sm:left-4 right-3.5 sm:right-4 text-white z-10">
+                <span className="text-[10px] sm:text-xs uppercase font-mono tracking-wider px-2.5 sm:px-3 py-1 rounded-md bg-black/75 backdrop-blur-sm border border-white/15 text-[#FACC15] font-bold">
                   2-DAY IMMERSIVE LAB @ IIT CAMPUS
                 </span>
               </div>
             </div>
 
             {/* Card Body */}
-            <div className="p-6 sm:p-8 md:w-1/2 flex flex-col justify-between">
+            <div className="p-6 sm:p-8 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between text-xs font-mono mb-2.5 text-[#525252] dark:text-[#A3A3A3]">
                   <span className="px-3 py-1 rounded-full bg-[#F8F8F5] dark:bg-[#0A0A0A] text-[#0A0A0A] dark:text-[#FACC15] font-bold text-xs border border-black/10 dark:border-[#262626]">
                     {ws.category}
                   </span>
-                  <span className="text-xs font-mono text-[#525252] dark:text-[#A3A3A3]">
-                    {ws.mode}
+                  <span className="text-xs font-mono text-[#EAB308] dark:text-[#FACC15] font-semibold">
+                    Offline IIT Campus
                   </span>
                 </div>
 
@@ -128,18 +132,24 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, cur
                   {ws.title}
                 </h3>
 
-                <p className="mt-2 text-sm text-[#525252] dark:text-[#A3A3A3] font-medium leading-relaxed">
+                <p className="mt-2 text-sm sm:text-base text-[#525252] dark:text-[#A3A3A3] font-medium leading-relaxed">
                   Two-day hands-on workshop at IIT Campus.
                 </p>
 
-                <div className="my-5 space-y-2.5 text-xs sm:text-sm font-mono text-[#525252] dark:text-[#A3A3A3] p-4 rounded-2xl bg-[#F8F8F5] dark:bg-[#0A0A0A] border border-black/5 dark:border-[#262626]">
+                <div className="my-5 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm font-mono text-[#525252] dark:text-[#A3A3A3] p-4 rounded-2xl bg-[#F8F8F5] dark:bg-[#0A0A0A] border border-black/5 dark:border-[#262626]">
                   <div className="flex items-center gap-2.5">
                     <Calendar className="w-4 h-4 text-[#EAB308] dark:text-[#FACC15] flex-shrink-0" />
-                    <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{ws.dates}</span>
+                    <div>
+                      <span className="text-[10px] text-neutral-400 block uppercase font-sans">DATES</span>
+                      <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{ws.dates}</span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2.5">
                     <MapPin className="w-4 h-4 text-[#737373] flex-shrink-0" />
-                    <span className="truncate font-semibold">{ws.location}</span>
+                    <div>
+                      <span className="text-[10px] text-neutral-400 block uppercase font-sans">VENUE</span>
+                      <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{ws.location}</span>
+                    </div>
                   </div>
                 </div>
 
