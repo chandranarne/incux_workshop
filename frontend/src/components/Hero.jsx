@@ -127,9 +127,9 @@ export default function Hero({ onOpenRegistration }) {
       </div>
 
       {/* ========================================================================= */}
-      {/* HERO FOREGROUND CONTENT (Centered & Editorial Framing with Impact Grid)   */}
+      {/* HERO FOREGROUND CONTENT (Centered & Editorial Framing)                     */}
       {/* ========================================================================= */}
-      <div className="relative z-20 max-w-5xl mx-auto px-6 sm:px-10 lg:px-12 pt-16 sm:pt-24 lg:pt-28 pb-12 flex flex-col items-center text-center my-auto">
+      <div className="relative z-20 max-w-5xl mx-auto px-6 sm:px-10 lg:px-12 pt-16 sm:pt-24 lg:pt-32 pb-16 flex flex-col items-center text-center my-auto">
         
         {/* Subtle Pre-header Pill */}
         <motion.div
@@ -213,34 +213,6 @@ export default function Hero({ onOpenRegistration }) {
             <span>Explore Our Work</span>
             <ArrowDownRight className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:translate-y-1" />
           </button>
-        </motion.div>
-
-        {/* Live Impact Metrics Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-12 sm:mt-14 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 w-full max-w-3xl"
-        >
-          <div className="p-4 rounded-2xl bg-white/85 dark:bg-[#141414]/85 border border-black/10 dark:border-white/10 backdrop-blur-md shadow-sm">
-            <span className="block font-headline font-black text-2xl sm:text-3xl text-neutral-950 dark:text-[#FACC15]">3,075+</span>
-            <span className="text-[11px] sm:text-xs font-mono uppercase tracking-wider text-neutral-600 dark:text-neutral-400 mt-1 block">Verified Students</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-white/85 dark:bg-[#141414]/85 border border-black/10 dark:border-white/10 backdrop-blur-md shadow-sm">
-            <span className="block font-headline font-black text-2xl sm:text-3xl text-neutral-950 dark:text-[#FACC15]">21+</span>
-            <span className="text-[11px] sm:text-xs font-mono uppercase tracking-wider text-neutral-600 dark:text-neutral-400 mt-1 block">Intensive Sessions</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-white/85 dark:bg-[#141414]/85 border border-black/10 dark:border-white/10 backdrop-blur-md shadow-sm">
-            <span className="block font-headline font-black text-2xl sm:text-3xl text-neutral-950 dark:text-[#FACC15]">10+</span>
-            <span className="text-[11px] sm:text-xs font-mono uppercase tracking-wider text-neutral-600 dark:text-neutral-400 mt-1 block">Colleges &amp; Tech Hubs</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-white/85 dark:bg-[#141414]/85 border border-black/10 dark:border-white/10 backdrop-blur-md shadow-sm">
-            <span className="block font-headline font-black text-2xl sm:text-3xl text-neutral-950 dark:text-[#FACC15]">100%</span>
-            <span className="text-[11px] sm:text-xs font-mono uppercase tracking-wider text-neutral-600 dark:text-neutral-400 mt-1 block">Industrial Sandboxes</span>
-          </div>
         </motion.div>
 
       </div>
