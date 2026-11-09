@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, MapPin, Sparkles, ArrowRight, ShieldCheck, Cpu } from 'lucide-react';
 import genAiBannerImg from '../assets/generative_ai_workshop_banner.jpg';
@@ -41,7 +42,7 @@ export default function UpcomingWorkshopPopup({ onOpenRegistration, onExploreWor
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
           {/* Backdrop Blur */}
           <motion.div
             initial={{ opacity: 0 }}

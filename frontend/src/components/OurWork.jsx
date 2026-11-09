@@ -21,6 +21,8 @@ export default function OurWork({ cards = [], onOpenRegistration }) {
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
   const scrollLeftRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+  const isMouseDownRef = useRef(false);
 
   // Check scroll position for navigation buttons and progress bar
   const checkScroll = useCallback(() => {
@@ -69,29 +71,39 @@ export default function OurWork({ cards = [], onOpenRegistration }) {
     });
   };
 
-  // Mouse Drag-to-Scroll Handlers
+  // Mouse Drag-to-Scroll Handlers (6px threshold prevents cancelling click events)
   const handleMouseDown = (e) => {
     if (!trackRef.current) return;
-    isDraggingRef.current = true;
+    isMouseDownRef.current = true;
+    dragDistanceRef.current = 0;
+    isDraggingRef.current = false;
     startXRef.current = e.pageX - trackRef.current.offsetLeft;
     scrollLeftRef.current = trackRef.current.scrollLeft;
-    trackRef.current.style.cursor = 'grabbing';
-    trackRef.current.style.userSelect = 'none';
   };
 
   const handleMouseMove = (e) => {
-    if (!isDraggingRef.current || !trackRef.current) return;
-    e.preventDefault();
+    if (!isMouseDownRef.current || !trackRef.current) return;
     const x = e.pageX - trackRef.current.offsetLeft;
     const walk = (x - startXRef.current) * 1.5;
-    trackRef.current.scrollLeft = scrollLeftRef.current - walk;
+    dragDistanceRef.current = Math.abs(x - startXRef.current);
+
+    if (dragDistanceRef.current > 6) {
+      e.preventDefault();
+      isDraggingRef.current = true;
+      trackRef.current.style.cursor = 'grabbing';
+      trackRef.current.style.userSelect = 'none';
+      trackRef.current.scrollLeft = scrollLeftRef.current - walk;
+    }
   };
 
   const handleMouseUpOrLeave = () => {
     if (!trackRef.current) return;
-    isDraggingRef.current = false;
+    isMouseDownRef.current = false;
     trackRef.current.style.cursor = 'grab';
     trackRef.current.style.removeProperty('user-select');
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 60);
     checkScroll();
   };
 

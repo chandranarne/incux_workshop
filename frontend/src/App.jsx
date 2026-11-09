@@ -54,6 +54,7 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isPortalOpen, setIsPortalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('register');
+  const [isUpcomingPopupOpen, setIsUpcomingPopupOpen] = useState(false);
 
   // App data state (defaults to local data, updates from backend if available)
   const [cards, setCards] = useState(workshopCards);

@@ -32,6 +32,7 @@ export default function WorkshopCard({ card, onSelect }) {
   const bgImage = getCardImage(card.id);
 
   const handleClick = (e) => {
+    e.stopPropagation();
     e.preventDefault();
     if (onSelect) {
       onSelect(card);

@@ -19,7 +19,7 @@ const initialWorkshop = {
   isPrimary: true
 };
 
-export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, currentUser }) {
+export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, currentUser, onOpenUpcomingPopup }) {
   const [workshop, setWorkshop] = useState(initialWorkshop);
 
   useEffect(() => {
@@ -85,13 +85,27 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, cur
         <div className="max-w-3xl mx-auto">
           <div className="group rounded-3xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] hover:border-[#FACC15] dark:hover:border-[#FACC15] transition-all duration-300 flex flex-col overflow-hidden shadow-2xl hover:shadow-yellow-500/10">
             {/* Visual Header / Banner - 16:9 Full View So Text is 100% Uncut */}
-            <div className="relative w-full aspect-[16/9] sm:aspect-[2/1] overflow-hidden bg-neutral-950">
+            <div
+              onClick={onOpenUpcomingPopup}
+              role="button"
+              tabIndex={0}
+              aria-label="Click to open official workshop announcement popup"
+              className="relative w-full aspect-[16/9] sm:aspect-[2/1] overflow-hidden bg-neutral-950 cursor-pointer group"
+            >
               <img
                 src={genAiBannerImg}
                 alt={ws.title}
                 className="w-full h-full object-cover sm:object-cover group-hover:scale-102 transition-transform duration-700 opacity-95"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/20 pointer-events-none" />
+
+              {/* Click to open popup prompt */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px] pointer-events-none z-20">
+                <span className="px-4 py-2 rounded-full bg-[#FACC15] text-[#0A0A0A] font-headline font-black text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 fill-[#0A0A0A]" />
+                  <span>Click To View Announcement Popup</span>
+                </span>
+              </div>
 
               {/* Top Status Badge */}
               <div className="absolute top-3.5 sm:top-4 left-3.5 sm:left-4 z-10">

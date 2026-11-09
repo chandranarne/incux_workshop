@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -45,9 +46,9 @@ export default function WorkshopFormatDetailModal({ formatId, isOpen, onClose, o
   const gallery = detail.gallery || [{ image: detail.heroImage, caption: detail.title }];
   const currentPhoto = gallery[selectedPhotoIndex] || gallery[0];
 
-  return (
+  const modalContent = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -268,4 +269,6 @@ export default function WorkshopFormatDetailModal({ formatId, isOpen, onClose, o
       </div>
     </AnimatePresence>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
 }
