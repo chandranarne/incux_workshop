@@ -153,7 +153,7 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
                 </motion.li>
               ))}
 
-              {/* Portal / Registration Action Inside Menu */}
+              {/* Login / Portal Action Inside Hamburger Menu */}
               <motion.li variants={navItemVariants} className="pt-4 sm:pt-6 border-t border-black/10 dark:border-yellow-400/20">
                 {currentUser ? (
                   <button
@@ -169,16 +169,17 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
                     </span>
                   </button>
                 ) : (
-                  <div className="py-2">
+                  <div className="py-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    {/* Dedicated Hamburger Login Action: Strictly Email & Password Login */}
                     <button
                       onClick={() => {
                         onClose();
-                        onOpenAuth('register');
+                        onOpenAuth('login');
                       }}
-                      className="w-full sm:w-auto justify-center px-6 py-3.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-sm uppercase tracking-wider shadow-lg shadow-yellow-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+                      className="w-full sm:w-auto justify-center px-7 py-3.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-sm uppercase tracking-wider shadow-lg shadow-yellow-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2.5"
                     >
-                      <Sparkles className="w-4 h-4 fill-[#0A0A0A]" />
-                      <span>Let's Start with a Hello!</span>
+                      <LogIn className="w-4 h-4 stroke-[2.5]" />
+                      <span>Login</span>
                     </button>
                   </div>
                 )}

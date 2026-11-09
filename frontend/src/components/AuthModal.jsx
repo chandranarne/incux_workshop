@@ -96,7 +96,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Enter your full name"
+                  placeholder=""
                   className="w-full pl-9 pr-3.5 py-2 sm:py-2.5 rounded-xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#0A0A0A] text-neutral-900 dark:text-[#F5F5F5] text-xs sm:text-sm focus:outline-none focus:border-[#FACC15] transition-colors"
                 />
                 <User className="absolute left-3 top-2.5 sm:top-3 w-4 h-4 text-neutral-400 pointer-events-none" />
@@ -115,7 +115,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                 required
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="name@university.edu or gmail"
+                placeholder=""
                 className="w-full pl-9 pr-3.5 py-2 sm:py-2.5 rounded-xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#0A0A0A] text-neutral-900 dark:text-[#F5F5F5] text-xs sm:text-sm focus:outline-none focus:border-[#FACC15] transition-colors"
               />
               <Mail className="absolute left-3 top-2.5 sm:top-3 w-4 h-4 text-neutral-400 pointer-events-none" />
@@ -133,7 +133,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                 required
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="••••••••"
+                placeholder=""
                 className="w-full pl-9 pr-3.5 py-2 sm:py-2.5 rounded-xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#0A0A0A] text-neutral-900 dark:text-[#F5F5F5] text-xs sm:text-sm focus:outline-none focus:border-[#FACC15] transition-colors"
               />
               <Lock className="absolute left-3 top-2.5 sm:top-3 w-4 h-4 text-neutral-400 pointer-events-none" />
@@ -152,7 +152,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                     name="institution"
                     value={formData.institution}
                     onChange={handleChange}
-                    placeholder="e.g. Hindu College Guntur, IIT Hyderabad"
+                    placeholder=""
                     className="w-full pl-9 pr-3.5 py-2 sm:py-2.5 rounded-xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#0A0A0A] text-neutral-900 dark:text-[#F5F5F5] text-xs sm:text-sm focus:outline-none focus:border-[#FACC15] transition-colors"
                   />
                   <Building className="absolute left-3 top-2.5 sm:top-3 w-4 h-4 text-neutral-400 pointer-events-none" />
@@ -169,7 +169,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    placeholder="+91 98765 43210"
+                    placeholder=""
                     className="w-full pl-9 pr-3.5 py-2 sm:py-2.5 rounded-xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#0A0A0A] text-neutral-900 dark:text-[#F5F5F5] text-xs sm:text-sm focus:outline-none focus:border-[#FACC15] transition-colors"
                   />
                   <Phone className="absolute left-3 top-2.5 sm:top-3 w-4 h-4 text-neutral-400 pointer-events-none" />

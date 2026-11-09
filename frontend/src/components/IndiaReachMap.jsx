@@ -349,50 +349,18 @@ export default function IndiaReachMap() {
               <circle cx="435" cy="692" r="6" fill="#38bdf8" fillOpacity="0.5" className="animate-ping pointer-events-none" />
               <circle cx="435" cy="692" r="3" fill="#ffffff" className="pointer-events-none" />
             </svg>
-
-            {/* PIN 1: INCUXAI LOGO PIN FOR TELANGANA STATE (Hyderabad / IIT Hyd) */}
-            <div
-              style={{ left: '37.3%', top: '66.4%' }}
-              className="absolute -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
-            >
-              <div className="relative flex flex-col items-center">
-                {/* Radar ripple rings */}
-                <span className="absolute w-12 h-12 rounded-full bg-sky-400/40 animate-ping pointer-events-none" />
-                <span className="absolute w-16 h-16 rounded-full border border-sky-400/50 animate-pulse pointer-events-none" />
-
-                {/* IncuxAI Official Logo Pin */}
-                <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-[1px] shadow-2xl bg-white border border-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.9)] overflow-hidden">
-                  <img src={incuxaiLogo} alt="IncuxAI Telangana" className="w-full h-full object-cover" />
-                </div>
-
-                {/* Location Badge */}
-                <div className="mt-1 px-2 py-0.5 rounded-full backdrop-blur-md border text-[9px] sm:text-[10px] font-mono font-bold tracking-tight whitespace-nowrap shadow-lg flex items-center gap-1 bg-sky-500 text-white border-sky-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>INCUXAI • TELANGANA</span>
-                </div>
+            {/* Official IncuxAI Brand Logo - Positioned Beside Map in Top Right Corner */}
+            <div className="absolute top-2.5 sm:top-3.5 right-2.5 sm:right-3.5 z-20 pointer-events-none flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-2xl bg-black/70 backdrop-blur-md border border-[#38bdf8]/40 shadow-xl shadow-sky-500/10">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden bg-white p-[1.5px] border border-[#38bdf8] shrink-0 shadow-sm">
+                <img src={incuxaiLogo} alt="IncuxAI Official Logo" className="w-full h-full object-cover" />
               </div>
-            </div>
-
-            {/* PIN 2: INCUXAI LOGO PIN FOR ANDHRA PRADESH STATE (Vijayawada / Guntur / Anantapur) */}
-            <div
-              style={{ left: '44.7%', top: '72.0%' }}
-              className="absolute -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
-            >
-              <div className="relative flex flex-col items-center">
-                {/* Radar ripple rings */}
-                <span className="absolute w-12 h-12 rounded-full bg-sky-400/40 animate-ping pointer-events-none" />
-                <span className="absolute w-16 h-16 rounded-full border border-sky-400/50 animate-pulse pointer-events-none" />
-
-                {/* IncuxAI Official Logo Pin */}
-                <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl p-[1px] shadow-2xl bg-white border border-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.9)] overflow-hidden">
-                  <img src={incuxaiLogo} alt="IncuxAI Andhra Pradesh" className="w-full h-full object-cover" />
-                </div>
-
-                {/* Location Badge */}
-                <div className="mt-1 px-2 py-0.5 rounded-full backdrop-blur-md border text-[9px] sm:text-[10px] font-mono font-bold tracking-tight whitespace-nowrap shadow-lg flex items-center gap-1 bg-sky-500 text-white border-sky-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>INCUXAI • ANDHRA PRADESH</span>
-                </div>
+              <div className="hidden xs:flex flex-col pr-1">
+                <span className="font-headline font-bold text-xs text-white leading-tight">
+                  IncuxAI
+                </span>
+                <span className="text-[9px] font-mono text-[#38bdf8] uppercase tracking-wider font-semibold">
+                  National Reach
+                </span>
               </div>
             </div>
           </div>

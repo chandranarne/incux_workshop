@@ -246,7 +246,7 @@ export default function ContactCTA() {
                       required
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="e.g. Dr. K. Raman / Prof. Priya"
+                      placeholder=""
                       className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-neutral-900 dark:text-[#F5F5F5] text-sm focus:border-[#FACC15] dark:focus:border-[#FACC15] transition-colors outline-none shadow-sm"
                     />
                   </div>
@@ -261,7 +261,7 @@ export default function ContactCTA() {
                       required
                       value={formData.institution}
                       onChange={handleChange}
-                      placeholder="e.g. Engineering Institute / Campus"
+                      placeholder=""
                       className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-neutral-900 dark:text-[#F5F5F5] text-sm focus:border-[#FACC15] dark:focus:border-[#FACC15] transition-colors outline-none shadow-sm"
                     />
                   </div>
@@ -278,7 +278,7 @@ export default function ContactCTA() {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="Enter your official email"
+                      placeholder=""
                       className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-neutral-900 dark:text-[#F5F5F5] text-sm focus:border-[#FACC15] dark:focus:border-[#FACC15] transition-colors outline-none shadow-sm"
                     />
                   </div>
@@ -292,7 +292,7 @@ export default function ContactCTA() {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="+91-XXXXXXXXXX"
+                      placeholder=""
                       className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-neutral-900 dark:text-[#F5F5F5] text-sm focus:border-[#FACC15] dark:focus:border-[#FACC15] transition-colors outline-none shadow-sm"
                     />
                   </div>
@@ -344,7 +344,7 @@ export default function ContactCTA() {
                     name="message"
                     value={formData.message}
                     onChange={handleChange}
-                    placeholder="Mention tentative dates, specific department branches, or lab infrastructure..."
+                    placeholder=""
                     className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-neutral-900 dark:text-[#F5F5F5] text-sm focus:border-[#FACC15] dark:focus:border-[#FACC15] transition-colors outline-none shadow-sm"
                   />
                 </div>
