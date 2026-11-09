@@ -42,7 +42,7 @@ const faqItems = [
 ];
 
 export default function FaqSection() {
-  const [openId, setOpenId] = useState('mentors');
+  const [openId, setOpenId] = useState(null);
 
   const toggleItem = (id) => {
     setOpenId(openId === id ? null : id);
