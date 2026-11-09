@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Sparkles, RotateCcw, ArrowRight } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, RotateCcw } from 'lucide-react';
 
-export default function WorkshopVideoPlayer({ onOpenRegistration }) {
+export default function WorkshopVideoPlayer() {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -11,8 +11,7 @@ export default function WorkshopVideoPlayer({ onOpenRegistration }) {
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [showControls, setShowControls] = useState(false);
-  // Never default to watched across browser sessions - always start fresh with play
-  const [hasWatchedFullVideo, setHasWatchedFullVideo] = useState(false);
+  const [hasEnded, setHasEnded] = useState(false);
 
   // Clear any legacy localStorage keys that previously caused 'rewatch' to show on load
   useEffect(() => {
@@ -60,7 +59,7 @@ export default function WorkshopVideoPlayer({ onOpenRegistration }) {
 
   const handleEnded = () => {
     setIsPlaying(false);
-    setHasWatchedFullVideo(true);
+    setHasEnded(true);
   };
 
   const handleRewatch = (e) => {
@@ -68,27 +67,21 @@ export default function WorkshopVideoPlayer({ onOpenRegistration }) {
     const video = videoRef.current;
     if (!video) return;
     video.currentTime = 0;
+    setHasEnded(false);
     video.play().then(() => {
       setIsPlaying(true);
     }).catch(() => {});
-  };
-
-  // Redirect to registration page when clicking on the video or registration action
-  const handleVideoClick = (e) => {
-    // If user clicked the play icon or explicit play trigger, toggle play
-    // Otherwise open registration page as requested by user
-    if (onOpenRegistration) {
-      onOpenRegistration('register');
-      document.querySelector('#upcoming-workshops')?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      togglePlay();
-    }
   };
 
   const togglePlay = (e) => {
     if (e) e.stopPropagation();
     const video = videoRef.current;
     if (!video) return;
+
+    if (hasEnded) {
+      handleRewatch(e);
+      return;
+    }
 
     if (video.paused) {
       video.play();
@@ -124,49 +117,41 @@ export default function WorkshopVideoPlayer({ onOpenRegistration }) {
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
       }
       setIsFullscreen(false);
     }
   };
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
-
   const handleTimeUpdate = () => {
     const video = videoRef.current;
     if (!video) return;
     setCurrentTime(video.currentTime);
-    if (video.duration) {
-      setProgress((video.currentTime / video.duration) * 100);
-    }
+    const p = (video.currentTime / video.duration) * 100;
+    setProgress(isNaN(p) ? 0 : p);
   };
 
   const handleLoadedMetadata = () => {
     const video = videoRef.current;
-    if (video) {
-      setDuration(video.duration);
-    }
+    if (!video) return;
+    setDuration(video.duration);
   };
 
   const handleSeek = (e) => {
     e.stopPropagation();
     const video = videoRef.current;
-    if (!video || !video.duration) return;
+    if (!video) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
-    video.currentTime = pos * video.duration;
+    const clickPos = (e.clientX - rect.left) / rect.width;
+    video.currentTime = clickPos * video.duration;
   };
 
-  const formatTime = (seconds) => {
-    if (isNaN(seconds) || seconds === 0) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  const formatTime = (time) => {
+    if (isNaN(time)) return '0:00';
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
   return (
@@ -176,11 +161,11 @@ export default function WorkshopVideoPlayer({ onOpenRegistration }) {
       onMouseLeave={() => setShowControls(false)}
       className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden bg-neutral-950 border border-black/10 dark:border-[#262626] shadow-2xl group transition-all duration-300 hover:border-[#FACC15]/40"
     >
-      {/* Video Element: Clicking video redirects to registration page */}
+      {/* Video Element */}
       <div 
-        onClick={handleVideoClick}
+        onClick={togglePlay}
         className="relative aspect-video w-full bg-black cursor-pointer"
-        title="Click video to register for upcoming workshops"
+        title={isPlaying ? 'Click to pause video' : 'Click to play video'}
       >
         <video
           ref={videoRef}
@@ -201,7 +186,7 @@ export default function WorkshopVideoPlayer({ onOpenRegistration }) {
         {/* Ambient Top Shadow */}
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/75 via-black/25 to-transparent pointer-events-none transition-opacity" />
 
-        {/* Top Floating Badges & Direct Registration CTA */}
+        {/* Top Floating Badges */}
         <div className="absolute top-3 sm:top-5 inset-x-3 sm:inset-x-5 flex items-center justify-between pointer-events-none z-20">
           {/* Live Workshop Reel Badge */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/65 backdrop-blur-md border border-white/10 text-[11px] font-mono text-white tracking-wider shadow-lg pointer-events-auto">
@@ -215,20 +200,6 @@ export default function WorkshopVideoPlayer({ onOpenRegistration }) {
           </div>
 
           <div className="flex items-center gap-2 pointer-events-auto">
-            {/* Direct Registration Pill on Video */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onOpenRegistration) onOpenRegistration('register');
-                document.querySelector('#upcoming-workshops')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] text-xs font-mono font-bold tracking-wider shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 fill-[#0A0A0A]" />
-              <span>Register Free</span>
-            </button>
-
             {/* Sound Toggle */}
             <button
               type="button"
@@ -251,43 +222,36 @@ export default function WorkshopVideoPlayer({ onOpenRegistration }) {
           </div>
         </div>
 
-        {/* Center Hover / Paused Action Card */}
+        {/* Center Hover / Paused Action Button */}
         <div
-          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
-            !isPlaying ? 'opacity-100 bg-black/45' : showControls ? 'opacity-90 bg-transparent' : 'opacity-0'
+          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${
+            !isPlaying ? 'opacity-100 bg-black/35' : showControls ? 'opacity-90 bg-transparent' : 'opacity-0'
           }`}
         >
-          {!isPlaying && (
-            <div className="flex flex-col sm:flex-row items-center gap-3 p-4 rounded-3xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-2xl">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onOpenRegistration) onOpenRegistration('register');
-                  document.querySelector('#upcoming-workshops')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="px-6 py-3 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-black text-xs sm:text-sm tracking-wider uppercase flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 fill-current" />
-                <span>Register for Workshop</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <button
-                type="button"
-                onClick={togglePlay}
-                className="px-4 py-3 rounded-full bg-white/15 hover:bg-white/25 text-white font-mono text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Play Video</span>
-              </button>
-            </div>
+          {hasEnded ? (
+            <button
+              type="button"
+              onClick={handleRewatch}
+              className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-xs uppercase tracking-wider shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Watch Again</span>
+            </button>
+          ) : !isPlaying && (
+            <button
+              type="button"
+              onClick={togglePlay}
+              className="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer group/play"
+              aria-label="Play Video"
+            >
+              <Play className="w-7 h-7 sm:w-9 sm:h-9 ml-1 fill-current group-hover/play:scale-105 transition-transform" />
+            </button>
           )}
         </div>
 
         {/* Bottom Ambient Gradient for Controls */}
         <div
-          className={`absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none transition-opacity duration-300 ${
+          className={`absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none transition-opacity duration-300 ${
             showControls || !isPlaying ? 'opacity-100' : 'opacity-0 sm:opacity-0'
           }`}
         />
@@ -330,20 +294,6 @@ export default function WorkshopVideoPlayer({ onOpenRegistration }) {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Prompt to register */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onOpenRegistration) onOpenRegistration('register');
-                  document.querySelector('#upcoming-workshops')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="hidden sm:inline-flex items-center gap-1.5 text-[#FACC15] hover:text-[#FEF08A] text-[11px] font-bold cursor-pointer transition-colors"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Click to Register</span>
-              </button>
-
               {/* Fullscreen Toggle */}
               <button
                 type="button"

@@ -18,6 +18,7 @@ import CustomCursor from './components/CustomCursor';
 
 import AuthModal from './components/AuthModal';
 import PortalModal from './components/PortalModal';
+import UpcomingWorkshopPopup from './components/UpcomingWorkshopPopup';
 
 import { workshopCards, featuredWorkshops } from './data/workshops';
 import { companiesData } from './data/companies';
@@ -94,7 +95,8 @@ export default function App() {
     setIsPortalOpen(false);
   };
 
-  const openAuth = () => {
+  const openAuth = (mode = 'register') => {
+    setAuthMode(mode);
     setIsAuthModalOpen(true);
   };
 
@@ -130,6 +132,7 @@ export default function App() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onAuthSuccess={handleAuthSuccess}
+        initialMode={authMode}
       />
 
       {/* Interactive Candidate & Admin Management Portal */}
@@ -138,6 +141,11 @@ export default function App() {
         onClose={() => setIsPortalOpen(false)}
         user={currentUser}
         onLogout={handleLogout}
+      />
+
+      {/* Real Upcoming Workshop Announcement Popup Modal */}
+      <UpcomingWorkshopPopup
+        onOpenRegistration={openAuth}
       />
 
       {/* Main Content: 11 Sections in Exact Fixed Order + Live Registration Portal */}

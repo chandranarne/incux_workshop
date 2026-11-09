@@ -213,6 +213,41 @@ export const registerCandidate = async (userData) => {
 // ==========================================
 // WORKSHOPS MANAGEMENT & REGISTRATIONS
 // ==========================================
+export const DEFAULT_UPCOMING_WORKSHOPS = [
+  {
+    id: "WS-GENAI-IIT",
+    title: "Generative AI Workshop",
+    category: "Generative AI",
+    dates: "November 20–21, 2026",
+    duration: "2-Day Hands-on Workshop",
+    location: "IIT Campus",
+    seats: 120,
+    registered: 42,
+    mode: "Offline Hands-on Lab",
+    speaker: "IncuxAI Senior AI Architects & Google/IIT Research Scholars",
+    description: "Two-day hands-on workshop at IIT Campus. Deep-dive into LLM fine-tuning, prompt engineering pipelines, autonomous agent architectures, retrieval-augmented generation (RAG), and enterprise deployment sandboxes.",
+    status: "Active",
+    isPrimary: true,
+    postedAt: "2026-11-01T09:00:00Z"
+  },
+  {
+    id: "WS-AGENTIC-SYSTEMS",
+    title: "Autonomous Agentic AI & Systems Engineering",
+    category: "Agentic AI",
+    dates: "December 5–6, 2026",
+    duration: "2-Day Immersive Sprint",
+    location: "Regional Tech Innovation Hub",
+    seats: 100,
+    registered: 35,
+    mode: "Offline Sandbox",
+    speaker: "IncuxAI Core Systems Engineering Team",
+    description: "Multi-agent orchestration, tool routing, memory schemas, and production deployment loops.",
+    status: "Active",
+    isPrimary: false,
+    postedAt: "2026-11-02T10:00:00Z"
+  }
+];
+
 export const fetchUpcomingWorkshops = async () => {
   if (supabase) {
     try {
@@ -233,9 +268,12 @@ export const fetchUpcomingWorkshops = async () => {
     const res = await fetch(`${API_BASE}/workshops/upcoming`);
     if (!res.ok) throw new Error('Failed to fetch upcoming workshops');
     const data = await res.json();
-    return data.workshops || [];
+    if (data.workshops && data.workshops.length > 0) {
+      return data.workshops;
+    }
+    return DEFAULT_UPCOMING_WORKSHOPS;
   } catch (err) {
-    return [];
+    return DEFAULT_UPCOMING_WORKSHOPS;
   }
 };
 

@@ -254,8 +254,11 @@ export default function PortalModal({ isOpen, onClose, user, onLogout }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {workshops.map((ws) => {
+              {/* Only 1 upcoming workshop shown in candidate portal as requested */}
+              <div className="max-w-2xl">
+                {(workshops.filter(ws => ws.id === 'WS-GENAI-IIT' || ws.title?.toLowerCase().includes('generative ai')).slice(0, 1).length > 0
+                  ? workshops.filter(ws => ws.id === 'WS-GENAI-IIT' || ws.title?.toLowerCase().includes('generative ai')).slice(0, 1)
+                  : workshops.slice(0, 1)).map((ws) => {
                   const isRegistered = myRegistrations.some((r) => r.workshopId === ws.id);
                   const seatsLeft = Math.max(0, ws.seats - (ws.registered || 0));
 
