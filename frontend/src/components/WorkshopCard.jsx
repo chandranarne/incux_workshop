@@ -1,13 +1,14 @@
 import React from 'react';
-import { MapPin, ArrowUpRight, BookmarkCheck } from 'lucide-react';
+import { MapPin, ArrowUpRight, BookmarkCheck, Sparkles } from 'lucide-react';
 import TiltCard from './TiltCard';
 import auditoriumImg from '../assets/auditorium_workshop.jpg';
 import labImg from '../assets/hands_on_lab.jpg';
 import mentorImg from '../assets/mentor_guidance.jpg';
 import campusHallImg from '../assets/campus_hall_card.jpg';
 import realHackathonImg from '../assets/real_hackathon_2k26.jpg';
+import guestLectureSpeakerImg from '../assets/guest_lecture_speaker.jpg';
 
-export default function WorkshopCard({ card }) {
+export default function WorkshopCard({ card, onSelect }) {
   // Associate authentic workshop photographs with each format
   const getCardImage = (id) => {
     switch (id) {
@@ -20,7 +21,7 @@ export default function WorkshopCard({ card }) {
       case 'ai-bootcamps':
         return labImg;
       case 'guest-lectures':
-        return mentorImg;
+        return guestLectureSpeakerImg;
       case 'online-workshops':
         return labImg;
       default:
@@ -30,10 +31,27 @@ export default function WorkshopCard({ card }) {
 
   const bgImage = getCardImage(card.id);
 
+  const handleClick = (e) => {
+    e.preventDefault();
+    if (onSelect) {
+      onSelect(card);
+    }
+  };
+
   return (
     <TiltCard maxTilt={5} scale={1.02} glare={false}>
       <div
-        className="group relative flex flex-col justify-between w-[285px] xs:w-[320px] sm:w-[380px] lg:w-[420px] flex-shrink-0 h-[480px] sm:h-[520px] rounded-3xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] hover:border-[#FACC15] dark:hover:border-[#FACC15] transition-all duration-500 overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-yellow-500/10"
+        onClick={handleClick}
+        className="group relative flex flex-col justify-between w-[285px] xs:w-[320px] sm:w-[380px] lg:w-[420px] flex-shrink-0 h-[480px] sm:h-[520px] rounded-3xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] hover:border-[#FACC15] dark:hover:border-[#FACC15] transition-all duration-500 overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-yellow-500/10 cursor-pointer"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleClick(e);
+          }
+        }}
+        aria-label={`View detailed format specs and information for ${card.title}`}
       >
         {/* Top Photographic Showcase */}
         <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-neutral-900 shrink-0">
@@ -58,6 +76,13 @@ export default function WorkshopCard({ card }) {
           <div className="absolute bottom-2.5 sm:bottom-3 left-3 sm:left-4 flex items-center gap-1.5 text-[11px] sm:text-xs font-mono text-white/90">
             <MapPin className="w-3.5 h-3.5 text-[#FACC15] shrink-0" />
             <span className="font-medium drop-shadow-sm truncate max-w-[200px]">{card.location}</span>
+          </div>
+
+          {/* Hover Prompt */}
+          <div className="absolute bottom-2.5 sm:bottom-3 right-3 sm:right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="px-2.5 py-1 rounded-full bg-[#FACC15] text-[#0A0A0A] font-mono text-[10px] font-bold tracking-wider shadow-md">
+              CLICK TO EXPAND
+            </span>
           </div>
         </div>
 
@@ -92,18 +117,20 @@ export default function WorkshopCard({ card }) {
             </div>
           </div>
 
-          {/* Card Footer: Agency Series & Magnetic Arrow */}
+          {/* Card Footer: Agency Series & The Yellow Magnetic Arrow Button */}
           <div className="pt-2 sm:pt-3 border-t border-black/10 dark:border-[#262626] flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-mono text-[#525252] dark:text-[#A3A3A3] font-medium">
-              IncuxAI Workshop Series
+            <span className="text-[11px] sm:text-xs font-mono text-[#525252] dark:text-[#A3A3A3] font-medium flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-[#EAB308] dark:text-[#FACC15]" />
+              <span>Explore Details</span>
             </span>
-            <a
-              href="#contact"
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#F8F8F5] dark:bg-[#0A0A0A] border border-black/15 dark:border-[#262626] group-hover:bg-[#FACC15] group-hover:text-[#0A0A0A] group-hover:border-[#FACC15] text-[#0A0A0A] dark:text-[#FACC15] flex items-center justify-center transition-all duration-300 shadow-sm group-hover:scale-110 shrink-0"
-              aria-label={`Inquire about ${card.title}`}
+            <button
+              type="button"
+              onClick={handleClick}
+              className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] border border-[#EAB308] dark:border-[#FACC15] flex items-center justify-center transition-all duration-300 shadow-md hover:scale-110 active:scale-95 shrink-0 cursor-pointer"
+              aria-label={`Open detailed format popup for ${card.title}`}
             >
-              <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </a>
+              <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 stroke-[2.5]" />
+            </button>
           </div>
         </div>
       </div>

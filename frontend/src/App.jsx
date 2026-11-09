@@ -157,7 +157,7 @@ export default function App() {
         <About onOpenRegistration={openAuth} />
 
         {/* Section 3: Our Work ("Where Ideas Become Experience" with fluid horizontal scrolling) */}
-        <OurWork cards={cards} />
+        <OurWork cards={cards} onOpenRegistration={openAuth} />
 
         {/* Live Workshop Registration & Location Request Portal Section */}
         <UpcomingWorkshopsSection

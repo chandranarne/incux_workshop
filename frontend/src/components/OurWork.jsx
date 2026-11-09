@@ -2,11 +2,12 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import WorkshopCard from './WorkshopCard';
+import WorkshopFormatDetailModal from './WorkshopFormatDetailModal';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function OurWork({ cards = [] }) {
+export default function OurWork({ cards = [], onOpenRegistration }) {
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
   const progressBarRef = useRef(null);
@@ -14,6 +15,7 @@ export default function OurWork({ cards = [] }) {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [selectedFormatId, setSelectedFormatId] = useState(null);
 
   // Mouse drag-to-scroll state
   const isDraggingRef = useRef(false);
@@ -141,7 +143,7 @@ export default function OurWork({ cards = [] }) {
           <div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-[#141414]/90 backdrop-blur-md border border-black/10 dark:border-yellow-400/30 text-xs font-mono text-[#0A0A0A] dark:text-[#FACC15] uppercase tracking-widest mb-4 font-bold shadow-xs">
               <span className="w-2 h-2 rounded-full bg-[#FACC15]" />
-              <span>Workshop Formats</span>
+              <span>Workshop Formats // Click Any Card To Explore</span>
             </div>
             <h2 className="font-headline font-black text-3xl sm:text-5xl md:text-6xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight leading-tight">
               Where Ideas Become <br />
@@ -194,11 +196,29 @@ export default function OurWork({ cards = [] }) {
         >
           {cards.map((card) => (
             <div key={card.id} className="ourwork-settle-card shrink-0 snap-start">
-              <WorkshopCard card={card} />
+              <WorkshopCard
+                card={card}
+                onSelect={(selected) => setSelectedFormatId(selected.id)}
+              />
             </div>
           ))}
         </div>
       </div>
+
+      {/* Comprehensive Format Information Popup Modal */}
+      <WorkshopFormatDetailModal
+        formatId={selectedFormatId}
+        isOpen={!!selectedFormatId}
+        onClose={() => setSelectedFormatId(null)}
+        onRegister={() => {
+          setSelectedFormatId(null);
+          if (onOpenRegistration) onOpenRegistration('register');
+        }}
+        onRequestCollege={() => {
+          setSelectedFormatId(null);
+          document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
+        }}
+      />
     </section>
   );
 }

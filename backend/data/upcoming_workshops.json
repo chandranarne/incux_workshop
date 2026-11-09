@@ -14,21 +14,5 @@
     "status": "Active",
     "isPrimary": true,
     "postedAt": "2026-11-01T09:00:00Z"
-  },
-  {
-    "id": "WS-AGENTIC-SYSTEMS",
-    "title": "Autonomous Agentic AI & Systems Engineering",
-    "category": "Agentic AI",
-    "dates": "December 5–6, 2026",
-    "duration": "2-Day Immersive Sprint",
-    "location": "Regional Tech Innovation Hub",
-    "seats": 100,
-    "registered": 35,
-    "mode": "Offline Sandbox",
-    "speaker": "IncuxAI Core Systems Engineering Team",
-    "description": "Multi-agent orchestration, tool routing, memory schemas, and production deployment loops.",
-    "status": "Active",
-    "isPrimary": false,
-    "postedAt": "2026-11-02T10:00:00Z"
   }
 ]
