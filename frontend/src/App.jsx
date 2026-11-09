@@ -52,6 +52,7 @@ export default function App() {
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isPortalOpen, setIsPortalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('register');
 
   // App data state (defaults to local data, updates from backend if available)
   const [cards, setCards] = useState(workshopCards);
@@ -145,7 +146,7 @@ export default function App() {
         <Hero />
 
         {/* Section: Bridging Education & Industry (Directly below landing page) */}
-        <About />
+        <About onOpenRegistration={openAuth} />
 
         {/* Section 3: Our Work ("Where Ideas Become Experience" with fluid horizontal scrolling) */}
         <OurWork cards={cards} />

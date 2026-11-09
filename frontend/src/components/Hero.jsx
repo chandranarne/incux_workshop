@@ -1,69 +1,99 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowDownRight, ChevronDown, ChevronLeft, ChevronRight, Eye, Grid } from 'lucide-react';
+import { ArrowDownRight, ChevronDown, ChevronLeft, ChevronRight, Eye, Grid, Sparkles, MapPin, Users } from 'lucide-react';
 import { siteConfig } from '../data/config';
 import realCampusCohort from '../assets/real_campus_cohort.jpg';
 import realHandsOnLab from '../assets/real_hands_on_lab.jpg';
 import realHackathon2k26 from '../assets/real_hackathon_2k26.jpg';
 import realStageCertifications from '../assets/real_stage_certifications.jpg';
 import realStaircaseSprint from '../assets/real_staircase_sprint.jpg';
+import guestLectureSpeakerImg from '../assets/guest_lecture_speaker.jpg';
+import aiPresentationSpeakerImg from '../assets/ai_presentation_speaker.jpg';
+import campusOutdoorCohortImg from '../assets/campus_outdoor_cohort.jpg';
+import staircaseCohortImg from '../assets/staircase_group_cohort.jpg';
+import staircaseWideImg from '../assets/staircase_group_wide.jpg';
+
+// Watermark photos array for ambient background streams
+const watermarkPhotos = [
+  guestLectureSpeakerImg,
+  campusOutdoorCohortImg,
+  aiPresentationSpeakerImg,
+  staircaseCohortImg,
+  staircaseWideImg,
+  realCampusCohort,
+  realHandsOnLab,
+  realHackathon2k26,
+  realStageCertifications,
+  realStaircaseSprint
+];
 
 // Real authentic workshop photographs provided by the user with asymmetric editorial layout parameters
 const workshopGallery = [
   {
     id: 1,
-    image: realCampusCohort,
-    category: "PREMIER CAMPUS",
-    tag: "CAMPUS IMMERSION",
+    image: aiPresentationSpeakerImg,
+    category: "GENERATIVE AI",
+    tag: "CAMPUS MASTERCLASS",
     number: "01",
-    title: "Collegiate Engineering Immersion",
-    location: "Telangana & Andhra Pradesh Campuses",
-    highlight: "3,075+ Engineers Mentored",
+    title: "Generative AI & Career Opportunities",
+    location: "Hindu College of Engineering & Tech, Guntur",
+    highlight: "150 Engineers • Tech Mahindra Speaker",
     desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-start lg:ml-[5%] xl:ml-[8%]"
   },
   {
     id: 2,
-    image: realHandsOnLab,
-    category: "100% PRACTICAL LABS",
-    tag: "PRODUCTION LABS",
+    image: guestLectureSpeakerImg,
+    category: "CORE ENGINEERING",
+    tag: "LIVE CLASSROOM SESSION",
     number: "02",
-    title: "Hands-On Systems & Code Labs",
-    location: "Advanced Compute & Systems Labs",
-    highlight: "Live IDE Debugging",
+    title: "Java Programming Fundamentals",
+    location: "Hindu College of Engineering & Tech, Guntur",
+    highlight: "65 Students • Backend Developer Lead",
     desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-end lg:mr-[4%] xl:mr-[8%]"
   },
   {
     id: 3,
-    image: realHackathon2k26,
-    category: "COMPETITIVE SPRINT",
-    tag: "AI HACKATHON 2K26",
+    image: campusOutdoorCohortImg,
+    category: "CAMPUS FOOTPRINT",
+    tag: "COLLEGIATE COHORT",
     number: "03",
-    title: "AI x Anantapur Police Hackathon",
-    location: "Anantapur & Regional Technical Hubs",
-    highlight: "Real-World AI Solutions",
+    title: "NLP & Enterprise Systems Cohort",
+    location: "Campus Technical Auditoriums",
+    highlight: "Deloitte & TCS Industry Mentors",
     desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[310px] self-start lg:ml-[10%] xl:ml-[14%]"
   },
   {
     id: 4,
-    image: realStageCertifications,
-    category: "PEDIGREE & HONORS",
+    image: staircaseCohortImg,
+    category: "LEADERSHIP & HONORS",
     tag: "MASTERCLASS SPRINT",
     number: "04",
-    title: "Auditorium Masterclass & Honors",
-    location: "Campus Technical Auditoriums",
-    highlight: "Executive Mentorship",
+    title: "Soft Skills & Personality Development",
+    location: "Hindu College, Guntur",
+    highlight: "300+ Students • TCS Delivery Manager",
     desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-end lg:mr-[6%] xl:mr-[10%]"
   },
   {
     id: 5,
-    image: realStaircaseSprint,
-    category: "COLLEGIATE FOOTPRINT",
-    tag: "ENGINEERING SQUAD",
+    image: realHandsOnLab,
+    category: "100% PRACTICAL LABS",
+    tag: "PRODUCTION LABS",
     number: "05",
-    title: "University Practitioner Bootcamps",
-    location: "University Engineering Campuses",
-    highlight: "Multi-Day Bootcamps",
+    title: "Hands-On Systems & Code Labs",
+    location: "Advanced Compute & Systems Labs",
+    highlight: "Live IDE Debugging",
     desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[300px] self-center"
+  },
+  {
+    id: 6,
+    image: realHackathon2k26,
+    category: "COMPETITIVE SPRINT",
+    tag: "AI HACKATHON 2K26",
+    number: "06",
+    title: "AI x Regional Hackathon Sprints",
+    location: "Regional Technical Hubs",
+    highlight: "Real-World AI Solutions",
+    desktopClass: "w-[88%] sm:w-[82%] max-w-[460px] h-[310px] self-start"
   }
 ];
 
@@ -96,9 +126,63 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] transition-colors duration-200 overflow-hidden"
       aria-label="Hero Section"
     >
+      {/* ========================================================================= */}
+      {/* AMBIENT WATERMARK BACKGROUND PHOTO STREAMS                                 */}
+      {/* Up-to-Down (Vertical) & Left-to-Right, Right-to-Left (Horizontal)          */}
+      {/* ========================================================================= */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+        {/* Soft Vignettes for Flawless Text Readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FDFCFA]/95 via-[#FDFCFA]/80 to-[#FDFCFA]/95 dark:from-[#0A0A0A]/95 dark:via-[#0A0A0A]/85 dark:to-[#0A0A0A]/95 z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#FDFCFA] via-transparent to-[#FDFCFA] dark:from-[#0A0A0A] dark:via-transparent dark:to-[#0A0A0A] z-10 pointer-events-none" />
+
+        {/* 1. VERTICAL WATERMARK STREAM: Up to Down (Left Column) */}
+        <div className="absolute -top-36 left-2 sm:left-8 w-44 sm:w-60 opacity-[0.14] dark:opacity-[0.10] filter grayscale contrast-125 z-0">
+          <div className="animate-watermark-down flex flex-col gap-5">
+            {watermarkPhotos.concat(watermarkPhotos).map((img, idx) => (
+              <div key={`vm-l-${idx}`} className="w-full h-32 sm:h-44 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
+                <img src={img} alt="Campus Workshop Watermark" className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 2. VERTICAL WATERMARK STREAM: Up to Down (Right Column) */}
+        <div className="absolute -top-24 right-2 sm:right-12 w-48 sm:w-64 opacity-[0.13] dark:opacity-[0.09] filter grayscale contrast-125 z-0 hidden md:block">
+          <div className="animate-watermark-down flex flex-col gap-5" style={{ animationDelay: '-12s', animationDuration: '40s' }}>
+            {watermarkPhotos.slice().reverse().concat(watermarkPhotos).map((img, idx) => (
+              <div key={`vm-r-${idx}`} className="w-full h-36 sm:h-48 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
+                <img src={img} alt="Campus Workshop Watermark" className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 3. HORIZONTAL WATERMARK STREAM: Left to Right (Upper Tier) */}
+        <div className="absolute top-[12%] inset-x-0 h-28 sm:h-36 opacity-[0.12] dark:opacity-[0.08] filter grayscale contrast-125 z-0 overflow-hidden">
+          <div className="animate-watermark-ltr flex gap-5 w-max">
+            {watermarkPhotos.concat(watermarkPhotos).map((img, idx) => (
+              <div key={`hm-ltr-${idx}`} className="w-48 sm:w-64 h-28 sm:h-36 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
+                <img src={img} alt="Campus Workshop Watermark" className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. HORIZONTAL WATERMARK STREAM: Right to Left (Lower Tier) */}
+        <div className="absolute bottom-[10%] inset-x-0 h-28 sm:h-36 opacity-[0.12] dark:opacity-[0.08] filter grayscale contrast-125 z-0 overflow-hidden">
+          <div className="animate-watermark-rtl flex gap-5 w-max">
+            {watermarkPhotos.slice().reverse().concat(watermarkPhotos).map((img, idx) => (
+              <div key={`hm-rtl-${idx}`} className="w-48 sm:w-64 h-28 sm:h-36 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
+                <img src={img} alt="Campus Workshop Watermark" className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Editorial Architectural Grid Lines */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="max-w-[1600px] mx-auto h-full px-4 sm:px-6 lg:px-8 border-x border-black/10 dark:border-yellow-400/15 flex justify-between">
@@ -183,10 +267,10 @@ export default function Hero() {
         </div>
 
         {/* ========================================================================= */}
-        {/* RIGHT SECTION: Workshop Photo Gallery (Adaptive: Full on First Visit, Compact on Return) */}
+        {/* RIGHT SECTION: Workshop Photo Gallery                                    */}
         {/* ========================================================================= */}
         <div className="w-full md:w-[60%] lg:w-[57%] px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 md:pt-16 pb-12 flex flex-col justify-center z-10">
-          {/* Compact Featured Reel */}
+          {/* Featured Reel Card */}
           <div className="relative rounded-3xl overflow-hidden border border-black/15 dark:border-[#262626] bg-neutral-950 shadow-2xl p-2 sm:p-3">
             <div className="relative h-[300px] sm:h-[380px] lg:h-[420px] rounded-2xl overflow-hidden bg-neutral-900 group">
               <AnimatePresence mode="wait">
@@ -212,24 +296,25 @@ export default function Hero() {
                   <h3 className="font-headline font-bold text-base sm:text-lg text-white truncate">
                     {workshopGallery[activePhotoIdx].title}
                   </h3>
-                  <p className="text-xs font-mono text-white/75 truncate">
-                    {workshopGallery[activePhotoIdx].location} • {workshopGallery[activePhotoIdx].highlight}
+                  <p className="text-xs font-mono text-white/75 truncate flex items-center gap-1.5 mt-0.5">
+                    <MapPin className="w-3.5 h-3.5 text-[#FACC15] shrink-0" />
+                    <span>{workshopGallery[activePhotoIdx].location} • {workshopGallery[activePhotoIdx].highlight}</span>
                   </p>
                 </div>
                 
                 {/* Prev / Next buttons */}
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
-                    onClick={() => setActivePhotoIdx((prev) => (prev - 1 + workshopGallery.length) % workshopGallery.length)}
-                    aria-label="Previous photo"
-                    className="w-9 h-9 rounded-full bg-black/60 hover:bg-[#FACC15] hover:text-[#0A0A0A] text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer border border-white/10"
+                    onClick={() => setActivePhotoIdx((prev) => (prev === 0 ? workshopGallery.length - 1 : prev - 1))}
+                    aria-label="Previous workshop photo"
+                    className="w-9 h-9 rounded-full bg-black/60 hover:bg-[#FACC15] hover:text-[#0A0A0A] border border-white/20 flex items-center justify-center text-white transition-all cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => setActivePhotoIdx((prev) => (prev + 1) % workshopGallery.length)}
-                    aria-label="Next photo"
-                    className="w-9 h-9 rounded-full bg-black/60 hover:bg-[#FACC15] hover:text-[#0A0A0A] text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer border border-white/10"
+                    onClick={() => setActivePhotoIdx((prev) => (prev === workshopGallery.length - 1 ? 0 : prev + 1))}
+                    aria-label="Next workshop photo"
+                    className="w-9 h-9 rounded-full bg-black/60 hover:bg-[#FACC15] hover:text-[#0A0A0A] border border-white/20 flex items-center justify-center text-white transition-all cursor-pointer"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -237,80 +322,19 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* Photo selector indicator dots */}
-            <div className="flex items-center justify-center gap-2 pt-3 pb-1">
-              {workshopGallery.map((item, idx) => (
+            {/* Thumbnails row */}
+            <div className="mt-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1">
+              {workshopGallery.map((photo, idx) => (
                 <button
-                  key={item.id}
+                  key={photo.id}
                   onClick={() => setActivePhotoIdx(idx)}
-                  className={`h-2 rounded-full transition-all cursor-pointer ${
-                    activePhotoIdx === idx ? 'w-8 bg-[#FACC15]' : 'w-2 bg-neutral-600 hover:bg-neutral-400'
+                  className={`relative shrink-0 w-16 h-12 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
+                    activePhotoIdx === idx
+                      ? 'border-[#FACC15] scale-105 shadow-md shadow-yellow-500/20'
+                      : 'border-white/10 opacity-60 hover:opacity-100 hover:border-white/40'
                   }`}
-                  title={item.title}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* ========================================================================= */}
-      {/* Prominent Upcoming Workshops Scrolling Marquee (Transitions into Section 2) */}
-      {/* ========================================================================= */}
-      <div className="relative z-10 w-full pt-4 sm:pt-6 pb-6 sm:pb-8 border-t border-black/10 dark:border-yellow-400/20 overflow-hidden">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mb-2 flex items-center justify-between relative z-20">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#FACC15] shadow-xs shrink-0" />
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#0A0A0A] dark:text-[#FACC15]">
-              Upcoming Workshops // Open For Registration
-            </span>
-          </div>
-        </div>
-
-        {/* Horizontal Track Layered Over Oversized Watermark */}
-        <div className="relative w-full overflow-hidden py-2 sm:py-3 select-none flex items-center justify-center">
-          {/* Oversized "WORKSHOPS" Background Watermark Layer */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
-            <div
-              className="text-center font-headline font-black uppercase text-[15vw] sm:text-[13vw] md:text-[11vw] leading-none tracking-tighter text-black/[0.04] dark:text-yellow-400/[0.05] whitespace-nowrap block w-full drop-shadow-sm select-none"
-              aria-hidden="true"
-            >
-              {siteConfig.brand.heroOversized}
-            </div>
-          </div>
-
-          {/* Clean Horizontal Space for the Right-to-Left Scrolling Track */}
-          <div className="relative z-10 w-full py-1 bg-gradient-to-r from-[#FDFCFA]/80 via-transparent to-[#FDFCFA]/80 dark:from-[#0A0A0A]/80 dark:via-transparent dark:to-[#0A0A0A]/80 backdrop-blur-[2px]">
-            <div className="animate-marquee-infinite py-1 gap-4 sm:gap-6 flex items-center">
-              {[
-                "Enterprise Generative AI & LLMOps Pipeline",
-                "Autonomous AI Agents & LangGraph Deep Dive",
-                "Defensive Cloud Security & Zero-Trust Engineering",
-                "5-Day Full-Stack AI System Bootcamp",
-                "Enterprise Agentic AI & Autonomous Workflows",
-                "High-Scale Microservices & Distributed Systems",
-                "Applied Deep Learning & SLM Fine-Tuning"
-              ].concat([
-                "Enterprise Generative AI & LLMOps Pipeline",
-                "Autonomous AI Agents & LangGraph Deep Dive",
-                "Defensive Cloud Security & Zero-Trust Engineering",
-                "5-Day Full-Stack AI System Bootcamp",
-                "Enterprise Agentic AI & Autonomous Workflows",
-                "High-Scale Microservices & Distributed Systems",
-                "Applied Deep Learning & SLM Fine-Tuning"
-              ]).map((workshopName, idx) => (
-                <button
-                  key={`${workshopName}-${idx}`}
-                  onClick={() => {
-                    document.querySelector('#upcoming-workshops')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="shrink-0 group inline-flex items-center gap-2.5 sm:gap-3.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl bg-white/95 dark:bg-[#141414]/95 backdrop-blur-md border border-black/15 dark:border-[#262626] hover:border-[#FACC15] dark:hover:border-[#FACC15] hover:shadow-glow-yellow hover:-translate-y-0.5 transition-all duration-300 shadow-md cursor-pointer"
                 >
-                  <span className="w-2 h-2 rounded-full bg-[#FACC15] shrink-0 shadow-sm" />
-                  <span className="font-headline font-bold text-xs sm:text-sm md:text-base text-[#0A0A0A] dark:text-[#F5F5F5] group-hover:text-[#EAB308] dark:group-hover:text-[#FACC15] transition-colors tracking-tight whitespace-nowrap">
-                    {workshopName}
-                  </span>
+                  <img src={photo.image} alt={photo.title} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -318,6 +342,35 @@ export default function Hero() {
         </div>
       </div>
 
+      {/* Ticker / Highlights Marquee */}
+      <div className="relative z-10 w-full border-t border-black/10 dark:border-yellow-400/20 py-4 bg-white/75 dark:bg-[#0A0A0A]/75 backdrop-blur-md">
+        <div className="select-none overflow-hidden mask-gradient-x">
+          <div className="flex w-max animate-marquee gap-8 sm:gap-12 px-4 text-xs font-mono font-bold tracking-wider uppercase text-[#0A0A0A]/80 dark:text-[#F5F5F5]/80">
+            {[
+              "3,075+ Verified Student Participants",
+              "21 Specialised Technical Sessions",
+              "Frontier GenAI & Agentic Architectures",
+              "IIT Hyderabad Campus Cohorts",
+              "Hindu College Guntur Guest Lectures",
+              "Hands-on Industrial Code Sandboxes",
+              "Enterprise Mentorship: Google • Walmart • Tech Mahindra • Deloitte • TCS"
+            ].concat([
+              "3,075+ Verified Student Participants",
+              "21 Specialised Technical Sessions",
+              "Frontier GenAI & Agentic Architectures",
+              "IIT Hyderabad Campus Cohorts",
+              "Hindu College Guntur Guest Lectures",
+              "Hands-on Industrial Code Sandboxes",
+              "Enterprise Mentorship: Google • Walmart • Tech Mahindra • Deloitte • TCS"
+            ]).map((text, idx) => (
+              <span key={idx} className="flex items-center gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FACC15]" />
+                <span>{text}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

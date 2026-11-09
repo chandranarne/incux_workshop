@@ -109,12 +109,12 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
                 <button
                   onClick={() => {
                     onClose();
-                    onOpenAuth();
+                    onOpenAuth('register');
                   }}
                   className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-xs uppercase tracking-wider shadow-sm hover:scale-105 transition-all cursor-pointer"
                 >
                   <LogIn className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>Login / Register</span>
+                  <span>Let's Start with a Hello!</span>
                 </button>
               ) : (
                 <button
@@ -197,12 +197,12 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
                     <button
                       onClick={() => {
                         onClose();
-                        onOpenAuth();
+                        onOpenAuth('register');
                       }}
                       className="px-6 py-3.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-sm uppercase tracking-wider shadow-lg shadow-yellow-500/25 hover:scale-105 transition-all cursor-pointer flex items-center gap-2"
                     >
                       <LogIn className="w-4 h-4" />
-                      <span>Login / Register</span>
+                      <span>Let's Start with a Hello!</span>
                     </button>
                   </div>
                 )}

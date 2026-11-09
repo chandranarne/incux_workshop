@@ -65,29 +65,9 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
             </div>
           </a>
 
-          {/* Actions: Theme Toggle, Login/Portal, Menu Button */}
+          {/* Actions: Greeting Action / User Portal & Menu Button */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Theme Toggle Button (Dark / Light Mode) */}
-            <button
-              onClick={toggleTheme}
-              type="button"
-              aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-2 sm:px-3 sm:py-2 rounded-full border text-xs font-mono font-bold transition-all bg-black/5 dark:bg-[#141414] border-black/15 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] cursor-pointer shadow-sm hover:scale-105 flex items-center gap-1.5"
-            >
-              {isDark ? (
-                <>
-                  <Sun className="w-4 h-4 text-[#FACC15]" />
-                  <span className="hidden sm:inline">Light</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-4 h-4 text-[#0A0A0A]" />
-                  <span className="hidden sm:inline">Dark</span>
-                </>
-              )}
-            </button>
-
-            {/* Login / Register or Active User Portal Button (Beside Dark Mode) */}
+            {/* Let's Start with a Hello! (opens Registration) or Active User Portal Button */}
             {currentUser ? (
               <button
                 onClick={onOpenPortal}
@@ -102,11 +82,11 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
               </button>
             ) : (
               <button
-                onClick={() => onOpenAuth()}
-                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-xs uppercase tracking-wider shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                onClick={() => onOpenAuth('register')}
+                className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
-                <LogIn className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Login / Register</span>
+                <Sparkles className="w-3.5 h-3.5 fill-[#0A0A0A] text-[#0A0A0A]" />
+                <span>Let's Start with a Hello!</span>
               </button>
             )}
 

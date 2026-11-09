@@ -329,3 +329,45 @@ textarea:focus-visible {
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+
+/* Watermark Background Scrolling Animations */
+@keyframes watermark-down {
+  0% { transform: translateY(-50%); }
+  100% { transform: translateY(0%); }
+}
+
+@keyframes watermark-up {
+  0% { transform: translateY(0%); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes watermark-ltr {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+
+@keyframes watermark-rtl {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-watermark-down {
+  animation: watermark-down 45s linear infinite;
+  will-change: transform;
+}
+
+.animate-watermark-up {
+  animation: watermark-up 45s linear infinite;
+  will-change: transform;
+}
+
+.animate-watermark-ltr {
+  animation: watermark-ltr 50s linear infinite;
+  will-change: transform;
+}
+
+.animate-watermark-rtl {
+  animation: watermark-rtl 50s linear infinite;
+  will-change: transform;
+}

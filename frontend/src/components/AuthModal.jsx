@@ -2,8 +2,15 @@ import React, { useState } from 'react';
 import { X, User, Lock, Mail, Building, ArrowRight, AlertCircle } from 'lucide-react';
 import { loginUser, registerCandidate } from '../services/api';
 
-export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
-  const [isRegistering, setIsRegistering] = useState(false);
+export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode = 'register' }) {
+  const [isRegistering, setIsRegistering] = useState(initialMode !== 'login');
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setIsRegistering(initialMode !== 'login');
+      setError('');
+    }
+  }, [isOpen, initialMode]);
 
   const [formData, setFormData] = useState({
     name: '',

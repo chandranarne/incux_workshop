@@ -11,10 +11,13 @@ import realStageCertifications from '../assets/real_stage_certifications.jpg';
 import realStaircaseSprint from '../assets/real_staircase_sprint.jpg';
 import campusHallImg from '../assets/campus_hall_card.jpg';
 import WorkshopVideoPlayer from './WorkshopVideoPlayer';
+import guestLectureSpeakerImg from '../assets/guest_lecture_speaker.jpg';
+import aiPresentationSpeakerImg from '../assets/ai_presentation_speaker.jpg';
+import campusOutdoorCohortImg from '../assets/campus_outdoor_cohort.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function About() {
+export default function About({ onOpenRegistration }) {
   const sectionRef = useRef(null);
   const [activeCategory, setActiveCategory] = useState('workshops'); // 'workshops' | 'hackathons' | 'guest-lectures'
 
@@ -74,27 +77,27 @@ export default function About() {
     'guest-lectures': [
       {
         id: 'g1',
-        title: 'Executive Keynotes @ IIT Hyderabad',
-        location: 'IIT Hyderabad Campus',
-        date: 'Research & Enterprise Tech Talks',
-        image: auditoriumImg,
-        badge: 'PREMIER KEYNOTE'
+        title: 'Demystifying Generative AI & Career Opportunities',
+        location: 'Hindu Engineering & Technology College, Guntur',
+        date: 'July 25th • 150 Students',
+        image: aiPresentationSpeakerImg,
+        badge: 'TECH MAHINDRA SPEAKER'
       },
       {
         id: 'g2',
-        title: 'Staff AI Leadership Masterclass',
-        location: 'College Central Auditorium',
-        date: 'Google & Walmart Mentors',
-        image: mentorImg,
-        badge: 'STAFF AI DIALOGUE'
+        title: 'Java Programming Fundamentals',
+        location: 'Hindu Engineering & Technology College, Guntur',
+        date: 'August 1st • 65 Students',
+        image: guestLectureSpeakerImg,
+        badge: 'BACKEND DEV SESSION'
       },
       {
         id: 'g3',
-        title: '500+ Engineering Audience Keynote',
-        location: 'Chalapathi Institute of Tech',
-        date: 'Large-Scale Student Immersion',
-        image: campusHallImg,
-        badge: '500+ ATTENDEES'
+        title: 'Natural Language Processing & Soft Skills',
+        location: 'Hindu College, Guntur',
+        date: 'Deloitte & TCS Industry Leaders',
+        image: campusOutdoorCohortImg,
+        badge: 'ENTERPRISE MENTORSHIP'
       }
     ]
   };
@@ -178,7 +181,7 @@ export default function About() {
 
         {/* Featured Video Showcase: Placed directly below Bridging Education and Industry */}
         <div className="about-video-wrapper mb-12 sm:mb-16 max-w-5xl mx-auto">
-          <WorkshopVideoPlayer />
+          <WorkshopVideoPlayer onOpenRegistration={onOpenRegistration} />
         </div>
 
         {/* Interactive Event Showcase: 3 Icons (Workshops, Hackathons, Guest Lectures) */}
