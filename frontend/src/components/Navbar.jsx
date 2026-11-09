@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Sun, Moon, User, Shield, LogIn, Sparkles } from 'lucide-react';
+import { Menu, User, Shield, Sparkles } from 'lucide-react';
 import { siteConfig } from '../data/config';
 import { useTheme } from '../context/ThemeContext';
+import incuxaiLogo from '../assets/incuxai_official_logo.jpg';
 
 export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPortal }) {
   const [scrolled, setScrolled] = useState(false);
@@ -41,18 +42,19 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
         }`}
       >
         <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 flex items-center justify-between">
-          {/* Brand Wordmark with AI Pulsing Emblem */}
+          {/* Brand Wordmark with Official IncuxAI Logo */}
           <a
             href="#hero"
             className="group flex items-center gap-2 sm:gap-3 focus-visible:outline-[#FACC15]"
             aria-label="IncuxAI Home"
           >
-            <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-[#FACC15] via-[#EAB308] to-[#0A0A0A] p-[1px] shadow-sm group-hover:shadow-glow-yellow transition-all shrink-0">
-              <div className="w-full h-full rounded-[11px] bg-[#FDFCFA] dark:bg-[#0A0A0A] flex items-center justify-center">
-                <span className="font-headline font-black text-transparent bg-clip-text bg-gradient-to-r from-[#0A0A0A] to-[#333333] dark:from-[#FACC15] dark:to-[#FEF08A] text-base sm:text-lg leading-none">
-                  I
-                </span>
-              </div>
+            {/* Official IncuxAI Logo */}
+            <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-sm group-hover:shadow-glow-yellow transition-all shrink-0 border border-black/10 dark:border-white/15 bg-white">
+              <img
+                src={incuxaiLogo}
+                alt="IncuxAI Official Logo"
+                className="w-full h-full object-cover"
+              />
             </div>
 
             <div className="flex flex-col">

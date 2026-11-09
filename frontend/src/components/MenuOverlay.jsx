@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowUpRight, Sparkles, User, Shield, Sun, Moon, LogIn } from 'lucide-react';
 import { siteConfig } from '../data/config';
 import { useTheme } from '../context/ThemeContext';
+import incuxaiLogo from '../assets/incuxai_official_logo.jpg';
 
 export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal, currentUser }) {
   const closeBtnRef = useRef(null);
@@ -78,9 +79,12 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
             <a
               href="#hero"
               onClick={() => handleLinkClick('#hero')}
-              className="font-headline font-bold text-xl sm:text-2xl tracking-tighter text-[#0A0A0A] dark:text-[#F5F5F5] flex items-center gap-2"
+              className="font-headline font-bold text-xl sm:text-2xl tracking-tighter text-[#0A0A0A] dark:text-[#F5F5F5] flex items-center gap-2.5"
             >
-              {siteConfig.brand.wordmark}
+              <div className="w-8 h-8 rounded-xl overflow-hidden border border-black/10 dark:border-white/15 bg-white shrink-0 shadow-xs">
+                <img src={incuxaiLogo} alt="IncuxAI Logo" className="w-full h-full object-cover" />
+              </div>
+              <span>{siteConfig.brand.wordmark}</span>
             </a>
 
             <div className="flex items-center gap-2 sm:gap-3">

@@ -1,16 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { impactStatsData } from '../data/statistics';
-import { Sparkles, Activity, Layers, Users, Calendar, Award } from 'lucide-react';
+import { Sparkles, Activity } from 'lucide-react';
 import IndiaReachMap from './IndiaReachMap';
 
-gsap.registerPlugin(ScrollTrigger);
-
 function SwipeableCounterCard({ stat, index, activeHoveredIndex, setActiveHoveredIndex }) {
+  // Always default to stat.value so numbers are NEVER blank or delayed
   const [currentValue, setCurrentValue] = useState(stat.value);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const hasAnimatedRef = useRef(false);
   const cardRef = useRef(null);
 
   useEffect(() => {
@@ -23,14 +22,12 @@ function SwipeableCounterCard({ stat, index, activeHoveredIndex, setActiveHovere
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  // Smooth springs for fluid swiping glide
   const springConfig = { damping: 18, stiffness: 180, mass: 0.6 };
   const swipeX = useSpring(mouseX, springConfig);
   const swipeY = useSpring(mouseY, springConfig);
   const rotateZ = useTransform(swipeX, [-50, 50], [-4, 4]);
 
   const isHovered = activeHoveredIndex === index;
-  // If a neighboring card is hovered, this card shifts slightly away to simulate deck swiping
   const neighborShift =
     activeHoveredIndex !== null && activeHoveredIndex !== index
       ? index < activeHoveredIndex
@@ -38,33 +35,41 @@ function SwipeableCounterCard({ stat, index, activeHoveredIndex, setActiveHovere
         : 14
       : 0;
 
+  // Ultra-fast, responsive count-up animation that never lags or stays blank
   useEffect(() => {
     const card = cardRef.current;
-    if (!card) return;
+    if (!card || hasAnimatedRef.current) {
+      setCurrentValue(stat.value);
+      return;
+    }
 
-    // Reset to 0 and count up smoothly in 3 to 4 seconds (3.5s)
-    setCurrentValue(0);
-    const statTarget = { val: 0 };
-    const countDuration = stat.value >= 100 ? 3.5 : 2.0;
-
-    const tween = gsap.to(statTarget, {
-      val: stat.value,
-      duration: countDuration,
-      delay: index * 0.08,
-      ease: "power2.out",
-      scrollTrigger: {
-        trigger: card,
-        start: "top 95%",
-        toggleActions: "play none none none"
+    // IntersectionObserver triggers reliably slightly ahead of time (rootMargin: 80px)
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasAnimatedRef.current) {
+          hasAnimatedRef.current = true;
+          
+          const statTarget = { val: 0 };
+          gsap.to(statTarget, {
+            val: stat.value,
+            duration: 0.85,
+            delay: index * 0.06,
+            ease: "power2.out",
+            onUpdate: () => {
+              setCurrentValue(Math.floor(statTarget.val));
+            },
+            onComplete: () => {
+              setCurrentValue(stat.value);
+            }
+          });
+          observer.disconnect();
+        }
       },
-      onUpdate: () => {
-        setCurrentValue(Math.floor(statTarget.val));
-      }
-    });
+      { threshold: 0.1, rootMargin: '80px' }
+    );
 
-    return () => {
-      tween.kill();
-    };
+    observer.observe(card);
+    return () => observer.disconnect();
   }, [stat.value, index]);
 
   const handleMouseMove = (e) => {
@@ -152,33 +157,6 @@ function SwipeableCounterCard({ stat, index, activeHoveredIndex, setActiveHovere
 export default function ImpactStats({ data = impactStatsData }) {
   const sectionRef = useRef(null);
   const [activeHoveredIndex, setActiveHoveredIndex] = useState(null);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        ".impact-card",
-        { opacity: 0.3, y: 25 },
-        {
-          opacity: 1,
-          y: 0,
-          stagger: 0.1,
-          duration: 0.6,
-          ease: "power2.out",
-          clearProps: "all",
-          scrollTrigger: {
-            trigger: section,
-            start: "top 95%",
-            once: true
-          }
-        }
-      );
-    }, section);
-
-    return () => ctx.revert();
-  }, [data]);
 
   return (
     <section
