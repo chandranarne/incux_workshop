@@ -67,8 +67,8 @@ export default function Navbar({ onOpenMenu }) {
             </div>
           </a>
 
-          {/* Desktop Navigation Links - visible on laptop and larger screens */}
-          <nav className="hidden md:flex items-center gap-1 sm:gap-2 font-mono text-xs sm:text-sm">
+          {/* Desktop Navigation Links - laptop and larger only */}
+          <nav className="hidden lg:flex items-center gap-1 sm:gap-2 font-mono text-xs sm:text-sm">
             {siteConfig.navigation.map((item) => (
               <a
                 key={item.label}
@@ -80,7 +80,7 @@ export default function Navbar({ onOpenMenu }) {
             ))}
           </nav>
 
-          {/* Actions: Theme Toggle & Menu Button (always visible) */}
+          {/* Actions: Theme Toggle always, Menu button below laptop only */}
           <div className="flex items-center gap-1.5 sm:gap-3">
             {/* Theme Mode Toggle */}
             <button
@@ -102,11 +102,11 @@ export default function Navbar({ onOpenMenu }) {
               )}
             </button>
 
-            {/* Menu button themed in Yellow and Black */}
+            {/* Menu button themed in Yellow and Black - below laptop only */}
             <button
               onClick={onOpenMenu}
               aria-label="Open full-screen navigation menu"
-              className="group flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] border border-[#0A0A0A] dark:border-[#FACC15] font-headline font-bold text-[11px] sm:text-xs uppercase tracking-wider shadow-lg shadow-black/20 dark:shadow-yellow-500/20 transition-all duration-200 active:scale-95 cursor-pointer shrink-0"
+              className="lg:hidden group flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] border border-[#0A0A0A] dark:border-[#FACC15] font-headline font-bold text-[11px] sm:text-xs uppercase tracking-wider shadow-lg shadow-black/20 dark:shadow-yellow-500/20 transition-all duration-200 active:scale-95 cursor-pointer shrink-0"
             >
               <span className="hidden xs:inline">Menu</span>
               <Menu className="w-4 h-4 stroke-[2.5] text-[#FACC15] dark:text-[#0A0A0A] group-hover:rotate-90 transition-transform duration-300" />

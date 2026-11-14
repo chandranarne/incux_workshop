@@ -25,9 +25,18 @@ export default function MenuOverlay({ isOpen, onClose, onOpenPortal }) {
     };
     window.addEventListener('keydown', handleKeyDown);
 
+    // The overlay is the below-laptop navigation. Close it if the viewport
+    // grows to laptop width, where the inline header nav takes over.
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const handleBreakpoint = (e) => {
+      if (e.matches && isOpen) onClose();
+    };
+    desktop.addEventListener('change', handleBreakpoint);
+
     return () => {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
+      desktop.removeEventListener('change', handleBreakpoint);
     };
   }, [isOpen, onClose]);
 
