@@ -1,5 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, RotateCcw } from 'lucide-react';
+import fallbackPoster from '../assets/events/workshops/workshop_09.jpg';
+
+// Drop a file at frontend/public/video.mp4 and set this to '/video.mp4' to enable
+// the full player. While it is empty the panel renders a real workshop photo
+// instead, so the page never requests a missing asset or shows a black box.
+const VIDEO_SRC = '';
+const HAS_VIDEO = VIDEO_SRC.length > 0;
 
 export default function WorkshopVideoPlayer() {
   const videoRef = useRef(null);
@@ -161,27 +168,38 @@ export default function WorkshopVideoPlayer() {
       onMouseLeave={() => setShowControls(false)}
       className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden bg-neutral-950 border border-black/10 dark:border-[#262626] shadow-2xl group transition-all duration-300 hover:border-[#FACC15]/40"
     >
-      {/* Video Element */}
+      {/* Media Panel */}
       <div 
-        onClick={togglePlay}
-        className="relative aspect-video w-full bg-black cursor-pointer"
-        title={isPlaying ? 'Click to pause video' : 'Click to play video'}
+        onClick={HAS_VIDEO ? togglePlay : undefined}
+        className={`relative aspect-video w-full bg-black ${HAS_VIDEO ? 'cursor-pointer' : ''}`}
+        title={HAS_VIDEO ? (isPlaying ? 'Click to pause video' : 'Click to play video') : undefined}
       >
-        <video
-          ref={videoRef}
-          src="/video.mp4"
-          autoPlay
-          muted
-          playsInline
-          preload="metadata"
-          onEnded={handleEnded}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          className="w-full h-full object-cover"
-        >
-          <source src="/video.mp4" type="video/mp4" />
-          <source src="/video.mp4" type="video/mp4" />
-        </video>
+        {HAS_VIDEO && (
+          <video
+            ref={videoRef}
+            src={VIDEO_SRC}
+            autoPlay
+            muted
+            playsInline
+            preload="metadata"
+            onEnded={handleEnded}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+            className="w-full h-full object-cover"
+          >
+            <source src={VIDEO_SRC} type="video/mp4" />
+          </video>
+        )}
+
+        {!HAS_VIDEO && (
+          <img
+            src={fallbackPoster}
+            alt="Students collaborating during an IncuxAI workshop session"
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+          />
+        )}
 
         {/* Ambient Top Shadow */}
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/75 via-black/25 to-transparent pointer-events-none transition-opacity" />
@@ -199,113 +217,119 @@ export default function WorkshopVideoPlayer() {
             <span className="text-white/80 hidden sm:inline">Engineering Immersions</span>
           </div>
 
-          <div className="flex items-center gap-2 pointer-events-auto">
-            {/* Sound Toggle */}
-            <button
-              type="button"
-              onClick={toggleMute}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 hover:bg-black/85 backdrop-blur-md border border-white/15 text-[11px] font-mono text-white transition-colors cursor-pointer shadow-lg"
-              title={isMuted ? 'Muted. Click to enable sound.' : 'Sound active. Click to mute.'}
-            >
-              {isMuted ? (
-                <>
-                  <VolumeX className="w-3.5 h-3.5 text-[#FACC15]" />
-                  <span className="text-white/90 font-medium hidden sm:inline">Muted</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="w-3.5 h-3.5 text-[#FACC15]" />
-                  <span className="text-[#FACC15] font-medium hidden sm:inline">Sound</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Center Hover / Paused Action Button */}
-        <div
-          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${
-            !isPlaying ? 'opacity-100 bg-black/35' : showControls ? 'opacity-90 bg-transparent' : 'opacity-0'
-          }`}
-        >
-          {hasEnded ? (
-            <button
-              type="button"
-              onClick={handleRewatch}
-              className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-xs uppercase tracking-wider shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Watch Again</span>
-            </button>
-          ) : !isPlaying && (
-            <button
-              type="button"
-              onClick={togglePlay}
-              className="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer group/play"
-              aria-label="Play Video"
-            >
-              <Play className="w-7 h-7 sm:w-9 sm:h-9 ml-1 fill-current group-hover/play:scale-105 transition-transform" />
-            </button>
+          {HAS_VIDEO && (
+            <div className="flex items-center gap-2 pointer-events-auto">
+              {/* Sound Toggle */}
+              <button
+                type="button"
+                onClick={toggleMute}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 hover:bg-black/85 backdrop-blur-md border border-white/15 text-[11px] font-mono text-white transition-colors cursor-pointer shadow-lg"
+                title={isMuted ? 'Muted. Click to enable sound.' : 'Sound active. Click to mute.'}
+              >
+                {isMuted ? (
+                  <>
+                    <VolumeX className="w-3.5 h-3.5 text-[#FACC15]" />
+                    <span className="text-white/90 font-medium hidden sm:inline">Muted</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3.5 h-3.5 text-[#FACC15]" />
+                    <span className="text-[#FACC15] font-medium hidden sm:inline">Sound</span>
+                  </>
+                )}
+              </button>
+            </div>
           )}
         </div>
 
-        {/* Bottom Ambient Gradient for Controls */}
-        <div
-          className={`absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none transition-opacity duration-300 ${
-            showControls || !isPlaying ? 'opacity-100' : 'opacity-0 sm:opacity-0'
-          }`}
-        />
-
-        {/* Bottom Interactive Controls Bar */}
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className={`absolute inset-x-0 bottom-0 p-3 sm:p-5 flex flex-col gap-2.5 transition-opacity duration-300 ${
-            showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none sm:opacity-0'
-          }`}
-        >
-          {/* Progress Timeline Track */}
-          <div
-            onClick={handleSeek}
-            className="w-full h-1.5 hover:h-2.5 bg-white/20 hover:bg-white/30 rounded-full cursor-pointer relative transition-all overflow-hidden"
-          >
+        {HAS_VIDEO && (
+          <>
+            {/* Center Hover / Paused Action Button */}
             <div
-              className="h-full bg-gradient-to-r from-amber-500 to-[#FACC15] rounded-full transition-all duration-100"
-              style={{ width: `${progress}%` }}
+              className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${
+                !isPlaying ? 'opacity-100 bg-black/35' : showControls ? 'opacity-90 bg-transparent' : 'opacity-0'
+              }`}
+            >
+              {hasEnded ? (
+                <button
+                  type="button"
+                  onClick={handleRewatch}
+                  className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-xs uppercase tracking-wider shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Watch Again</span>
+                </button>
+              ) : !isPlaying && (
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  className="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer group/play"
+                  aria-label="Play Video"
+                >
+                  <Play className="w-7 h-7 sm:w-9 sm:h-9 ml-1 fill-current group-hover/play:scale-105 transition-transform" />
+                </button>
+              )}
+            </div>
+
+            {/* Bottom Ambient Gradient for Controls */}
+            <div
+              className={`absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none transition-opacity duration-300 ${
+                showControls || !isPlaying ? 'opacity-100' : 'opacity-0 sm:opacity-0'
+              }`}
             />
-          </div>
 
-          {/* Action Buttons Row */}
-          <div className="flex items-center justify-between text-white text-xs font-mono">
-            <div className="flex items-center gap-3">
-              {/* Play / Pause Toggle */}
-              <button
-                type="button"
-                onClick={togglePlay}
-                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
-                title={isPlaying ? 'Pause' : 'Play'}
+            {/* Bottom Interactive Controls Bar */}
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={`absolute inset-x-0 bottom-0 p-3 sm:p-5 flex flex-col gap-2.5 transition-opacity duration-300 ${
+                showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none sm:opacity-0'
+              }`}
+            >
+              {/* Progress Timeline Track */}
+              <div
+                onClick={handleSeek}
+                className="w-full h-1.5 hover:h-2.5 bg-white/20 hover:bg-white/30 rounded-full cursor-pointer relative transition-all overflow-hidden"
               >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5 fill-current" />}
-              </button>
+                <div
+                  className="h-full bg-gradient-to-r from-amber-500 to-[#FACC15] rounded-full transition-all duration-100"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
 
-              {/* Time Counter */}
-              <span className="text-white/70 text-[11px] tracking-wide">
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </span>
-            </div>
+              {/* Action Buttons Row */}
+              <div className="flex items-center justify-between text-white text-xs font-mono">
+                <div className="flex items-center gap-3">
+                  {/* Play / Pause Toggle */}
+                  <button
+                    type="button"
+                    onClick={togglePlay}
+                    className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
+                    title={isPlaying ? 'Pause' : 'Play'}
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5 fill-current" />}
+                  </button>
 
-            <div className="flex items-center gap-3">
-              {/* Fullscreen Toggle */}
-              <button
-                type="button"
-                onClick={toggleFullscreen}
-                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
-                title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-              >
-                {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-              </button>
+                  {/* Time Counter */}
+                  <span className="text-white/70 text-[11px] tracking-wide">
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {/* Fullscreen Toggle */}
+                  <button
+                    type="button"
+                    onClick={toggleFullscreen}
+                    className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
+                    title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                  >
+                    {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

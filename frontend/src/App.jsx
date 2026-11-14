@@ -34,7 +34,7 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPortalOpen, setIsPortalOpen] = useState(false);
   const [isUpcomingPopupOpen, setIsUpcomingPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<'home' | 'terms' | 'privacy'>('home');
+  const [currentPage, setCurrentPage] = useState('home');
 
   useEffect(() => {
     // Whenever intro finishes or layout settles, recalculate scroll triggers

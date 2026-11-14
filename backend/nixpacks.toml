@@ -1,2 +1,13 @@
-[provider.nodejs]
-version = "22"
+# Nixpacks build plan for the IncuxAI backend.
+# Node 22 LTS + openssl (Prisma query engine needs libssl).
+[phases.setup]
+nixPkgs = ["nodejs_22", "npm-9_x", "openssl"]
+
+[phases.install]
+cmds = ["npm install --no-audit --no-fund"]
+
+[phases.build]
+cmds = ["npx prisma generate"]
+
+[start]
+cmd = "node server.js"

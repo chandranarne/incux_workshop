@@ -119,10 +119,6 @@ export default function About() {
       <div className="relative z-10 max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
         {/* Section Header: Centered Editorial Mission */}
         <div className="about-content max-w-4xl mx-auto text-center mb-10 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#FACC15]/15 dark:bg-[#FACC15]/10 border border-[#FACC15]/30 text-[11px] sm:text-xs font-mono text-neutral-900 dark:text-[#FACC15] uppercase tracking-widest mb-3.5 sm:mb-4 font-bold shadow-xs">
-            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-[#FACC15]" />
-            <span>Academic &amp; Industry Initiative</span>
-          </div>
 
           <h2 className="font-headline font-black text-2xl sm:text-5xl md:text-6xl text-neutral-950 dark:text-[#F5F5F5] tracking-tight leading-tight">
             Bridging Education <br className="hidden sm:inline" />
