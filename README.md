@@ -139,7 +139,7 @@ Backend and frontend are deployed individually on Railway.
 1. Connect the `frontend/` folder as a separate Railway service
 2. Node 22 is picked up from `.nvmrc` / `engines.node`
 3. No deploy config file is needed. Railway builds with `npm run build` and starts with `npm start` (`vite preview`), which reads `PORT` from the environment
-4. `/api/*` is proxied to the backend from `vite.config.js`. Set `API_PROXY_TARGET` in Railway Variables to the backend URL (the private URL `http://backend.railway.internal:5000` keeps traffic off the public edge). Nothing is hardcoded: without it the proxy falls back to `http://localhost:5000`, which only works locally
+4. `/api/*` is proxied to the backend from `vite.config.js`. Set `API_PROXY_TARGET` in Railway Variables to the backend URL (the private URL `http://backend.railway.internal:5000` keeps traffic off the public edge). Nothing is hardcoded: if it is missing, `/api` answers `503` with a message naming the variable instead of falling back to `localhost`
 
 Production behaviour of `vite preview`, configured in `vite.config.js`:
 

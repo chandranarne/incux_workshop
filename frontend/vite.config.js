@@ -13,16 +13,17 @@ const DIST_ASSETS = path.resolve(__dirname, 'dist', 'assets')
 
 // Backend origin for the /api proxy. Always comes from the environment.
 // `localhost` is only a development fallback, so nothing deployed is hardcoded.
+const apiTargetEnv = process.env.API_PROXY_TARGET || process.env.BACKEND_URL
 const apiTarget = (
-  process.env.API_PROXY_TARGET ||
-  process.env.BACKEND_URL ||
+  apiTargetEnv ||
   `http://localhost:${process.env.BACKEND_PORT || 5000}`
 ).replace(/\/+$/, '')
+const hasApiTarget = Boolean(apiTargetEnv)
 
-if (process.env.PORT && !process.env.API_PROXY_TARGET && !process.env.BACKEND_URL) {
+if (process.env.PORT && !hasApiTarget) {
   console.warn(
-    `[vite] API_PROXY_TARGET is not set, so /api proxies to ${apiTarget}. ` +
-    'Set API_PROXY_TARGET to the backend URL on Railway.'
+    '[vite] No API_PROXY_TARGET or BACKEND_URL set. /api will answer 503 ' +
+    'until you set one on the frontend service.'
   )
 }
 
@@ -36,6 +37,19 @@ function previewAssets() {
   return {
     name: 'incuxai-preview-assets',
     configurePreviewServer(server) {
+      // Without a configured backend there is no proxy middleware, so answer
+      // /api explicitly instead of letting it fall through to index.html.
+      if (!hasApiTarget) {
+        server.middlewares.use('/api', (req, res) => {
+          res.statusCode = 503
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+          res.end(JSON.stringify({
+            error: 'Backend proxy is not configured',
+            detail: 'Set API_PROXY_TARGET (or BACKEND_URL) on this service.',
+          }))
+        })
+      }
+
       server.middlewares.use((req, res, next) => {
         const urlPath = (req.url || '').split('?')[0]
         if (!urlPath.startsWith('/assets/')) return next()
@@ -87,12 +101,18 @@ export default defineConfig({
     // instead of silently listening on 4173 while the edge returns 502.
     port: Number(process.env.PORT) || 4173,
     strictPort: true,
-    proxy: {
-      '/api': {
-        target: apiTarget,
-        changeOrigin: true,
-      },
-    },
+    // Only proxy when a target is configured; otherwise the plugin above
+    // returns a clear 503 instead of proxying to a dead localhost port.
+    ...(hasApiTarget
+      ? {
+          proxy: {
+            '/api': {
+              target: apiTarget,
+              changeOrigin: true,
+            },
+          },
+        }
+      : {}),
   },
   build: {
     chunkSizeWarningLimit: 1000,
