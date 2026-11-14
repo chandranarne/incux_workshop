@@ -117,7 +117,7 @@ export default function WorkshopFormatDetailModal({ formatId, isOpen, onClose, o
 
                 <div className="absolute bottom-3 left-3 right-3 text-white text-xs sm:text-sm font-mono flex items-center justify-between">
                   <span className="bg-black/60 px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10 truncate max-w-[85%] font-medium">
-                    📸 {currentPhoto.caption}
+                    {currentPhoto.caption}
                   </span>
                   <span className="text-[11px] font-bold text-[#FACC15]">
                     {selectedPhotoIndex + 1} / {gallery.length}

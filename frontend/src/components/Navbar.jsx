@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, Sun, Moon } from 'lucide-react';
 import { siteConfig } from '../data/config';
 import { useTheme } from '../context/ThemeContext';
 import incuxaiLogo from '../assets/incuxai_official_logo.jpg';
@@ -91,12 +91,12 @@ export default function Navbar({ onOpenMenu }) {
             >
               {isDark ? (
                 <>
-                  <span className="text-[#FACC15]">☀</span>
+                  <Sun className="w-4 h-4 text-[#FACC15]" />
                   <span className="hidden xs:inline">Light</span>
                 </>
               ) : (
                 <>
-                  <span className="text-[#0A0A0A]">☽</span>
+                  <Moon className="w-4 h-4 text-[#0A0A0A]" />
                   <span className="hidden xs:inline">Dark</span>
                 </>
               )}
