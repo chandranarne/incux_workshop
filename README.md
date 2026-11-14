@@ -91,10 +91,9 @@ d:\Incux_workshop\
 │   │   ├── index.css
 │   │   └── main.jsx
 │   ├── .env                          # Frontend environment variables (VITE_API_BASE)
-│   ├── railway.json                  # Railway deployment config
-│   ├── package.json
+│   ├── package.json                  # build + start (vite preview) scripts
 │   ├── tailwind.config.js
-│   └── vite.config.js
+│   └── vite.config.js                # dev + preview server config (port, /api proxy)
 │
 └── package.json                      # Root workspace orchestrator
 ```
@@ -127,18 +126,31 @@ npm run dev
 
 ## 🚄 Deploy on Railway
 
-Backend and frontend are deployed individually on Railway using `railway.json`.
+Backend and frontend are deployed individually on Railway.
 
 ### Backend (Railway)
 1. Create a PostgreSQL database on Railway → copy `DATABASE_URL`
 2. Set `DATABASE_URL` in Railway Variables for the backend service
 3. Connect the `backend/` folder as a Railway service
-4. Railway runs: `npm run prisma:generate && npm run prisma:migrate && npm start`
+4. `backend/railway.json` runs: `npm run prisma:generate && (npx prisma migrate deploy || npx prisma db push --skip-generate) && npm start`
+5. Healthcheck: `/api/health`
 
 ### Frontend (Railway)
 1. Connect the `frontend/` folder as a separate Railway service
-2. Set `VITE_API_BASE=https://<your-backend>.railway.app/api` in Railway Variables
-3. Railway runs: `npm install && npm run build`
+2. Node 22 is picked up from `.nvmrc` / `engines.node`
+3. No deploy config file is needed. Railway builds with `npm run build` and starts with `npm start` (`vite preview`), which reads `PORT` from the environment
+4. `/api/*` is proxied to the backend from `vite.config.js`. Set `API_PROXY_TARGET` to the backend's private URL (`http://backend.railway.internal:5000`) or leave it to use the public backend URL
+
+Production behaviour of `vite preview`, configured in `vite.config.js`:
+
+| Concern | Behaviour |
+| :--- | :--- |
+| Compression | gzip for text assets (Vite built-in) |
+| HTML caching | `Cache-Control: no-cache` plus ETag, so updates appear immediately |
+| Hashed assets | `Cache-Control: public, max-age=31536000, immutable` |
+| SPA routes | Unknown extensionless paths fall back to `index.html` |
+| Missing files | Real `404`, not an HTML fallback |
+| API | `/api/*` same-origin proxy to the backend, no CORS needed |
 
 ---
 
