@@ -152,6 +152,22 @@ Production behaviour of `vite preview`, configured in `vite.config.js`:
 | Missing files | Real `404`, not an HTML fallback |
 | API | `/api/*` same-origin proxy to the backend, no CORS needed |
 
+### Admin console
+
+The admin console lives at **`/admin`** (not a hidden button). It is a real
+path, served by the SPA fallback on both `vite preview` and `vite dev`.
+
+1. Set `ADMIN_PASSCODE` in Railway Variables on the **backend** service
+2. Visit `https://workshops.incuxai.com/admin`
+3. Enter the passphrase; the backend issues a signed session token valid for 8 hours
+4. The token is stored in `sessionStorage` and sent as `Authorization: Bearer <token>`
+
+Admin backend routes are all protected by that token: `POST /api/workshops`,
+`DELETE /api/workshops/:id`, `POST /api/collaboration-requests/:id/approve`,
+`GET /api/registrations`, `GET /api/inquiries`, and `GET /api/collaboration-requests`.
+Without a token they answer `401`. Passphrase attempts are rate limited to
+8 per 15 minutes per IP.
+
 ---
 
 ## 🔌 Backend REST API Endpoints

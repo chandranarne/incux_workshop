@@ -117,7 +117,7 @@ export default function Terms() {
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 mt-0.5 text-amber-600 dark:text-[#FACC15] shrink-0" />
                 <span>
-                  Building No: 148, 2nd Floor, Outer Ring Rd, Regional Tech Corridor, Hyderabad, Telangana &amp; Andhra Pradesh 500081
+                  Guntur, Andhra Pradesh, India
                 </span>
               </li>
             </ul>

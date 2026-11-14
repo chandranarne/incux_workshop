@@ -6,6 +6,61 @@ import { siteConfig } from '../data/config';
 
 const API_BASE = import.meta.env?.VITE_API_BASE || '/api';
 
+// ==========================================
+// ADMIN SESSION (passphrase, no accounts)
+// ==========================================
+const ADMIN_TOKEN_KEY = 'incuxai_admin_token';
+
+export const getAdminToken = () => {
+  try {
+    return sessionStorage.getItem(ADMIN_TOKEN_KEY) || '';
+  } catch {
+    return '';
+  }
+};
+
+export const setAdminToken = (token) => {
+  try {
+    sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
+  } catch {
+    // Storage can be unavailable in private modes; the session stays in memory.
+  }
+};
+
+export const clearAdminToken = () => {
+  try {
+    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  } catch {
+    // Ignore storage errors.
+  }
+};
+
+const adminHeaders = () => {
+  const token = getAdminToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+export const loginAdmin = async (passcode) => {
+  const res = await fetch(`${API_BASE}/admin/session`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ passcode })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Unable to verify the passphrase.');
+  return data;
+};
+
+export const verifyAdminSession = async () => {
+  if (!getAdminToken()) return false;
+  try {
+    const res = await fetch(`${API_BASE}/admin/session`, { headers: adminHeaders() });
+    return res.ok;
+  } catch {
+    return false;
+  }
+};
+
 export const fetchWorkshops = async () => {
   try {
     const res = await fetch(`${API_BASE}/workshops`);
@@ -142,7 +197,7 @@ export const fetchUpcomingWorkshops = async () => {
 export const postWorkshop = async (workshopData) => {
   const res = await fetch(`${API_BASE}/workshops`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...adminHeaders() },
     body: JSON.stringify(workshopData)
   });
   const data = await res.json();
@@ -151,7 +206,10 @@ export const postWorkshop = async (workshopData) => {
 };
 
 export const deleteWorkshop = async (id) => {
-  const res = await fetch(`${API_BASE}/workshops/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${API_BASE}/workshops/${id}`, {
+    method: 'DELETE',
+    headers: adminHeaders()
+  });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed to delete workshop');
   return data;
@@ -195,7 +253,7 @@ export const submitCollaborationRequest = async (requestData) => {
 
 export const fetchCollaborationRequests = async () => {
   try {
-    const res = await fetch(`${API_BASE}/collaboration-requests`);
+    const res = await fetch(`${API_BASE}/collaboration-requests`, { headers: adminHeaders() });
     if (!res.ok) throw new Error('Failed to load requests');
     const data = await res.json();
     return data.requests || [];
@@ -206,7 +264,8 @@ export const fetchCollaborationRequests = async () => {
 
 export const approveCollaborationRequest = async (requestId) => {
   const res = await fetch(`${API_BASE}/collaboration-requests/${requestId}/approve`, {
-    method: 'POST'
+    method: 'POST',
+    headers: adminHeaders()
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed to approve request');
@@ -215,7 +274,7 @@ export const approveCollaborationRequest = async (requestId) => {
 
 export const fetchAllRegistrations = async () => {
   try {
-    const res = await fetch(`${API_BASE}/registrations`);
+    const res = await fetch(`${API_BASE}/registrations`, { headers: adminHeaders() });
     if (!res.ok) throw new Error('Failed to load all registrations');
     const data = await res.json();
     return data.registrations || [];

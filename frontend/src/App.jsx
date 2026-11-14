@@ -19,6 +19,7 @@ import PortalModal from './components/PortalModal';
 import UpcomingWorkshopPopup from './components/UpcomingWorkshopPopup';
 import Terms from './components/Pages/Terms';
 import PrivacyPolicy from './components/Pages/PrivacyPolicy';
+import AdminPage from './components/AdminPage';
 
 import { workshopCards, featuredWorkshops } from './data/workshops';
 import { companiesData } from './data/companies';
@@ -99,6 +100,12 @@ export default function App() {
     setIsPortalOpen(true);
     setIsMenuOpen(false);
   };
+
+  // The admin console is a real path, not a modal state. Vite serves
+  // index.html for /admin, and the passphrase is verified by the backend.
+  if (/^\/admin\/?$/i.test(window.location.pathname)) {
+    return <AdminPage />;
+  }
 
   return (
     <div className="min-h-screen bg-[#FDFCFA] dark:bg-[#0A0A0A] text-[#0A0A0A] dark:text-[#F5F5F5] selection:bg-[#FACC15] selection:text-[#0A0A0A] transition-colors duration-200">

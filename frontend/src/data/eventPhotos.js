@@ -48,9 +48,7 @@ export const eventPhotos = {
     { id: 'w-12', image: w12, title: 'Cloud Infrastructure & Deployment Hands-On', location: 'Cloud Compute Suite', badge: 'DEVOPS LAB', date: 'Live Deployment' },
     { id: 'w-13', image: w13, title: 'Enterprise Architecture & Clean Code Lab', location: 'Systems Architecture Suite', badge: 'ARCHITECTURE', date: 'Code Quality Sprint' },
     { id: 'w-14', image: w14, title: 'Database Optimization & SQL Mastery', location: 'Campus Data Lab', badge: 'DATA SYSTEMS', date: 'Query Performance' },
-    { id: 'w-16', image: w16, title: 'Applied Machine Learning Engineering', location: 'AI Research Center', badge: 'APPLIED AI', date: 'Industrial ML' },
-    { id: 'w-18', image: w18, title: 'Workshop Graduation & Certification Session', location: 'Auditorium Lab Complex', badge: 'CERTIFIED', date: 'Certificate Ceremony' }
-  ],
+    ],
   hackathons: [
     { id: 'h-01', image: h01, title: 'AI x Regional Hackathon 2k26 Launch', location: 'Regional Technology Arena', badge: 'OPENING SPRINT', date: '48-Hour Sprint' },
     { id: 'h-02', image: h02, title: 'Squad Ideation & Rapid AI Prototyping', location: 'Innovation Arena Block', badge: 'IDEATION LAB', date: 'Overnight Build' },
@@ -61,9 +59,7 @@ export const eventPhotos = {
     { id: 'h-07', image: h07, title: 'Final Prototype Testing & System Validation', location: 'Testing Lab Arena', badge: 'VALIDATION', date: 'Jury Scrutiny' },
     { id: 'h-08', image: h08, title: 'Team Collaboration & Innovation Showcase', location: 'Hackathon Arena Floor', badge: 'COLLABORATION', date: 'Team Sprint' },
     { id: 'h-09', image: h09, title: 'Podium Honors & Cash Prize Felicitation', location: 'Grand Stage', badge: 'HONORS & AWARDS', date: 'Award Ceremony' },
-    { id: 'h-10', image: h10, title: 'Cohort Celebration & Winning Teams', location: 'Open Campus Arena', badge: 'WINNERS COHORT', date: 'Felicitation' },
-    { id: 'h-11', image: h11, title: 'Grand Hackathon Finale & Group Commemoration', location: 'University Grounds', badge: 'GRAND FINALE', date: 'All-Cohort Photo' }
-  ],
+     ],
   'guest-lectures': [
     { id: 'gl-01', image: gl01, title: 'Demystifying Generative AI & Career Opportunities', location: 'Hindu Engineering & Technology College, Guntur', badge: 'TECH MAHINDRA', date: 'July 25th • 150 Students' },
     { id: 'gl-02', image: gl02, title: 'Java Programming Fundamentals & OOP Systems', location: 'Hindu Engineering & Technology College, Guntur', badge: 'BACKEND DEV LEAD', date: 'August 1st • 65 Students' },
@@ -71,9 +67,7 @@ export const eventPhotos = {
     { id: 'gl-05', image: gl05, title: 'Live Audience Q&A on Career Pathways in AI', location: 'Campus Main Auditorium', badge: 'KEYNOTE Q&A', date: 'Executive Keynote' },
     { id: 'gl-07', image: gl07, title: 'Leadership & Industry Best Practices Session', location: 'Executive Seminar Hall', badge: 'EXECUTIVE TALK', date: 'Leadership Series' },
     { id: 'gl-08', image: gl08, title: 'Student Engagement & Enterprise Mindset', location: 'Hindu College Hall', badge: 'CAMPUS ADDRESS', date: 'Student Interaction' },
-    { id: 'gl-09', image: gl09, title: 'Technical Roadmap & Cloud System Architectures', location: 'Conference Center', badge: 'TECH ROADMAP', date: 'Special Keynote' },
-    { id: 'gl-10', image: gl10, title: 'Industry Panel & College Academic Leadership', location: 'University Stage', badge: 'LEADERSHIP PANEL', date: 'Dignitary Address' }
-  ]
+    ]
 };
 
 // --- Lightweight thumbnails for the decorative Hero background streams ---

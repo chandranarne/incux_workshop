@@ -18,7 +18,7 @@ export const siteConfig = {
     email: "info@incuxai.com",
     phone: "7665061289",
     phoneFormatted: "+91 7665061289",
-    address: "Hyderabad & Regional Centers, India",
+    address: "Guntur, Andhra Pradesh, India",
     notice: "Official institutional inquiry channels. Reach out directly or submit the collaboration inquiry form below."
   },
   newsPlaceholder: {

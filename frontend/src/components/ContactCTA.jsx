@@ -181,9 +181,9 @@ export default function ContactCTA() {
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400 block font-medium">REGIONAL HEADQUARTERS</span>
+                  <span className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400 block font-medium">HEADQUARTERS</span>
                   <span className="text-sm text-neutral-800 dark:text-neutral-300">
-                    Hyderabad &amp; Regional Centers, India
+                    Guntur, Andhra Pradesh, India
                   </span>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import crypto from 'crypto';
 import fs from 'fs';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -52,6 +53,95 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+
+// ==========================================
+// ADMIN SESSION (passphrase, no user accounts)
+// ==========================================
+const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || '';
+const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET || ADMIN_PASSCODE || 'incuxai-local-admin-secret';
+const ADMIN_SESSION_MS = 8 * 60 * 60 * 1000; // 8 hours
+const ADMIN_MAX_ATTEMPTS = 8;
+const ADMIN_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
+const adminAttempts = new Map();
+
+const signAdminToken = (expiresAt) => {
+  const payload = String(expiresAt);
+  const signature = crypto.createHmac('sha256', ADMIN_TOKEN_SECRET).update(payload).digest('base64url');
+  return `${Buffer.from(payload).toString('base64url')}.${signature}`;
+};
+
+const verifyAdminToken = (token) => {
+  if (typeof token !== 'string' || !token.includes('.')) return false;
+  const [encoded, signature] = token.split('.');
+  let expiresAt;
+  try {
+    expiresAt = Number(Buffer.from(encoded, 'base64url').toString('utf8'));
+  } catch {
+    return false;
+  }
+  if (!Number.isFinite(expiresAt) || expiresAt < Date.now()) return false;
+  const expected = crypto.createHmac('sha256', ADMIN_TOKEN_SECRET).update(String(expiresAt)).digest('base64url');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  } catch {
+    return false;
+  }
+};
+
+const readAdminToken = (req) => {
+  const header = req.headers.authorization || '';
+  return header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+};
+
+const requireAdmin = (req, res, next) => {
+  if (!ADMIN_PASSCODE) {
+    return res.status(503).json({
+      error: 'Admin access is not configured. Set ADMIN_PASSCODE in the backend environment.'
+    });
+  }
+  if (!verifyAdminToken(readAdminToken(req))) {
+    return res.status(401).json({ error: 'Admin session missing or expired. Sign in again.' });
+  }
+  next();
+};
+
+app.post('/api/admin/session', (req, res) => {
+  if (!ADMIN_PASSCODE) {
+    return res.status(503).json({
+      error: 'Admin access is not configured. Set ADMIN_PASSCODE in the backend environment.'
+    });
+  }
+
+  const ip = req.ip || 'unknown';
+  const now = Date.now();
+  const attempts = adminAttempts.get(ip) || { count: 0, first: now };
+  if (now - attempts.first > ADMIN_ATTEMPT_WINDOW_MS) {
+    attempts.count = 0;
+    attempts.first = now;
+  }
+  if (attempts.count >= ADMIN_MAX_ATTEMPTS) {
+    return res.status(429).json({ error: 'Too many attempts. Try again in a few minutes.' });
+  }
+
+  const passcode = typeof req.body?.passcode === 'string' ? req.body.passcode.trim() : '';
+  if (!passcode || passcode !== ADMIN_PASSCODE) {
+    attempts.count += 1;
+    adminAttempts.set(ip, attempts);
+    return res.status(401).json({ error: 'Incorrect passphrase.' });
+  }
+
+  adminAttempts.delete(ip);
+  const expiresAt = Date.now() + ADMIN_SESSION_MS;
+  res.json({
+    success: true,
+    token: signAdminToken(expiresAt),
+    expiresAt: new Date(expiresAt).toISOString()
+  });
+});
+
+app.get('/api/admin/session', requireAdmin, (req, res) => {
+  res.json({ success: true });
+});
 
 // Data paths for local JSON fallback
 const DATA_DIR = path.join(__dirname, 'data');
@@ -216,7 +306,7 @@ app.post('/api/inquiries', async (req, res) => {
   }
 });
 
-app.get('/api/inquiries', async (req, res) => {
+app.get('/api/inquiries', requireAdmin, async (req, res) => {
   try {
     if (isDatabaseConfigured) {
       try {
@@ -390,7 +480,7 @@ app.get('/api/workshops/upcoming', async (req, res) => {
   }
 });
 
-app.post('/api/workshops', async (req, res) => {
+app.post('/api/workshops', requireAdmin, async (req, res) => {
   try {
     const { title, category, dates, location, seats, mode, speaker, description } = req.body;
     if (!title || !category || !dates || !location) {
@@ -449,7 +539,7 @@ app.post('/api/workshops', async (req, res) => {
   }
 });
 
-app.delete('/api/workshops/:id', async (req, res) => {
+app.delete('/api/workshops/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -709,7 +799,7 @@ app.post('/api/collaboration-requests', async (req, res) => {
   }
 });
 
-app.get('/api/collaboration-requests', async (req, res) => {
+app.get('/api/collaboration-requests', requireAdmin, async (req, res) => {
   try {
     if (isDatabaseConfigured) {
       try {
@@ -729,7 +819,7 @@ app.get('/api/collaboration-requests', async (req, res) => {
   }
 });
 
-app.post('/api/collaboration-requests/:id/approve', async (req, res) => {
+app.post('/api/collaboration-requests/:id/approve', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     let requestItem = null;
@@ -819,7 +909,7 @@ app.post('/api/collaboration-requests/:id/approve', async (req, res) => {
   }
 });
 
-app.get('/api/registrations', async (req, res) => {
+app.get('/api/registrations', requireAdmin, async (req, res) => {
   try {
     if (isDatabaseConfigured) {
       try {

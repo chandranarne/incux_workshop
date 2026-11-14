@@ -219,7 +219,7 @@ export default function Footer({ onNavigateToTerms, onNavigateToPrivacy }) {
               </p>
               <p className="pt-1.5 border-t border-black/10 dark:border-[#262626]">
                 <strong className="text-neutral-900 dark:text-[#F5F5F5] block font-mono text-[11px] mb-0.5">Address:</strong>
-                Building No: 148, 2nd Floor, Outer Ring Rd, Regional Tech Corridor, Hyderabad, Telangana &amp; Andhra Pradesh 500081
+                Guntur, Andhra Pradesh, India
               </p>
             </div>
           </div>

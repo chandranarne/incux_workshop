@@ -103,7 +103,7 @@ export default function About() {
     <section
       id="about"
       ref={sectionRef}
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-8 sm:py-12 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-8 sm:py-12 border-t border-black/10  dark:border-[#262626] overflow-hidden transition-colors duration-200"
       aria-label="Bridging Education and Industry"
     >
       {/* Ambient Settled Background Photography */}

@@ -16,18 +16,50 @@ import {
   ArrowRight,
   BookmarkCheck,
   Building,
-  AlertCircle
+  AlertCircle,
+  LogOut
 } from 'lucide-react';
 import {
   fetchUpcomingWorkshops,
   postWorkshop,
   deleteWorkshop,
   registerForWorkshop,
-  fetchAllRegistrations
+  fetchAllRegistrations,
+  fetchCandidateRegistrations
 } from '../services/api';
 
-export default function PortalModal({ isOpen, onClose }) {
-  const isAdmin = false;
+const CANDIDATE_KEY = 'incuxai_candidate_profile';
+const ADMIN_PROFILE = {
+  name: 'IncuxAI Admin',
+  role: 'Administrator',
+  email: 'admin@incuxai.com',
+  institution: 'IncuxAI HQ, Guntur'
+};
+const EMPTY_CANDIDATE = { name: '', email: '', institution: '' };
+
+const readCandidateProfile = () => {
+  try {
+    const stored = JSON.parse(localStorage.getItem(CANDIDATE_KEY) || 'null');
+    if (stored && typeof stored === 'object') {
+      return { ...EMPTY_CANDIDATE, ...stored };
+    }
+  } catch {
+    // Ignore malformed storage.
+  }
+  return EMPTY_CANDIDATE;
+};
+
+export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout }) {
+  const [candidate, setCandidate] = useState(readCandidateProfile);
+
+  const user = isAdmin
+    ? ADMIN_PROFILE
+    : {
+        name: candidate.name || 'Guest Candidate',
+        role: 'Candidate',
+        email: candidate.email || 'Not provided',
+        institution: candidate.institution || 'Independent Candidate'
+      };
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState('browse-workshops');
@@ -51,6 +83,10 @@ export default function PortalModal({ isOpen, onClose }) {
     description: ''
   });
 
+  // Candidate details captured inline on first registration (no login)
+  const [detailsFor, setDetailsFor] = useState('');
+  const [details, setDetails] = useState(EMPTY_CANDIDATE);
+
   // Load portal data
   const loadData = async () => {
     setLoading(true);
@@ -58,9 +94,18 @@ export default function PortalModal({ isOpen, onClose }) {
       const wsList = await fetchUpcomingWorkshops();
       setWorkshops(wsList);
 
-      const regs = await fetchAllRegistrations();
-      setAllRegistrations(regs);
-      setMyRegistrations(regs);
+      if (isAdmin) {
+        const regs = await fetchAllRegistrations();
+        setAllRegistrations(regs);
+        setMyRegistrations(regs);
+      } else if (candidate.email) {
+        const regs = await fetchCandidateRegistrations(candidate.email);
+        setMyRegistrations(regs);
+        setAllRegistrations([]);
+      } else {
+        setMyRegistrations([]);
+        setAllRegistrations([]);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -73,7 +118,7 @@ export default function PortalModal({ isOpen, onClose }) {
       setActiveTab('browse-workshops');
       loadData();
     }
-  }, [isOpen]);
+  }, [isOpen, isAdmin, candidate.email]);
 
   if (!isOpen) return null;
 
@@ -84,19 +129,44 @@ export default function PortalModal({ isOpen, onClose }) {
   };
 
   // --- Candidate Action: Register for Workshop ---
-  const handleRegister = async (workshopId) => {
+  const submitRegistration = async (workshopId, person) => {
     try {
       await registerForWorkshop(workshopId, {
-        candidateName: user.name,
-        candidateEmail: user.email,
-        candidateInstitution: user.institution || 'Independent Candidate',
-        candidatePhone: '7665061289'
+        candidateName: person.name.trim(),
+        candidateEmail: person.email.trim(),
+        candidateInstitution: person.institution?.trim() || 'Independent Candidate',
+        candidatePhone: person.phone?.trim() || 'Not provided'
       });
-      notify('success', 'Successfully registered for workshop! View it in "My Enrolled Workshops".');
+      try {
+        localStorage.setItem(CANDIDATE_KEY, JSON.stringify(person));
+      } catch {
+        // Storage is optional; the in-memory profile still works.
+      }
+      setCandidate(person);
+      setDetailsFor('');
+      notify('success', 'Registration confirmed. It now appears under "My Enrolled Workshops".');
       loadData();
     } catch (err) {
       notify('error', err.message);
     }
+  };
+
+  const handleRegister = (workshopId) => {
+    if (!candidate.name || !candidate.email) {
+      setDetails(candidate);
+      setDetailsFor(workshopId);
+      return;
+    }
+    submitRegistration(workshopId, candidate);
+  };
+
+  const handleDetailsSubmit = (e) => {
+    e.preventDefault();
+    if (!details.name.trim() || !details.email.trim()) {
+      notify('error', 'Name and email are required to register.');
+      return;
+    }
+    submitRegistration(detailsFor, details);
   };
 
   // --- Admin Action: Post New Workshop ---
@@ -159,6 +229,16 @@ export default function PortalModal({ isOpen, onClose }) {
           </div>
 
           <div className="flex items-center gap-2">
+            {isAdmin && onLogout && (
+              <button
+                onClick={onLogout}
+                className="h-10 px-3 rounded-xl bg-neutral-100 dark:bg-[#1A1A1A] flex items-center gap-2 text-xs font-mono font-bold text-neutral-700 dark:text-neutral-300 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+                aria-label="Sign out of admin"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Sign out</span>
+              </button>
+            )}
             <button
               onClick={onClose}
               className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-[#1A1A1A] flex items-center justify-center text-amber-600 dark:text-[#FACC15] hover:bg-[#FACC15] hover:text-[#0A0A0A] transition-colors cursor-pointer"
@@ -286,6 +366,58 @@ export default function PortalModal({ isOpen, onClose }) {
                         <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 mb-4 font-body">
                           {ws.description}
                         </p>
+
+                        {detailsFor === ws.id && (
+                          <form
+                            onSubmit={handleDetailsSubmit}
+                            className="mt-4 p-4 rounded-2xl bg-[#F8F8F5] dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] space-y-2.5"
+                          >
+                            <p className="text-[10px] font-mono uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-bold">
+                              Details for this registration
+                            </p>
+                            <input
+                              type="text"
+                              required
+                              value={details.name}
+                              onChange={(e) => setDetails({ ...details, name: e.target.value })}
+                              placeholder="Full name"
+                              aria-label="Full name"
+                              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] text-sm text-neutral-900 dark:text-[#F5F5F5] focus:outline-none focus:border-[#FACC15]"
+                            />
+                            <input
+                              type="email"
+                              required
+                              value={details.email}
+                              onChange={(e) => setDetails({ ...details, email: e.target.value })}
+                              placeholder="Email address"
+                              aria-label="Email address"
+                              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] text-sm text-neutral-900 dark:text-[#F5F5F5] focus:outline-none focus:border-[#FACC15]"
+                            />
+                            <input
+                              type="text"
+                              value={details.institution}
+                              onChange={(e) => setDetails({ ...details, institution: e.target.value })}
+                              placeholder="College or institution (optional)"
+                              aria-label="College or institution"
+                              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] text-sm text-neutral-900 dark:text-[#F5F5F5] focus:outline-none focus:border-[#FACC15]"
+                            />
+                            <div className="flex items-center gap-2 pt-1">
+                              <button
+                                type="submit"
+                                className="px-4 py-2 rounded-xl bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] text-xs font-headline font-black uppercase tracking-wider transition-colors cursor-pointer"
+                              >
+                                Confirm registration
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDetailsFor('')}
+                                className="px-3 py-2 rounded-xl bg-neutral-100 dark:bg-[#1A1A1A] text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        )}
                       </div>
 
                       <div className="pt-4 border-t border-black/10 dark:border-[#262626] flex items-center justify-between">
@@ -301,7 +433,7 @@ export default function PortalModal({ isOpen, onClose }) {
                             <CheckCheck className="w-4 h-4" />
                             <span>Enrolled</span>
                           </div>
-                        ) : (
+                        ) : detailsFor === ws.id ? null : (
                           <button
                             onClick={() => handleRegister(ws.id)}
                             disabled={seatsLeft === 0}
@@ -482,7 +614,7 @@ export default function PortalModal({ isOpen, onClose }) {
                       required
                       value={newWorkshop.location}
                       onChange={(e) => setNewWorkshop({ ...newWorkshop, location: e.target.value })}
-                      placeholder="e.g. GRIET Campus, Hyderabad"
+                      placeholder="e.g. Hindu College of Engineering, Guntur"
                       className="w-full px-3.5 py-2.5 rounded-xl bg-[#FDFCFA] dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm text-neutral-950 dark:text-[#F5F5F5] outline-none focus:border-[#FACC15] dark:focus:border-[#FACC15]"
                     />
                   </div>
