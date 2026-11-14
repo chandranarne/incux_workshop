@@ -64,11 +64,6 @@ export default function UpcomingWorkshopPopup({ isOpen, onClose }) {
               <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E10] via-transparent to-black/30 pointer-events-none" />
 
               {/* Floating Top Tag */}
-              <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FACC15] text-[#0A0A0A] text-[10px] sm:text-xs font-mono font-bold tracking-wider shadow-lg">
-                  UPCOMING WORKSHOP // OPEN FOR REGISTRATION
-                </span>
-              </div>
             </div>
 
             {/* Modal Body */}

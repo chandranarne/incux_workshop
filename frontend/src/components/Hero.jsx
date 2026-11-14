@@ -130,20 +130,7 @@ export default function Hero() {
       {/* ========================================================================= */}
       <div className="relative z-20 max-w-5xl mx-auto px-4 sm:px-8 lg:px-12 pt-10 sm:pt-14 lg:pt-16 pb-8 sm:pb-10 flex flex-col items-center text-center my-auto">
         
-        {/* Pre-header Pill */}
-        <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#0A0A0A]/5 dark:bg-[#FACC15]/10 border border-black/10 dark:border-[#FACC15]/30 backdrop-blur-md mb-4 sm:mb-6 shadow-xs"
-        >
-          <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-[#EAB308] dark:bg-[#FACC15] animate-pulse" />
-          <span className="text-[10px] sm:text-xs font-mono font-bold uppercase tracking-widest text-neutral-900 dark:text-[#FACC15]">
-            Campus Workshops &amp; Hackathons
-          </span>
-        </motion.div>
-
-        {/* Main Heading */}
+       {/* Main Heading */}
         <h1 className="font-headline font-black text-[32px] xs:text-4xl sm:text-6xl lg:text-7xl tracking-tight text-[#0A0A0A] dark:text-[#F5F5F5] leading-[1.08] max-w-4xl">
           <motion.span
             custom={0}

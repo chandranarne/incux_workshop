@@ -11,13 +11,20 @@ const envDir = fs.existsSync(path.resolve(__dirname, '../.env')) ? '../' : './'
 
 const DIST_ASSETS = path.resolve(__dirname, 'dist', 'assets')
 
-// Backend origin for the production preview server. On Railway you can point
-// this at the private URL, e.g. http://backend.railway.internal:5000
+// Backend origin for the /api proxy. Always comes from the environment.
+// `localhost` is only a development fallback, so nothing deployed is hardcoded.
 const apiTarget = (
   process.env.API_PROXY_TARGET ||
   process.env.BACKEND_URL ||
-  'https://steadfast-beauty-production-458e.up.railway.app'
+  `http://localhost:${process.env.BACKEND_PORT || 5000}`
 ).replace(/\/+$/, '')
+
+if (process.env.PORT && !process.env.API_PROXY_TARGET && !process.env.BACKEND_URL) {
+  console.warn(
+    `[vite] API_PROXY_TARGET is not set, so /api proxies to ${apiTarget}. ` +
+    'Set API_PROXY_TARGET to the backend URL on Railway.'
+  )
+}
 
 /**
  * `vite preview` is the production server, so it has to behave like one:
@@ -66,7 +73,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: process.env.BACKEND_URL || 'http://localhost:5000',
+        target: apiTarget,
         changeOrigin: true,
       },
     },

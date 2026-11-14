@@ -235,10 +235,6 @@ export default function IndiaReachMap() {
 
       {/* Map Header */}
       <div className="pb-6 border-b border-black/10 dark:border-[#262626]">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/15 dark:bg-sky-950/40 border border-sky-400/30 text-xs font-mono text-sky-700 dark:text-sky-300 font-bold uppercase tracking-wider mb-2">
-          <Navigation className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-          <span>National Footprint &amp; Student Inflow Distribution</span>
-        </div>
         <h3 className="font-headline font-extrabold text-2xl sm:text-3xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight">
           INCUXAI FOOTPRINT ACROSS INDIA
         </h3>

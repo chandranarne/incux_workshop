@@ -40,10 +40,6 @@ export default function CompanyGrid({ data = companiesData }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="max-w-3xl mb-8 sm:mb-12">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-[#141414]/90 border border-black/10 dark:border-yellow-400/30 text-xs font-mono text-[#0A0A0A] dark:text-[#FACC15] uppercase tracking-widest mb-4 font-bold shadow-xs">
-            <span>Our Leading Collaborations</span>
-          </div>
-
           <h2 className="font-headline font-black text-3xl sm:text-5xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight leading-tight">
             {headline}
           </h2>
