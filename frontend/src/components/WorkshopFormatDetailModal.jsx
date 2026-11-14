@@ -109,6 +109,8 @@ export default function WorkshopFormatDetailModal({ formatId, isOpen, onClose, o
                 <img
                   src={currentPhoto.image}
                   alt={currentPhoto.caption || detail.title}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover transition-all duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent pointer-events-none" />

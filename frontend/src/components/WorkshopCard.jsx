@@ -59,6 +59,8 @@ export default function WorkshopCard({ card, onSelect }) {
           <img
             src={bgImage}
             alt={card.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />

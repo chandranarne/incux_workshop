@@ -58,6 +58,8 @@ function TurningWorkshopCard({ item, index }) {
             <img
               src={cardBg}
               alt={item.title}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover filter saturate-120"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white via-white/85 to-transparent dark:from-[#141414] dark:via-[#141414]/85 dark:to-transparent" />

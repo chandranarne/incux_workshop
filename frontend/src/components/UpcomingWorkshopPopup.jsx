@@ -57,6 +57,8 @@ export default function UpcomingWorkshopPopup({ isOpen, onClose }) {
               <img
                 src={genAiBannerImg}
                 alt="Generative AI Workshop at IIT Campus"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E10] via-transparent to-black/30 pointer-events-none" />

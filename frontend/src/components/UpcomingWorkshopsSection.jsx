@@ -90,6 +90,8 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
               <img
                 src={genAiBannerImg}
                 alt={ws.title}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover sm:object-cover group-hover:scale-102 transition-transform duration-700 opacity-95"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/20 pointer-events-none" />

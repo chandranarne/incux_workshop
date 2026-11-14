@@ -456,6 +456,8 @@ export default function IndiaReachMap() {
                   <img
                     src={activeCollege.logo}
                     alt={activeCollege.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-contain filter contrast-105"
                   />
                 </div>
@@ -520,7 +522,7 @@ export default function IndiaReachMap() {
                     }`}
                   >
                     <div className="w-7 h-7 rounded-lg bg-white p-0.5 flex items-center justify-center shrink-0 border border-black/5">
-                      <img src={col.logo} alt={col.code} className="w-full h-full object-contain" />
+                      <img src={col.logo} alt={col.code} loading="lazy" decoding="async" className="w-full h-full object-contain" />
                     </div>
                     <div className="text-left font-mono text-xs">
                       <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5] block leading-tight">{col.code}</span>

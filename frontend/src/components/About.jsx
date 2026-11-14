@@ -109,10 +109,10 @@ export default function About() {
       {/* Ambient Settled Background Photography */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
         <div className="about-ambient-photo-1 absolute -top-10 -left-16 w-80 h-64 rounded-3xl overflow-hidden opacity-10 dark:opacity-5 blur-[1px] rotate-[-8deg] border border-[#FACC15]/20">
-          <img src={labImg} alt="" className="w-full h-full object-cover grayscale" />
+          <img src={labImg} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover grayscale" />
         </div>
         <div className="about-ambient-photo-2 absolute -bottom-16 -right-20 w-96 h-72 rounded-3xl overflow-hidden opacity-10 dark:opacity-5 blur-[1px] rotate-[10deg] border border-[#FACC15]/20">
-          <img src={auditoriumImg} alt="" className="w-full h-full object-cover grayscale" />
+          <img src={auditoriumImg} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover grayscale" />
         </div>
       </div>
 
@@ -212,6 +212,7 @@ export default function About() {
                   src={photo.image}
                   alt="IncuxAI Campus Moment"
                   loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-106 transition-transform duration-500 ease-out"
                 />
                 

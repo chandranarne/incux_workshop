@@ -76,9 +76,50 @@ export const eventPhotos = {
   ]
 };
 
+// --- Lightweight thumbnails for the decorative Hero background streams ---
+// The hero renders these at ~130-210px wide behind a vignette, so full-resolution
+// originals (up to 1MB each) are pure waste. Thumbs are ~24KB each.
+import tGuest01 from '../assets/event_thumbs/guest_lecture_01.jpg';
+import tGuest02 from '../assets/event_thumbs/guest_lecture_02.jpg';
+import tGuest03 from '../assets/event_thumbs/guest_lecture_03.jpg';
+import tGuest05 from '../assets/event_thumbs/guest_lecture_05.jpg';
+import tGuest07 from '../assets/event_thumbs/guest_lecture_07.jpg';
+import tGuest08 from '../assets/event_thumbs/guest_lecture_08.jpg';
+import tGuest09 from '../assets/event_thumbs/guest_lecture_09.jpg';
+import tGuest10 from '../assets/event_thumbs/guest_lecture_10.jpg';
+import tWork03 from '../assets/event_thumbs/workshop_03.jpg';
+import tWork04 from '../assets/event_thumbs/workshop_04.jpg';
+import tWork06 from '../assets/event_thumbs/workshop_06.jpg';
+import tWork08 from '../assets/event_thumbs/workshop_08.jpg';
+import tWork09 from '../assets/event_thumbs/workshop_09.jpg';
+import tWork10 from '../assets/event_thumbs/workshop_10.jpg';
+import tWork12 from '../assets/event_thumbs/workshop_12.jpg';
+import tWork13 from '../assets/event_thumbs/workshop_13.jpg';
+import tWork14 from '../assets/event_thumbs/workshop_14.jpg';
+import tWork16 from '../assets/event_thumbs/workshop_16.jpg';
+import tWork18 from '../assets/event_thumbs/workshop_18.jpg';
+import tHack01 from '../assets/event_thumbs/hackathon_01.jpg';
+import tHack02 from '../assets/event_thumbs/hackathon_02.jpg';
+import tHack03 from '../assets/event_thumbs/hackathon_03.jpg';
+import tHack04 from '../assets/event_thumbs/hackathon_04.jpg';
+import tHack05 from '../assets/event_thumbs/hackathon_05.jpg';
+import tHack06 from '../assets/event_thumbs/hackathon_06.jpg';
+import tHack07 from '../assets/event_thumbs/hackathon_07.jpg';
+import tHack08 from '../assets/event_thumbs/hackathon_08.jpg';
+import tHack09 from '../assets/event_thumbs/hackathon_09.jpg';
+import tHack10 from '../assets/event_thumbs/hackathon_10.jpg';
+import tHack11 from '../assets/event_thumbs/hackathon_11.jpg';
+
 // Flattened list of all authentic event photos for Hero background streams
 export const allEventPhotos = [
   ...eventPhotos['guest-lectures'].map(p => p.image),
   ...eventPhotos.workshops.map(p => p.image),
   ...eventPhotos.hackathons.map(p => p.image)
+];
+
+// Same order as allEventPhotos, but pointing at the small thumbnails.
+export const heroPhotos = [
+  tGuest01, tGuest02, tGuest03, tGuest05, tGuest07, tGuest08, tGuest09, tGuest10,
+  tWork03, tWork04, tWork06, tWork08, tWork09, tWork10, tWork12, tWork13, tWork14, tWork16, tWork18,
+  tHack01, tHack02, tHack03, tHack04, tHack05, tHack06, tHack07, tHack08, tHack09, tHack10, tHack11
 ];

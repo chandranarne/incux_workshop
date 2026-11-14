@@ -173,7 +173,7 @@ export default function WorkshopVideoPlayer() {
           autoPlay
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           onEnded={handleEnded}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}

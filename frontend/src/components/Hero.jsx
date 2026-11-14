@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowDownRight } from 'lucide-react';
 import { siteConfig } from '../data/config';
-import { allEventPhotos } from '../data/eventPhotos';
+import { heroPhotos } from '../data/eventPhotos';
 
 export default function Hero() {
   useEffect(() => {
@@ -29,12 +29,12 @@ export default function Hero() {
   };
 
   // Divide photos into distinct sets for unique scrolling streams
-  const stream1 = allEventPhotos.slice(0, 10);
-  const stream2 = allEventPhotos.slice(10, 20);
-  const stream3 = allEventPhotos.slice(20, 30);
-  const stream4 = allEventPhotos.slice(30, 40);
-  const streamHorizontal1 = allEventPhotos.slice(0, 15);
-  const streamHorizontal2 = allEventPhotos.slice(15, 30);
+  const stream1 = heroPhotos.slice(0, 10);
+  const stream2 = heroPhotos.slice(10, 20);
+  const stream3 = heroPhotos.slice(20, 30);
+  const stream4 = heroPhotos.slice(30, 40);
+  const streamHorizontal1 = heroPhotos.slice(0, 15);
+  const streamHorizontal2 = heroPhotos.slice(15, 30);
 
   return (
     <section
@@ -55,7 +55,7 @@ export default function Hero() {
           <div className="animate-watermark-down flex flex-col gap-4 sm:gap-5">
             {stream1.concat(stream1).map((img, idx) => (
               <div key={`stream1-${idx}`} className="w-full h-24 sm:h-40 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
-                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
+                <img src={img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
@@ -66,7 +66,7 @@ export default function Hero() {
           <div className="animate-watermark-up flex flex-col gap-5">
             {stream2.concat(stream2).map((img, idx) => (
               <div key={`stream2-${idx}`} className="w-full h-28 sm:h-40 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
-                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
+                <img src={img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
@@ -77,7 +77,7 @@ export default function Hero() {
           <div className="animate-watermark-down flex flex-col gap-5" style={{ animationDuration: '40s' }}>
             {stream3.concat(stream3).map((img, idx) => (
               <div key={`stream3-${idx}`} className="w-full h-28 sm:h-40 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
-                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
+                <img src={img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
@@ -88,7 +88,7 @@ export default function Hero() {
           <div className="animate-watermark-up flex flex-col gap-4 sm:gap-5" style={{ animationDuration: '42s' }}>
             {stream4.concat(stream4).map((img, idx) => (
               <div key={`stream4-${idx}`} className="w-full h-24 sm:h-40 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
-                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
+                <img src={img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
@@ -99,7 +99,7 @@ export default function Hero() {
           <div className="animate-watermark-ltr flex gap-4 sm:gap-5 w-max">
             {streamHorizontal1.concat(streamHorizontal1).map((img, idx) => (
               <div key={`h-ltr-${idx}`} className="w-36 sm:w-60 h-20 sm:h-32 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
-                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
+                <img src={img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
@@ -110,7 +110,7 @@ export default function Hero() {
           <div className="animate-watermark-rtl flex gap-5 w-max">
             {streamHorizontal2.concat(streamHorizontal2).map((img, idx) => (
               <div key={`h-rtl-${idx}`} className="w-44 sm:w-60 h-20 sm:h-32 rounded-2xl overflow-hidden border border-black/15 dark:border-white/15 shadow-sm bg-neutral-900 shrink-0">
-                <img src={img} alt="Campus Event Photo" className="w-full h-full object-cover" />
+                <img src={img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
