@@ -840,21 +840,20 @@ app.get('/api/registrations', async (req, res) => {
 });
 
 // Start server if run directly (local / Render / Railway)
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const server = app.listen(PORT, () => {
-    console.log(`[IncuxAI Backend] Server listening at http://localhost:${PORT}`);
-    console.log(`[IncuxAI Backend] Health check: http://localhost:${PORT}/api/health`);
-    console.log(`[IncuxAI Backend] Database status: ${isDatabaseConfigured ? 'PostgreSQL (Railway via Prisma)' : 'Local JSON Store'}`);
-  });
+// Also exported for serverless environments
+const server = app.listen(PORT, () => {
+  console.log(`[IncuxAI Backend] Server listening at http://localhost:${PORT}`);
+  console.log(`[IncuxAI Backend] Health check: http://localhost:${PORT}/api/health`);
+  console.log(`[IncuxAI Backend] Database status: ${isDatabaseConfigured ? 'PostgreSQL (Railway via Prisma)' : 'Local JSON Store'}`);
+});
 
-  server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.error(`[IncuxAI Backend] Port ${PORT} is currently in use. Stop the existing process or set PORT in the environment.`);
-    } else {
-      console.error('[IncuxAI Backend] Server error:', err);
-    }
-  });
-}
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[IncuxAI Backend] Port ${PORT} is currently in use. Stop the existing process or set PORT in the environment.`);
+  } else {
+    console.error('[IncuxAI Backend] Server error:', err);
+  }
+});
 
 // Export for serverless environments (Railway, AWS Lambda)
 export default app;
