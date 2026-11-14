@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, ArrowRight } from 'lucide-react';
 import { fetchUpcomingWorkshops } from '../services/api';
+import genAiBannerImg from '../assets/generative_ai_workshop_banner.jpg';
 
 const initialWorkshop = {
   id: "WS-GENAI-IIT",
