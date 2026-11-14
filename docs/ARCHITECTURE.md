@@ -1,6 +1,6 @@
 # incux_workshop — Architecture & Design
 
-> **Status:** 🟢 Live (assumed) | **Last Updated:** 2026-11-12 | **Audience:** Developers, AI agents, operators
+> **Status:** 🟢 Live (assumed) | **Last Updated:** 2026-11-14 | **Audience:** Developers, AI agents, operators
 
 ---
 
@@ -9,8 +9,8 @@
 **IncuxAI Workshop Website Platform** — A modern, animation-rich marketing website for IncuXai workshops, structured with separate **frontend** and **backend** layers.
 
 - **Frontend:** React.js + Vite + Tailwind CSS + GSAP (animation)
-- **Backend:** Node.js + Express REST API + Supabase (PostgreSQL + Auth)
-- **Deployment:** Vercel (frontend + serverless API), Supabase (database)
+- **Backend:** Node.js + Express REST API + Prisma ORM (Railway PostgreSQL)
+- **Deployment:** Railway (backend + frontend deployed individually)
 - **Purpose:** Public workshop marketing site — **NOT** the paid registration path (that's incuxai.com + Education Trust)
 
 ---
@@ -48,11 +48,12 @@ D:\code\incux_workshop\                        ← Local path
 │   │   ├── App.jsx
 │   │   ├── index.css
 │   │   └── main.jsx
+│   ├── .env                                  ← Frontend env (VITE_API_BASE)
+│   ├── railway.json                          # Railway deploy config
 │   ├── package.json
 │   ├── tailwind.config.js
-│   ├── vite.config.js
-│   └── vercel.json                           # Vercel config (rewrites, build)
-├── backend/                                  ← Express + Supabase
+│   └── vite.config.js
+├── backend/                                  ← Express + Prisma (Railway PostgreSQL)
 │   ├── data/                                 ← JSON data files (same as frontend fallback)
 │   │   ├── workshops.json
 │   │   ├── companies.json
@@ -61,15 +62,14 @@ D:\code\incux_workshop\                        ← Local path
 │   │   ├── config.json
 │   │   └── inquiries.json                    # Persisted inquiry submissions
 │   ├── server.js                             ← Express server, CORS, validation
-│   ├── supabaseClient.js                     ← Supabase client setup
-│   ├── database/README.md                    ← Database notes
+│   ├── prisma/                               ← Prisma schema & migrations
+│   │   └── schema.prisma                     # Prisma data model
+│   ├── .env                                  ← Backend env (DATABASE_URL)
+│   ├── railway.json                          # Railway deploy config
 │   └── package.json
-├── api/
-│   └── index.js                              ← Vercel serverless wrapper → backend/server.js
 ├── scripts/
-│   └── build.js                              ← Custom build (Vercel buildCommand)
+│   └── build.js                              ← Custom build script
 ├── package.json                              ← Root workspace orchestrator
-├── vercel.json                               ← Vercel config
 └── .git
 ```
 
@@ -85,7 +85,7 @@ D:\code\incux_workshop\                        ← Local path
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                         VERCEL (Frontend + API)                     │   │
+│  │                         RAILWAY (Frontend)                          │   │
 │  │  ┌──────────────────────────────────────────────────────────────┐  │   │
 │  │  │                    FRONTEND (React + Vite)                   │  │   │
 │  │  │  • 11 animated sections (GSAP, Framer Motion)               │  │   │
@@ -93,22 +93,27 @@ D:\code\incux_workshop\                        ← Local path
 │  │  │  • API client with auto-fallback (services/api.js)          │  │   │
 │  │  │  • Reduced-motion support, keyboard accessible              │  │   │
 │  │  └──────────────────────────────────────────────────────────────┘  │   │
-│  │  ┌──────────────────────────────────────────────────────────────┐  │   │
-│  │  │                    SERVERLESS API (/api/*)                   │  │   │
-│  │  │  • api/index.js → backend/server.js (Express)               │  │   │
-│  │  │  • Supabase client for DB operations                        │  │   │
-│  │  │  • Endpoints: workshops, companies, stats, expertise,       │  │   │
-│  │  │    config, news, inquiries (GET/POST)                       │  │   │
-│  │  └──────────────────────────────────────────────────────────────┘  │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│                                    ▼ HTTPS /api/*                           │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                         RAILWAY (Backend)                           │   │
+│  │  ┌──────────────────────────────────────────────────────────────┐  │   │
+│  │  │                    BACKEND (Express + Prisma)                │  │   │
+│  │  │  • Express server, CORS, input validation                    │  │   │
+│  │  │  • Prisma ORM → Railway PostgreSQL                           │  │   │
+│  │  │  • JSON fallback when DATABASE_URL not set                   │  │   │
+│  │  │  • Endpoints: workshops, companies, stats, expertise,        │  │   │
+│  │  │    config, news, inquiries (GET/POST)                        │  │   │
+│  │  └──────────────────────────────────────────────────────────────┘  │   │
 │                                    │                                        │
 │                                    ▼                                        │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                         SUPABASE                                     │   │
-│  │  • PostgreSQL database                                               │   │
-│  │  • Auth (if needed)                                                  │   │
-│  │  • Row Level Security (RLS) required on every table                 │   │
-│  │  • Tables: inquiries, workshops, companies, stats, expertise        │   │
+│  │                      RAILWAY POSTGRESQL                              │   │
+│  │  • Managed PostgreSQL database                                      │   │
+│  │  • Tables: users, inquiries, upcoming_workshops, registrations,    │   │
+│  │    custom_requests                                                  │   │
+│  │  • Accessed via Prisma Client                                       │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -117,9 +122,9 @@ D:\code\incux_workshop\                        ← Local path
 ### 3.2 Data Flow
 
 1. **Frontend loads** → Tries API first → Falls back to local `src/data/*.js` if API fails
-2. **Inquiry form submit** → `POST /api/inquiries` → Validation → Supabase insert → Response
-3. **All read endpoints** → `GET /api/*` → Supabase query → JSON response
-4. **Build time** → `VITE_*` env vars inlined → `vercel.json` rewrites `/api/*` to `api/index.js`
+2. **Inquiry form submit** → `POST /api/inquiries` → Validation → Prisma insert → Response (mirrored to JSON)
+3. **All read endpoints** → `GET /api/*` → Prisma query → JSON response (falls back to JSON files)
+4. **Build time** → `VITE_*` env vars inlined → Frontend built with `vite build`
 
 ---
 
@@ -148,7 +153,7 @@ D:\code\incux_workshop\                        ← Local path
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/health` | Health check, uptime, timestamp |
+| `GET` | `/api/health` | Health check, uptime, timestamp, DB status |
 | `GET` | `/api/workshops` | 5 overview cards + 5 featured achievements |
 | `GET` | `/api/companies` | 8 practitioner companies + compliance note |
 | `GET` | `/api/stats` | Verified impact statistics + attendance footnote |
@@ -157,6 +162,17 @@ D:\code\incux_workshop\                        ← Local path
 | `GET` | `/api/news` | Honest news placeholder status |
 | `POST` | `/api/inquiries` | Receive & validate institutional inquiries |
 | `GET` | `/api/inquiries` | Inspect stored inquiries |
+| `POST` | `/api/auth/login` | Admin & candidate login |
+| `POST` | `/api/auth/register` | Candidate registration |
+| `GET` | `/api/workshops/upcoming` | List upcoming workshops |
+| `POST` | `/api/workshops` | Post a new workshop |
+| `DELETE` | `/api/workshops/:id` | Delete a workshop |
+| `POST` | `/api/workshops/:id/register` | Register candidate for workshop |
+| `GET` | `/api/candidates/:email/registrations` | Get candidate registrations |
+| `POST` | `/api/collaboration-requests` | Submit collaboration request |
+| `GET` | `/api/collaboration-requests` | List collaboration requests |
+| `POST` | `/api/collaboration-requests/:id/approve` & workshop |
+| `GET` | `/api/registrations` | List all registrations |
 
 ---
 
@@ -187,13 +203,13 @@ D:\code\incux_workshop\                        ← Local path
 | **Linting** | oxlint | 1.88.0 |
 | **Backend Runtime** | Node.js | 20.x |
 | **Backend Framework** | Express | 4.21.2 |
-| **Database** | Supabase (PostgreSQL) | 2.119.0 |
-| **Auth** | Supabase Auth | — |
+| **ORM** | Prisma | 6.x |
+| **Database** | PostgreSQL (Railway) | Managed |
 | **Validation** | Manual (express) | — |
 | **Logging** | Morgan | 1.10.0 |
-| **Deploy (Frontend)** | Vercel | `vercel.json` config |
-| **Deploy (Backend)** | Vercel Serverless | `api/index.js` wrapper |
-| **Database Host** | Supabase | Managed PostgreSQL |
+| **Deploy (Frontend)** | Railway | `railway.json` config |
+| **Deploy (Backend)** | Railway | `railway.json` config |
+| **Database Host** | Railway | Managed PostgreSQL |
 
 ---
 
@@ -204,35 +220,39 @@ D:\code\incux_workshop\                        ← Local path
 | `frontend/package.json` | Frontend deps, scripts |
 | `frontend/vite.config.js` | Vite config |
 | `frontend/tailwind.config.js` | Tailwind config |
+| `frontend/.env` | Frontend env (`VITE_API_BASE`) |
+| `frontend/railway.json` | Railway deploy config (frontend) |
 | `backend/package.json` | Backend deps, scripts |
 | `backend/server.js` | Express server, endpoints |
-| `backend/supabaseClient.js` | Supabase client singleton |
+| `backend/prisma/schema.prisma` | Prisma data model |
+| `backend/.env` | Backend env (`DATABASE_URL`) |
+| `backend/railway.json` | Railway deploy config (backend) |
 | `backend/data/*.json` | Static data (fallback + API source) |
-| `api/index.js` | Vercel serverless wrapper |
-| `scripts/build.js` | Custom Vercel build |
-| `vercel.json` | Vercel config (rewrites, build, output) |
-| `.env.example` | Env template (Supabase keys) |
+| `scripts/build.js` | Custom build script |
+| `package.json` | Root orchestrator |
+| `.env.example` | Env template |
 
 ---
 
-## 9. Deployment (Vercel)
+## 9. Deployment (Railway)
 
-**Vercel Config (`vercel.json`):**
-```json
-{
-  "buildCommand": "node scripts/build.js",
-  "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
-```
+**Backend (`backend/railway.json`):**
+- Start command: `npm run prisma:generate && npm run prisma:migrate && npm start`
+- Healthcheck: `/api/health`
 
-- **Build:** `node scripts/build.js` → outputs `dist/`
-- **API:** `/api/*` → `api/index.js` (serverless wrapper around `backend/server.js`)
-- **SPA Fallback:** `/(.*)` → `/index.html`
-- **Env Vars (Vercel Dashboard):** `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+**Frontend (`frontend/railway.json`):**
+- Start command: `npm install && npm run build`
+- Healthcheck: `/`
+
+**Deploy:**
+1. Create a PostgreSQL database on Railway → copy `DATABASE_URL`
+2. Connect `backend/` as a Railway service → add `DATABASE_URL` variable
+3. Connect `frontend/` as a separate Railway service → add `VITE_API_BASE` variable pointing to backend URL
+4. Railway auto-deploys on push to connected branch
+
+**Env Vars (Railway → Service → Variables):**
+- Backend: `DATABASE_URL` (from Railway PostgreSQL), `PORT`, `NODE_ENV`
+- Frontend: `VITE_API_BASE` (e.g. `https://incuxai-backend.up.railway.app/api`)
 
 ---
 
@@ -245,11 +265,9 @@ D:\code\incux_workshop\                        ← Local path
 | Frontend data (fallback) | `frontend/src/data/` |
 | API client | `frontend/src/services/api.js` |
 | Backend server | `backend/server.js` |
-| Supabase client | `backend/supabaseClient.js` |
+| Prisma schema | `backend/prisma/schema.prisma` |
 | Backend data (API source) | `backend/data/*.json` |
-| Vercel config | `vercel.json` |
 | Build script | `scripts/build.js` |
-| Database notes | `backend/database/README.md` |
 | Env template | `.env.example` |
 
 ---
@@ -259,11 +277,11 @@ D:\code\incux_workshop\                        ← Local path
 | Role | Contact | Notes |
 |------|---------|-------|
 | **Owner** | ❓ Unknown | Ask **Ashish** (avani890a@gmail.com) |
-| **Vercel** | `incuxai.work@gmail.com` | Vercel account |
-| **Supabase** | ❓ Unknown | Dashboard: supabase.com/dashboard |
+| **Railway** | `incuxai.work@gmail.com` | Railway account |
+| **Database** | — | Railway PostgreSQL Dashboard |
 | **GitHub** | `incuxaiwork/incux_workshop` (public) | |
 
-> ⚠️ **Owner not documented.** Vercel project name/domain/branch unknown (gap in all_incuxai hub).
+> ⚠️ **Owner not documented.** Railway project name/domain unknown (gap in all_incuxai hub).
 
 ---
 
@@ -277,4 +295,4 @@ D:\code\incux_workshop\                        ← Local path
 
 ---
 
-*Generated from README.md, package.json files, and code inspection. Last verified: 2026-11-12.*
+*Generated from README.md, package.json files, and code inspection. Last verified: 2026-11-14.*

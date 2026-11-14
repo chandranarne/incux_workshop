@@ -40,7 +40,7 @@ function WhatsAppIcon({ className = "w-4 h-4" }) {
   );
 }
 
-export default function Footer() {
+export default function Footer({ onNavigateToTerms, onNavigateToPrivacy }) {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -48,7 +48,7 @@ export default function Footer() {
   return (
     <footer
       id="contact"
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] text-neutral-800 dark:text-neutral-300 pt-12 pb-8 border-t border-black/10 dark:border-[#262626] overflow-hidden select-none transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] text-neutral-800 dark:text-neutral-300 pt-8 pb-6 border-t border-black/10 dark:border-[#262626] overflow-hidden select-none transition-colors duration-200"
       aria-label="Footer"
     >
       {/* 
@@ -142,14 +142,20 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#news" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
+                <button
+                  onClick={onNavigateToPrivacy}
+                  className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors cursor-pointer text-left"
+                >
                   Privacy Policy
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#how-we-work" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
+                <button
+                  onClick={onNavigateToTerms}
+                  className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors cursor-pointer text-left"
+                >
                   Terms of Use
-                </a>
+                </button>
               </li>
             </ul>
           </div>
@@ -226,12 +232,18 @@ export default function Footer() {
           </div>
 
           <div className="flex items-center gap-6">
-            <a href="#how-we-work" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
+            <button
+              onClick={onNavigateToTerms}
+              className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors cursor-pointer font-medium"
+            >
               Terms of Use
-            </a>
-            <a href="#news" className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors">
+            </button>
+            <button
+              onClick={onNavigateToPrivacy}
+              className="hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors cursor-pointer font-medium"
+            >
               Privacy Policy
-            </a>
+            </button>
             <button
               onClick={scrollToTop}
               className="flex items-center gap-1.5 hover:text-amber-600 dark:hover:text-[#FACC15] transition-colors ml-2 cursor-pointer font-medium"

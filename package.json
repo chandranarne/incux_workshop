@@ -2,17 +2,18 @@
   "name": "incuxai-workshop-platform",
   "version": "1.0.0",
   "private": true,
-  "description": "IncuxAI Workshop Website Platform with React Frontend, Express API, and Supabase Database",
+  "description": "IncuxAI Workshop Website Platform with React Frontend, Express API, and Prisma ORM (Railway PostgreSQL)",
   "scripts": {
     "build": "node scripts/build.js",
     "start": "node backend/server.js",
     "start:backend": "cd backend && npm start",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "build:frontend": "cd frontend && npm run build"
+    "build:frontend": "cd frontend && npm run build",
+    "prisma:generate": "cd backend && npx prisma generate",
+    "prisma:migrate": "cd backend && npx prisma migrate deploy"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.119.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "morgan": "^1.10.0"

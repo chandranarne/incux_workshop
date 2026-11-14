@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { expertiseData } from '../data/expertise';
-import { Code2, Brain, Database, Shield, Briefcase, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Code2, Brain, Database, Shield, Briefcase, CheckCircle2 } from 'lucide-react';
 
 const icons = {
   ai: Brain,
@@ -28,7 +28,7 @@ export default function Expertise({ data = expertiseData }) {
   return (
     <section
       id="expertise"
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-16 sm:py-24 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-10 sm:py-14 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
       aria-label="Workshop Expertise"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

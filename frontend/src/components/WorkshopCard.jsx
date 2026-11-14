@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, ArrowUpRight, BookmarkCheck, Sparkles } from 'lucide-react';
+import { MapPin, ArrowUpRight, BookmarkCheck } from 'lucide-react';
 import TiltCard from './TiltCard';
 import auditoriumImg from '../assets/auditorium_workshop.jpg';
 import labImg from '../assets/hands_on_lab.jpg';
@@ -121,7 +121,6 @@ export default function WorkshopCard({ card, onSelect }) {
           {/* Card Footer: Agency Series & The Yellow Magnetic Arrow Button */}
           <div className="pt-2 sm:pt-3 border-t border-black/10 dark:border-[#262626] flex items-center justify-between">
             <span className="text-[11px] sm:text-xs font-mono text-[#525252] dark:text-[#A3A3A3] font-medium flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-[#EAB308] dark:text-[#FACC15]" />
               <span>Explore Details</span>
             </span>
             <button

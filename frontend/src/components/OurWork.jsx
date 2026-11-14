@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function OurWork({ cards = [], onOpenRegistration }) {
+export default function OurWork({ cards = [] }) {
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
   const progressBarRef = useRef(null);
@@ -146,7 +146,7 @@ export default function OurWork({ cards = [], onOpenRegistration }) {
     <section
       ref={sectionRef}
       id="our-work"
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-16 sm:py-24 overflow-hidden border-t border-black/10 dark:border-yellow-400/20 transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-10 sm:py-14 overflow-hidden border-t border-black/10 dark:border-yellow-400/20 transition-colors duration-200"
       aria-label="Workshop Formats Section"
     >
       {/* Header Container */}
@@ -224,7 +224,7 @@ export default function OurWork({ cards = [], onOpenRegistration }) {
         onClose={() => setSelectedFormatId(null)}
         onRegister={() => {
           setSelectedFormatId(null);
-          if (onOpenRegistration) onOpenRegistration('register');
+          document.querySelector('#upcoming-workshops')?.scrollIntoView({ behavior: 'smooth' });
         }}
         onRequestCollege={() => {
           setSelectedFormatId(null);

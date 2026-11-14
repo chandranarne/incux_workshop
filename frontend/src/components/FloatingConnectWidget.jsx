@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { MessageSquare, X, Mail, Phone, Calendar, ArrowRight, Sparkles, Send } from 'lucide-react';
+import { MessageSquare, X, Mail, Phone, Calendar, ArrowRight, Send } from 'lucide-react';
 
-export default function FloatingConnectWidget({ onOpenAuth, onOpenPortal, currentUser }) {
+export default function FloatingConnectWidget() {
   const [isOpen, setIsOpen] = useState(false);
 
   const scrollToContact = () => {

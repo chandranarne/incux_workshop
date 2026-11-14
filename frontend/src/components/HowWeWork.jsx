@@ -9,7 +9,6 @@ import {
   RotateCw,
   RotateCcw,
   CheckCircle2,
-  Sparkles,
   ArrowRight
 } from 'lucide-react';
 
@@ -57,7 +56,7 @@ export default function HowWeWork() {
     <section
       id="how-we-work"
       ref={sectionRef}
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-16 sm:py-24 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200 select-none"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-10 sm:py-14 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200 select-none"
       aria-label="How We Work"
     >
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -98,7 +97,7 @@ export default function HowWeWork() {
         </div>
 
         {/* 3D CIRCULAR CAROUSEL REVOLVING STAGE */}
-        <div className="relative w-full max-w-5xl mx-auto min-h-[540px] flex flex-col items-center justify-center [perspective:1800px] my-6">
+        <div className="relative w-full max-w-5xl mx-auto min-h-[400px] sm:min-h-[480px] flex flex-col items-center justify-center [perspective:1800px] my-4">
           
           {/* Circular Orbit Ring in the center */}
           <div className="absolute w-[440px] sm:w-[560px] h-[440px] sm:h-[560px] rounded-full border border-[#FACC15]/20 pointer-events-none flex items-center justify-center">
@@ -202,7 +201,7 @@ export default function HowWeWork() {
                   className="w-[320px] sm:w-[380px] md:w-[420px] cursor-pointer"
                 >
                   <div
-                    className={`process-step-card flex flex-col justify-between p-8 rounded-3xl bg-white dark:bg-[#141414] border transition-all duration-300 shadow-2xl relative overflow-hidden min-h-[360px] ${
+                    className={`process-step-card flex flex-col justify-between p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#141414] border transition-all duration-300 shadow-2xl relative overflow-hidden min-h-[300px] sm:min-h-[340px] ${
                       isCurrent
                         ? 'border-[#FACC15] ring-4 ring-[#FACC15]/20 shadow-xl shadow-yellow-500/10'
                         : 'border-black/10 dark:border-[#262626] hover:border-[#FACC15]'
@@ -259,7 +258,7 @@ export default function HowWeWork() {
                       </span>
                       {isCurrent ? (
                         <span className="text-[11px] font-mono text-amber-600 dark:text-[#FACC15] uppercase tracking-wider">
-                          Active Phase ●
+                          Active Phase >
                         </span>
                       ) : (
                         <span className="text-[11px] text-neutral-400 font-mono">Stage 0{step.step}</span>

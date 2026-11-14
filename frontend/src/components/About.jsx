@@ -9,7 +9,7 @@ import { eventPhotos } from '../data/eventPhotos';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function About({ onOpenRegistration }) {
+export default function About() {
   const sectionRef = useRef(null);
   const [activeCategory, setActiveCategory] = useState('workshops'); // 'workshops' | 'hackathons' | 'guest-lectures'
   const [lightboxIndex, setLightboxIndex] = useState(null); // null or number
@@ -103,7 +103,7 @@ export default function About({ onOpenRegistration }) {
     <section
       id="about"
       ref={sectionRef}
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-12 sm:py-24 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-8 sm:py-12 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
       aria-label="Bridging Education and Industry"
     >
       {/* Ambient Settled Background Photography */}
@@ -140,7 +140,7 @@ export default function About({ onOpenRegistration }) {
 
         {/* Featured Video Showcase */}
         <div className="about-video-wrapper mb-12 sm:mb-20 max-w-5xl mx-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-black/10 dark:border-[#262626]">
-          <WorkshopVideoPlayer onOpenRegistration={onOpenRegistration} />
+          <WorkshopVideoPlayer />
         </div>
 
         {/* ========================================================================= */}

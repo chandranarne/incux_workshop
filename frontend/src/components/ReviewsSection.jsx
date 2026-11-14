@@ -1,5 +1,5 @@
 import React from 'react';
-import { Quote, CheckCircle2, Sparkles } from 'lucide-react';
+import { Quote, CheckCircle2 } from 'lucide-react';
 import { studentReviews } from '../data/reviews';
 
 function ReviewCard({ review }) {
@@ -69,14 +69,13 @@ export default function ReviewsSection() {
   return (
     <section
       id="reviews"
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-16 sm:py-24 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-10 sm:py-14 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
       aria-label="Student Reviews and Campus Outcomes"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FACC15]/15 dark:bg-[#FACC15]/10 backdrop-blur-md border border-[#FACC15]/30 text-xs font-mono text-neutral-900 dark:text-[#FACC15] uppercase tracking-widest mb-4 font-bold shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#FACC15]" />
               <span>Student Campus Experiences</span>
             </div>
             <h2 className="font-headline font-black text-3xl sm:text-5xl md:text-6xl text-neutral-950 dark:text-[#F5F5F5] tracking-tight leading-tight">

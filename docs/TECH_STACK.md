@@ -1,6 +1,6 @@
 # incux_workshop — Tech Stack
 
-> **Status:** 🟢 Live (assumed) | **Last Updated:** 2026-11-12
+> **Status:** 🟢 Live (assumed) | **Last Updated:** 2026-11-14
 
 ---
 
@@ -10,6 +10,7 @@
 |-----------|------------|---------|
 | **Runtime** | Node.js | 20.x |
 | **Framework** | React | 19.3.1 |
+| **Module System** | ES Modules (`"type": "module"`) | — |
 | **Build Tool** | Vite | 8.3.4 |
 | **Router** | (SPA, single page) | — |
 | **Styling** | Tailwind CSS | 3.4.17 |
@@ -21,14 +22,15 @@
 
 ---
 
-## Backend (Express/Supabase)
+## Backend (Express/Prisma)
 
 | Component | Technology | Version |
 |-----------|------------|---------|
 | **Runtime** | Node.js | 20.x |
 | **Framework** | Express | 4.21.2 |
-| **Database** | Supabase (PostgreSQL) | 2.119.0 |
-| **Auth** | Supabase Auth | — |
+| **Module System** | ES Modules (`"type": "module"`) | — |
+| **ORM** | Prisma | 6.x |
+| **Database** | PostgreSQL (Railway) | Managed |
 | **Validation** | Manual (express) | — |
 | **Logging** | Morgan | 1.10.0 |
 | **CORS** | cors | 2.8.5 |
@@ -39,15 +41,14 @@
 
 | Component | Provider | Details |
 |-----------|----------|---------|
-| **Hosting (Frontend + API)** | Vercel | `vercel.json` config |
-| **Serverless API** | Vercel Functions | `api/index.js` → `backend/server.js` |
-| **Database** | Supabase | Managed PostgreSQL |
-| **Auth** | Supabase Auth | RLS required on all tables |
-| **Domain** | Vercel custom domain | ❓ Unknown (verify in Vercel dashboard) |
-| **SSL** | Vercel / Let's Encrypt | Auto |
-| **Build Command** | `node scripts/build.js` | Custom build |
+| **Hosting (Backend)** | Railway | `backend/railway.json` |
+| **Hosting (Frontend)** | Railway | `frontend/railway.json` |
+| **Database** | Railway PostgreSQL | Managed PostgreSQL via `DATABASE_URL` |
+| **Domain** | Railway custom domain | ❓ Unknown (verify in Railway dashboard) |
+| **SSL** | Railway / Let's Encrypt | Auto |
+| **Build Command** | `npm install && npm run build` | Frontend Vite build |
 | **Output** | `dist/` | Vite build output |
-| **Rewrites** | `/api/*` → `api/index.js` | SPA fallback to `/index.html` |
+| **Backend Start** | `npm run prisma:generate && npm run prisma:migrate && npm start` | Prisma generate + migrate + server |
 
 ---
 
@@ -55,47 +56,55 @@
 
 | File | Purpose |
 |------|---------|
-| `frontend/package.json` | Frontend deps, scripts |
+| `frontend/package.json` | Frontend deps, scripts (ESM) |
 | `frontend/vite.config.js` | Vite config |
 | `frontend/tailwind.config.js` | Tailwind config |
-| `backend/package.json` | Backend deps, scripts |
-| `backend/server.js` | Express server, endpoints, CORS, validation |
-| `backend/supabaseClient.js` | Supabase client singleton |
-| `backend/data/*.json` | Static data (workshops, companies, stats, expertise, config, inquiries) |
-| `api/index.js` | Vercel serverless wrapper |
-| `scripts/build.js` | Custom Vercel build script |
-| `vercel.json` | Vercel config (build, output, rewrites) |
-| `.env.example` | Env template (Supabase keys) |
+| `frontend/.env` | Frontend env (`VITE_API_BASE`) |
+| `frontend/railway.json` | Railway deploy config (frontend) |
+| `backend/package.json` | Backend deps, scripts (ESM) |
+| `backend/server.js` | Express server, endpoints, CORS, validation (ESM) |
+| `backend/prisma/schema.prisma` | Prisma data model |
+| `backend/.env` | Backend env (`DATABASE_URL`) |
+| `backend/railway.json` | Railway deploy config (backend) |
+| `backend/data/*.json` | Static data (fallback + API source) |
+| `scripts/build.js` | Custom build script |
+| `package.json` | Root orchestrator |
+| `.env.example` | Env template |
 
 ---
 
 ## Environment Variables
 
-### Root / Frontend (`.env`)
+### Backend (`.env`)
 
 | Variable | Purpose | Exposed to Browser? |
 |----------|---------|---------------------|
 | `PORT` | Backend server port | No |
 | `NODE_ENV` | Environment | No |
-| `VITE_API_BASE` | API base URL for frontend | **Yes** (VITE_ prefix) |
-| `SUPABASE_URL` | Supabase project URL | **Yes** (VITE_SUPABASE_URL) |
-| `VITE_SUPABASE_URL` | Public Supabase URL | **Yes** |
-| `SUPABASE_ANON_KEY` | Public anon key | **Yes** (VITE_SUPABASE_ANON_KEY) |
-| `VITE_SUPABASE_ANON_KEY` | Public anon key for frontend | **Yes** |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Backend only** — bypasses RLS | **Never** |
+| `DATABASE_URL` | Railway PostgreSQL connection string | **Never** |
+| `API_BASE` | API base URL reference | No |
 
-> **Critical:** `SUPABASE_SERVICE_ROLE_KEY` must **never** be prefixed with `VITE_`. It bypasses RLS and is for backend-only operations.
+### Frontend (`.env`)
+
+| Variable | Purpose | Exposed to Browser? |
+|----------|---------|---------------------|
+| `VITE_API_BASE` | API base URL for frontend | **Yes** (VITE_ prefix) |
+
+> **Critical:** `DATABASE_URL` must **never** be exposed to the frontend. It is backend-only.
 
 ---
 
-## Supabase Database
+## Database Schema (Prisma)
 
-| Aspect | Detail |
-|--------|--------|
-| **Provider** | Supabase |
-| **RLS** | Required on every table; default deny; policies scoped to `auth.uid()` |
-| **Tables** | `inquiries`, `workshops`, `companies`, `statistics`, `expertise`, `config` |
-| **Notes** | See `backend/database/README.md` |
+| Table | Description |
+|-------|-------------|
+| `users` | Admin & registered candidates |
+| `custom_requests` | College / department collaboration requests |
+| `upcoming_workshops` | Live published workshop sessions |
+| `registrations` | Candidate enrollments in workshops |
+| `inquiries` | Landing page contact & corporate/college inquiries |
+
+Schema located at: `backend/prisma/schema.prisma`
 
 ---
 
@@ -107,39 +116,42 @@ git clone https://github.com/incuxaiwork/incux_workshop.git D:\code\incux_worksh
 
 # 2. Configure
 cd D:\code\incux_workshop
-copy .env.example .env
-# Fill: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+
+# Backend: set DATABASE_URL in backend/.env (Railway PostgreSQL)
+# If no DATABASE_URL, backend falls back to local JSON store
+
+# Frontend: set VITE_API_BASE in frontend/.env (e.g. http://localhost:5000/api)
 
 # 3. Install
 npm install
 cd backend; npm install; cd ..
 cd frontend; npm install; cd ..
 
-# 4. Run
-npm run dev:backend    # Express API (own port)
-npm run dev:frontend   # Vite dev server
+# 4. Generate Prisma client
+cd backend; npx prisma generate; cd ..
 
-# Note: Vercel's /api/* rewrite is production-only.
-# Locally, set VITE_API_BASE to point to backend directly.
+# 5. Run (two terminals)
+npm run dev:backend    # Express API (own port, ESM)
+npm run dev:frontend   # Vite dev server
 ```
 
 ---
 
 ## Build & Deploy
 
+**Backend (Railway):**
 ```bash
-# Build (custom script for Vercel)
-npm run build    # node scripts/build.js → dist/
-
-# Deploy to Vercel
-vercel --prod    # ⚠️ Project link unverified
-# Or push to connected branch for auto-deploy
+# Connect backend/ folder as a Railway service
+# Add DATABASE_URL variable (from Railway PostgreSQL)
+# Railway runs: npm run prisma:generate && npm run prisma:migrate && npm start
 ```
 
-**Vercel Env Vars (Production scope):**
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (server-side only)
+**Frontend (Railway):**
+```bash
+# Connect frontend/ folder as a separate Railway service
+# Add VITE_API_BASE variable pointing to backend URL
+# Railway runs: npm install && npm run build
+```
 
 ---
 
@@ -150,7 +162,6 @@ vercel --prod    # ⚠️ Project link unverified
 ```json
 {
   "dependencies": {
-    "@supabase/supabase-js": "^2.119.0",
     "framer-motion": "^14.6.0",
     "gsap": "^3.15.0",
     "lucide-react": "^1.61.0",
@@ -175,14 +186,17 @@ vercel --prod    # ⚠️ Project link unverified
 ```json
 {
   "dependencies": {
-    "@supabase/supabase-js": "^2.119.0",
+    "@prisma/client": "^6.0.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "prisma": "^6.0.0"
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy"
   }
 }
 ```
@@ -204,7 +218,9 @@ vercel --prod    # ⚠️ Project link unverified
 | Frontend | `preview` | `vite preview` |
 | Backend | `start` | `node server.js` |
 | Backend | `dev` | `node --watch server.js` |
+| Backend | `prisma:generate` | `prisma generate` |
+| Backend | `prisma:migrate` | `prisma migrate deploy` |
 
 ---
 
-*Last verified: 2026-11-12 against actual package.json files.*
+*Last verified: 2026-11-14 against actual package.json files.*

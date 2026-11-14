@@ -1,11 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowUpRight, Sparkles, User, Shield, Sun, Moon, LogIn } from 'lucide-react';
+import { X, ArrowUpRight, User, Shield, Sun, Moon, LogIn } from 'lucide-react';
 import { siteConfig } from '../data/config';
 import { useTheme } from '../context/ThemeContext';
 import incuxaiLogo from '../assets/incuxai_official_logo.jpg';
 
-export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal, currentUser }) {
+export default function MenuOverlay({ isOpen, onClose, onOpenPortal }) {
   const closeBtnRef = useRef(null);
   const { isDark, toggleTheme } = useTheme();
 
@@ -92,7 +92,7 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
               <button
                 onClick={toggleTheme}
                 type="button"
-                aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-full border text-xs font-mono font-bold transition-all bg-black/5 dark:bg-[#141414] border-black/15 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] cursor-pointer shadow-sm hover:scale-105 active:scale-95"
               >
                 {isDark ? (
@@ -153,36 +153,20 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
                 </motion.li>
               ))}
 
-              {/* Login / Portal Action Inside Hamburger Menu */}
+              {/* Portal Action Inside Hamburger Menu (access without login) */}
               <motion.li variants={navItemVariants} className="pt-4 sm:pt-6 border-t border-black/10 dark:border-yellow-400/20">
-                {currentUser ? (
-                  <button
-                    onClick={() => {
-                      onClose();
-                      onOpenPortal();
-                    }}
-                    className="w-full text-left py-2 text-xl sm:text-2xl font-headline font-bold text-[#0A0A0A] dark:text-[#FACC15] flex items-center justify-between cursor-pointer"
-                  >
-                    <span>Open {currentUser.role === 'admin' ? 'Admin Hub' : 'Candidate Portal'}</span>
-                    <span className="text-xs font-mono px-3 py-1 rounded-full bg-[#FACC15]/15 border border-[#FACC15]/40 text-[#0A0A0A] dark:text-[#FACC15] font-bold">
-                      Active
-                    </span>
-                  </button>
-                ) : (
-                  <div className="py-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    {/* Dedicated Hamburger Login Action: Strictly Email & Password Login */}
-                    <button
-                      onClick={() => {
-                        onClose();
-                        onOpenAuth('login');
-                      }}
-                      className="w-full sm:w-auto justify-center px-7 py-3.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-bold text-sm uppercase tracking-wider shadow-lg shadow-yellow-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2.5"
-                    >
-                      <LogIn className="w-4 h-4 stroke-[2.5]" />
-                      <span>Login</span>
-                    </button>
-                  </div>
-                )}
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenPortal();
+                  }}
+                  className="w-full text-left py-2 text-xl sm:text-2xl font-headline font-bold text-[#0A0A0A] dark:text-[#FACC15] flex items-center justify-between cursor-pointer"
+                >
+                  <span>Open Workshop Portal</span>
+                  <span className="text-xs font-mono px-3 py-1 rounded-full bg-[#FACC15]/15 border border-[#FACC15]/40 text-[#0A0A0A] dark:text-[#FACC15] font-bold">
+                    Free Access
+                  </span>
+                </button>
               </motion.li>
             </motion.ul>
           </nav>
@@ -197,8 +181,7 @@ export default function MenuOverlay({ isOpen, onClose, onOpenAuth, onOpenPortal,
                 info@incuxai.com • +91 7665061289
               </p>
             </div>
-            <div className="flex items-center justify-start md:justify-end gap-2 text-[#EAB308] dark:text-[#FACC15]">
-              <Sparkles className="w-3.5 h-3.5 text-[#FACC15]" />
+            <div className="flex items-center justify-start md:justify-end gap-2 text-[#0A0A0A] dark:text-[#F5F5F5]">
               <span className="text-[#0A0A0A] dark:text-[#F5F5F5] font-medium text-xs sm:text-sm">
                 IncuxAI Workshop Initiative 2026
               </span>

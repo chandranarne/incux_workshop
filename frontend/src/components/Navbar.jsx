@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, User, Shield, Sparkles } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { siteConfig } from '../data/config';
 import { useTheme } from '../context/ThemeContext';
 import incuxaiLogo from '../assets/incuxai_official_logo.jpg';
 
-export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPortal }) {
+export default function Navbar({ onOpenMenu }) {
   const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const { theme, toggleTheme, isDark } = useTheme();
@@ -67,37 +67,46 @@ export default function Navbar({ onOpenMenu, currentUser, onOpenAuth, onOpenPort
             </div>
           </a>
 
-          {/* Actions: Greeting Action / User Portal & Menu Button */}
+          {/* Desktop Navigation Links - visible on laptop and larger screens */}
+          <nav className="hidden md:flex items-center gap-1 sm:gap-2 font-mono text-xs sm:text-sm">
+            {siteConfig.navigation.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                className="px-2.5 py-1.5 rounded-xl border border-transparent hover:border-[#FACC15]/40 hover:bg-[#FACC15]/10 dark:hover:border-[#FACC15]/30 dark:hover:bg-[#FACC15]/5 text-[#0A0A0A] dark:text-[#F5F5F5] font-semibold transition-all uppercase tracking-wider"
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+
+          {/* Actions: Theme Toggle & Menu Button (always visible) */}
           <div className="flex items-center gap-1.5 sm:gap-3">
-            {/* Let's Start with a Hello! (opens Registration) or Active User Portal Button */}
-            {currentUser ? (
-              <button
-                onClick={onOpenPortal}
-                className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full border text-xs font-mono font-bold transition-all shadow-sm cursor-pointer bg-[#FACC15]/10 hover:bg-[#FACC15]/20 dark:bg-[#FACC15]/15 dark:hover:bg-[#FACC15]/25 border-[#FACC15]/40 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] hover:shadow-md active:scale-95"
-              >
-                {currentUser.role === 'admin' ? (
-                  <Shield className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
-                ) : (
-                  <User className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
-                )}
-                <span className="max-w-[80px] sm:max-w-[120px] truncate">{currentUser.name.split(' ')[0]}</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => onOpenAuth('register')}
-                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
-              >
-                <Sparkles className="w-3.5 h-3.5 fill-[#0A0A0A] text-[#0A0A0A] shrink-0" />
-                <span className="hidden sm:inline">Let's Start with a Hello!</span>
-                <span className="sm:hidden">Start Hello!</span>
-              </button>
-            )}
+            {/* Theme Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              type="button"
+              aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-mono font-bold transition-all bg-black/5 dark:bg-[#141414] border-black/15 dark:border-yellow-400/30 text-[#0A0A0A] dark:text-[#FACC15] hover:border-[#FACC15] cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+            >
+              {isDark ? (
+                <>
+                  <span className="text-[#FACC15]">☀</span>
+                  <span className="hidden xs:inline">Light</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-[#0A0A0A]">☽</span>
+                  <span className="hidden xs:inline">Dark</span>
+                </>
+              )}
+            </button>
 
             {/* Menu button themed in Yellow and Black */}
             <button
               onClick={onOpenMenu}
               aria-label="Open full-screen navigation menu"
-              className="group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] border border-[#0A0A0A] dark:border-[#FACC15] font-headline font-bold text-[11px] sm:text-xs uppercase tracking-wider shadow-lg shadow-black/20 dark:shadow-yellow-500/20 transition-all duration-200 active:scale-95 cursor-pointer shrink-0"
+              className="group flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] border border-[#0A0A0A] dark:border-[#FACC15] font-headline font-bold text-[11px] sm:text-xs uppercase tracking-wider shadow-lg shadow-black/20 dark:shadow-yellow-500/20 transition-all duration-200 active:scale-95 cursor-pointer shrink-0"
             >
               <span className="hidden xs:inline">Menu</span>
               <Menu className="w-4 h-4 stroke-[2.5] text-[#FACC15] dark:text-[#0A0A0A] group-hover:rotate-90 transition-transform duration-300" />

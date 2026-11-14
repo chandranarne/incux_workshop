@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Building, CheckCircle2, Navigation, ChevronLeft, ChevronRight, School, ArrowRight, Info } from 'lucide-react';
+import { Building, CheckCircle2, Navigation, ChevronLeft, ChevronRight, School, ArrowRight, Info } from 'lucide-react';
 import indiaMapPaths from '../data/indiaMapPaths.json';
 import incuxaiLogo from '../assets/incuxai_official_logo.jpg';
 
@@ -500,7 +500,6 @@ export default function IndiaReachMap() {
           <div className="relative rounded-2xl bg-neutral-100/80 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] p-3 overflow-hidden">
             <div className="flex items-center justify-between text-[11px] font-mono text-neutral-500 dark:text-neutral-400 mb-2 px-1">
               <span className="flex items-center gap-1 font-bold">
-                <Sparkles className="w-3 h-3 text-[#EAB308] dark:text-[#FACC15]" />
                 <span>Some of the Participating Colleges</span>
               </span>
               <span className="text-[10px] text-neutral-400">Click logo to view</span>

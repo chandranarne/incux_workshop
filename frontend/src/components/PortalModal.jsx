@@ -9,7 +9,6 @@ import {
   User,
   Shield,
   Layers,
-  Sparkles,
   Send,
   Trash2,
   CheckCheck,
@@ -24,12 +23,11 @@ import {
   postWorkshop,
   deleteWorkshop,
   registerForWorkshop,
-  fetchCandidateRegistrations,
   fetchAllRegistrations
 } from '../services/api';
 
-export default function PortalModal({ isOpen, onClose, user, onLogout }) {
-  const isAdmin = user?.role === 'admin';
+export default function PortalModal({ isOpen, onClose }) {
+  const isAdmin = false;
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState('browse-workshops');
@@ -55,19 +53,14 @@ export default function PortalModal({ isOpen, onClose, user, onLogout }) {
 
   // Load portal data
   const loadData = async () => {
-    if (!user) return;
     setLoading(true);
     try {
       const wsList = await fetchUpcomingWorkshops();
       setWorkshops(wsList);
 
-      if (isAdmin) {
-        const regs = await fetchAllRegistrations();
-        setAllRegistrations(regs);
-      } else {
-        const myRegs = await fetchCandidateRegistrations(user.email);
-        setMyRegistrations(myRegs);
-      }
+      const regs = await fetchAllRegistrations();
+      setAllRegistrations(regs);
+      setMyRegistrations(regs);
     } catch (err) {
       console.error(err);
     } finally {
@@ -76,13 +69,13 @@ export default function PortalModal({ isOpen, onClose, user, onLogout }) {
   };
 
   useEffect(() => {
-    if (isOpen && user) {
-      setActiveTab(user.role === 'admin' ? 'post-workshop' : 'browse-workshops');
+    if (isOpen) {
+      setActiveTab('browse-workshops');
       loadData();
     }
-  }, [isOpen, user]);
+  }, [isOpen]);
 
-  if (!isOpen || !user) return null;
+  if (!isOpen) return null;
 
   // Flash message helper
   const notify = (type, text) => {
@@ -166,12 +159,6 @@ export default function PortalModal({ isOpen, onClose, user, onLogout }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={onLogout}
-              className="px-3.5 py-1.5 rounded-xl border border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-mono font-semibold transition-colors cursor-pointer"
-            >
-              Sign Out
-            </button>
             <button
               onClick={onClose}
               className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-[#1A1A1A] flex items-center justify-center text-amber-600 dark:text-[#FACC15] hover:bg-[#FACC15] hover:text-[#0A0A0A] transition-colors cursor-pointer"
@@ -481,7 +468,7 @@ export default function PortalModal({ isOpen, onClose, user, onLogout }) {
                       required
                       value={newWorkshop.dates}
                       onChange={(e) => setNewWorkshop({ ...newWorkshop, dates: e.target.value })}
-                      placeholder="e.g. December 19–20, 2026"
+                      placeholder="e.g. December 19-20, 2026"
                       className="w-full px-3.5 py-2.5 rounded-xl bg-[#FDFCFA] dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm text-neutral-950 dark:text-[#F5F5F5] outline-none focus:border-[#FACC15] dark:focus:border-[#FACC15]"
                     />
                   </div>

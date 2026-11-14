@@ -1,8 +1,12 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
-const morgan = require('morgan');
+import express from 'express';
+import cors from 'cors';
+import fs from 'fs';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import morgan from 'morgan';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables from root .env or backend/.env
 const rootEnvPath = path.join(__dirname, '..', '.env');
@@ -23,8 +27,23 @@ if (fs.existsSync(envPath)) {
   });
 }
 
-// Supabase client initialization
-const { supabase, isSupabaseConfigured, supabaseUrl } = require('./supabaseClient');
+// Prisma client initialization (Railway PostgreSQL)
+let prisma = null;
+let isDatabaseConfigured = false;
+try {
+  if (process.env.DATABASE_URL) {
+    const { PrismaClient } = await import('@prisma/client');
+    prisma = new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error']
+    });
+    isDatabaseConfigured = true;
+    console.log('[IncuxAI Prisma] Initialized PostgreSQL client (Railway)');
+  } else {
+    console.log('[IncuxAI Prisma] DATABASE_URL not set (falling back to local JSON store).');
+  }
+} catch (err) {
+  console.warn('[IncuxAI Prisma] Failed to initialize Prisma client:', err.message);
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -77,8 +96,8 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     service: 'IncuxAI Workshop Backend API',
-    database: isSupabaseConfigured ? 'Supabase PostgreSQL' : 'Local JSON Store (fallback)',
-    supabaseUrl: supabaseUrl || null,
+    database: isDatabaseConfigured ? 'PostgreSQL (Railway via Prisma)' : 'Local JSON Store (fallback)',
+    databaseUrl: process.env.DATABASE_URL ? 'configured' : null,
     uptime: process.uptime(),
     timestamp: new Date().toISOString()
   });
@@ -163,12 +182,26 @@ app.post('/api/inquiries', async (req, res) => {
       status: 'Received'
     };
 
-    if (isSupabaseConfigured) {
+    if (isDatabaseConfigured) {
       try {
-        const { error } = await supabase.from('inquiries').insert([newInquiry]);
-        if (error) console.warn('[Supabase inquiries error, falling back to JSON]:', error.message);
+        await prisma.inquiry.create({
+          data: {
+            id: newInquiry.id,
+            createdAt: new Date(newInquiry.createdAt),
+            name: newInquiry.name,
+            institution: newInquiry.institution,
+            role: newInquiry.role,
+            email: newInquiry.email,
+            phone: newInquiry.phone,
+            workshopInterest: newInquiry.workshopInterest,
+            estimatedStudents: newInquiry.estimatedStudents,
+            mode: newInquiry.mode,
+            message: newInquiry.message,
+            status: newInquiry.status
+          }
+        });
       } catch (e) {
-        console.warn('[Supabase inquiries exception]:', e.message);
+        console.warn('[Prisma inquiries error, falling back to JSON]:', e.message);
       }
     }
 
@@ -185,13 +218,14 @@ app.post('/api/inquiries', async (req, res) => {
 
 app.get('/api/inquiries', async (req, res) => {
   try {
-    if (isSupabaseConfigured) {
-      const { data, error } = await supabase
-        .from('inquiries')
-        .select('*')
-        .order('createdAt', { ascending: false });
-      if (!error && data) {
+    if (isDatabaseConfigured) {
+      try {
+        const data = await prisma.inquiry.findMany({
+          orderBy: { createdAt: 'desc' }
+        });
         return res.json({ count: data.length, inquiries: data });
+      } catch (e) {
+        console.warn('[Prisma inquiries read error]:', e.message);
       }
     }
     const inquiries = readJson('inquiries.json');
@@ -214,16 +248,13 @@ app.post('/api/auth/login', async (req, res) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
 
-    if (isSupabaseConfigured) {
+    if (isDatabaseConfigured) {
       try {
-        const { data: user, error } = await supabase
-          .from('users')
-          .select('*')
-          .ilike('email', cleanEmail)
-          .eq('password', cleanPassword)
-          .single();
+        const user = await prisma.user.findUnique({
+          where: { email: cleanEmail }
+        });
 
-        if (!error && user) {
+        if (user && user.password === cleanPassword) {
           return res.json({
             success: true,
             user: {
@@ -280,21 +311,28 @@ app.post('/api/auth/register', async (req, res) => {
       phone: phone ? phone.trim() : ''
     };
 
-    if (isSupabaseConfigured) {
+    if (isDatabaseConfigured) {
       try {
-        // Check if user already exists in Supabase
-        const { data: existingUser } = await supabase
-          .from('users')
-          .select('id')
-          .ilike('email', cleanEmail)
-          .single();
+        // Check if user already exists in Database
+        const existingUser = await prisma.user.findUnique({
+          where: { email: cleanEmail }
+        });
 
         if (existingUser) {
           return res.status(409).json({ error: 'An account with this email already exists. Please log in.' });
         }
 
-        const { error: insertError } = await supabase.from('users').insert([newUser]);
-        if (insertError) console.warn('[Supabase user insert error]:', insertError.message);
+        await prisma.user.create({
+          data: {
+            id: newUser.id,
+            role: newUser.role,
+            name: newUser.name,
+            email: newUser.email,
+            password: newUser.password,
+            institution: newUser.institution,
+            phone: newUser.phone
+          }
+        });
       } catch (e) {
         // Fallback continues
       }
@@ -302,7 +340,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     const users = readJson('users.json');
     const exists = users.some(u => u.email.toLowerCase() === cleanEmail);
-    if (exists && !isSupabaseConfigured) {
+    if (exists && !isDatabaseConfigured) {
       return res.status(409).json({ error: 'An account with this email already exists. Please log in.' });
     }
 
@@ -332,14 +370,16 @@ app.post('/api/auth/register', async (req, res) => {
 // ==========================================
 app.get('/api/workshops/upcoming', async (req, res) => {
   try {
-    if (isSupabaseConfigured) {
-      const { data, error } = await supabase
-        .from('upcoming_workshops')
-        .select('*')
-        .order('postedAt', { ascending: false });
-
-      if (!error && data && data.length > 0) {
-        return res.json({ success: true, count: data.length, workshops: data });
+    if (isDatabaseConfigured) {
+      try {
+        const data = await prisma.upcomingWorkshop.findMany({
+          orderBy: { postedAt: 'desc' }
+        });
+        if (data && data.length > 0) {
+          return res.json({ success: true, count: data.length, workshops: data });
+        }
+      } catch (e) {
+        console.warn('[Prisma upcoming workshops read error]:', e.message);
       }
     }
 
@@ -372,12 +412,26 @@ app.post('/api/workshops', async (req, res) => {
       postedAt: new Date().toISOString()
     };
 
-    if (isSupabaseConfigured) {
+    if (isDatabaseConfigured) {
       try {
-        const { error } = await supabase.from('upcoming_workshops').insert([newWorkshop]);
-        if (error) console.warn('[Supabase workshop insert error]:', error.message);
+        await prisma.upcomingWorkshop.create({
+          data: {
+            id: newWorkshop.id,
+            title: newWorkshop.title,
+            category: newWorkshop.category,
+            dates: newWorkshop.dates,
+            location: newWorkshop.location,
+            seats: newWorkshop.seats,
+            registered: newWorkshop.registered,
+            mode: newWorkshop.mode,
+            speaker: newWorkshop.speaker,
+            description: newWorkshop.description,
+            status: newWorkshop.status,
+            postedAt: new Date(newWorkshop.postedAt)
+          }
+        });
       } catch (e) {
-        console.warn('[Supabase workshop insert exception]:', e.message);
+        console.warn('[Prisma workshop insert error]:', e.message);
       }
     }
 
@@ -399,18 +453,20 @@ app.delete('/api/workshops/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (isSupabaseConfigured) {
+    if (isDatabaseConfigured) {
       try {
-        await supabase.from('upcoming_workshops').delete().eq('id', id);
+        await prisma.upcomingWorkshop.delete({
+          where: { id }
+        });
       } catch (e) {
-        console.warn('[Supabase workshop delete exception]:', e.message);
+        console.warn('[Prisma workshop delete exception]:', e.message);
       }
     }
 
     let workshops = readJson('upcoming_workshops.json');
     const beforeCount = workshops.length;
     workshops = workshops.filter(w => w.id !== id);
-    if (workshops.length === beforeCount && !isSupabaseConfigured) {
+    if (workshops.length === beforeCount && !isDatabaseConfigured) {
       return res.status(404).json({ error: 'Workshop not found.' });
     }
     writeJson('upcoming_workshops.json', workshops);
@@ -434,13 +490,15 @@ app.post('/api/workshops/:id/register', async (req, res) => {
 
     let workshop = null;
 
-    if (isSupabaseConfigured) {
-      const { data: wsData } = await supabase
-        .from('upcoming_workshops')
-        .select('*')
-        .eq('id', id)
-        .single();
-      workshop = wsData;
+    if (isDatabaseConfigured) {
+      try {
+        const wsData = await prisma.upcomingWorkshop.findUnique({
+          where: { id }
+        });
+        workshop = wsData;
+      } catch (e) {
+        console.warn('[Prisma workshop fetch exception]:', e.message);
+      }
     }
 
     if (!workshop) {
@@ -459,16 +517,20 @@ app.post('/api/workshops/:id/register', async (req, res) => {
     const cleanEmail = candidateEmail.trim().toLowerCase();
 
     // Check duplicate registration
-    if (isSupabaseConfigured) {
-      const { data: existingReg } = await supabase
-        .from('registrations')
-        .select('id')
-        .eq('workshopId', id)
-        .ilike('candidateEmail', cleanEmail)
-        .single();
+    if (isDatabaseConfigured) {
+      try {
+        const existingReg = await prisma.registration.findFirst({
+          where: {
+            workshopId: id,
+            candidateEmail: cleanEmail
+          }
+        });
 
-      if (existingReg) {
-        return res.status(409).json({ error: 'You are already registered for this workshop!' });
+        if (existingReg) {
+          return res.status(409).json({ error: 'You are already registered for this workshop!' });
+        }
+      } catch (e) {
+        console.warn('[Prisma duplicate registration check exception]:', e.message);
       }
     }
 
@@ -476,7 +538,7 @@ app.post('/api/workshops/:id/register', async (req, res) => {
     const alreadyRegistered = registrations.some(
       r => r.workshopId === id && r.candidateEmail.toLowerCase() === cleanEmail
     );
-    if (alreadyRegistered && !isSupabaseConfigured) {
+    if (alreadyRegistered && !isDatabaseConfigured) {
       return res.status(409).json({ error: 'You are already registered for this workshop!' });
     }
 
@@ -496,15 +558,31 @@ app.post('/api/workshops/:id/register', async (req, res) => {
       status: 'Confirmed'
     };
 
-    if (isSupabaseConfigured) {
+    if (isDatabaseConfigured) {
       try {
-        await supabase.from('registrations').insert([newReg]);
-        await supabase
-          .from('upcoming_workshops')
-          .update({ registered: (workshop.registered || 0) + 1 })
-          .eq('id', id);
+        await prisma.registration.create({
+          data: {
+            id: newReg.id,
+            workshopId: newReg.workshopId,
+            workshopTitle: newReg.workshopTitle,
+            workshopCategory: newReg.workshopCategory,
+            workshopDates: newReg.workshopDates,
+            workshopLocation: newReg.workshopLocation,
+            workshopMode: newReg.workshopMode,
+            candidateName: newReg.candidateName,
+            candidateEmail: newReg.candidateEmail,
+            candidateInstitution: newReg.candidateInstitution,
+            candidatePhone: newReg.candidatePhone,
+            registeredAt: new Date(newReg.registeredAt),
+            status: newReg.status
+          }
+        });
+        await prisma.upcomingWorkshop.update({
+          where: { id },
+          data: { registered: (workshop.registered || 0) + 1 }
+        });
       } catch (e) {
-        console.warn('[Supabase registration exception]:', e.message);
+        console.warn('[Prisma registration exception]:', e.message);
       }
     }
 
@@ -533,15 +611,15 @@ app.get('/api/candidates/:email/registrations', async (req, res) => {
   try {
     const email = req.params.email.toLowerCase().trim();
 
-    if (isSupabaseConfigured) {
-      const { data, error } = await supabase
-        .from('registrations')
-        .select('*')
-        .ilike('candidateEmail', email)
-        .order('registeredAt', { ascending: false });
-
-      if (!error && data) {
+    if (isDatabaseConfigured) {
+      try {
+        const data = await prisma.registration.findMany({
+          where: { candidateEmail: email },
+          orderBy: { registeredAt: 'desc' }
+        });
         return res.json({ success: true, count: data.length, registrations: data });
+      } catch (e) {
+        console.warn('[Prisma candidate registrations error]:', e.message);
       }
     }
 
@@ -593,11 +671,27 @@ app.post('/api/collaboration-requests', async (req, res) => {
       submittedAt: new Date().toISOString()
     };
 
-    if (isSupabaseConfigured) {
+    if (isDatabaseConfigured) {
       try {
-        await supabase.from('custom_requests').insert([newRequest]);
+        await prisma.customRequest.create({
+          data: {
+            id: newRequest.id,
+            requestedBy: newRequest.requestedBy,
+            email: newRequest.email,
+            phone: newRequest.phone,
+            institution: newRequest.institution,
+            preferredLocation: newRequest.preferredLocation,
+            topic: newRequest.topic,
+            targetAudience: newRequest.targetAudience,
+            estimatedStudents: newRequest.estimatedStudents,
+            preferredDates: newRequest.preferredDates,
+            specialRequirements: newRequest.specialRequirements,
+            status: newRequest.status,
+            submittedAt: new Date(newRequest.submittedAt)
+          }
+        });
       } catch (e) {
-        console.warn('[Supabase custom_requests insert exception]:', e.message);
+        console.warn('[Prisma custom_requests insert exception]:', e.message);
       }
     }
 
@@ -617,14 +711,14 @@ app.post('/api/collaboration-requests', async (req, res) => {
 
 app.get('/api/collaboration-requests', async (req, res) => {
   try {
-    if (isSupabaseConfigured) {
-      const { data, error } = await supabase
-        .from('custom_requests')
-        .select('*')
-        .order('submittedAt', { ascending: false });
-
-      if (!error && data) {
+    if (isDatabaseConfigured) {
+      try {
+        const data = await prisma.customRequest.findMany({
+          orderBy: { submittedAt: 'desc' }
+        });
         return res.json({ success: true, count: data.length, requests: data });
+      } catch (e) {
+        console.warn('[Prisma custom_requests read error]:', e.message);
       }
     }
 
@@ -640,13 +734,15 @@ app.post('/api/collaboration-requests/:id/approve', async (req, res) => {
     const { id } = req.params;
     let requestItem = null;
 
-    if (isSupabaseConfigured) {
-      const { data } = await supabase
-        .from('custom_requests')
-        .select('*')
-        .eq('id', id)
-        .single();
-      requestItem = data;
+    if (isDatabaseConfigured) {
+      try {
+        const data = await prisma.customRequest.findUnique({
+          where: { id }
+        });
+        requestItem = data;
+      } catch (e) {
+        console.warn('[Prisma custom_request fetch exception]:', e.message);
+      }
     }
 
     const requests = readJson('custom_requests.json');
@@ -678,17 +774,31 @@ app.post('/api/collaboration-requests/:id/approve', async (req, res) => {
       convertedFromRequestId: requestItem.id
     };
 
-    if (isSupabaseConfigured) {
+    if (isDatabaseConfigured) {
       try {
-        await supabase
-          .from('custom_requests')
-          .update({ status: 'Approved & Published', approvedAt })
-          .eq('id', id);
-        await supabase
-          .from('upcoming_workshops')
-          .insert([newWorkshop]);
+        await prisma.customRequest.update({
+          where: { id },
+          data: { status: 'Approved & Published', approvedAt: new Date(approvedAt) }
+        });
+        await prisma.upcomingWorkshop.create({
+          data: {
+            id: newWorkshop.id,
+            title: newWorkshop.title,
+            category: newWorkshop.category,
+            dates: newWorkshop.dates,
+            location: newWorkshop.location,
+            seats: newWorkshop.seats,
+            registered: newWorkshop.registered,
+            mode: newWorkshop.mode,
+            speaker: newWorkshop.speaker,
+            description: newWorkshop.description,
+            status: newWorkshop.status,
+            postedAt: new Date(newWorkshop.postedAt),
+            convertedFromRequestId: newWorkshop.convertedFromRequestId
+          }
+        });
       } catch (e) {
-        console.warn('[Supabase approve request exception]:', e.message);
+        console.warn('[Prisma approve request exception]:', e.message);
       }
     }
 
@@ -711,14 +821,14 @@ app.post('/api/collaboration-requests/:id/approve', async (req, res) => {
 
 app.get('/api/registrations', async (req, res) => {
   try {
-    if (isSupabaseConfigured) {
-      const { data, error } = await supabase
-        .from('registrations')
-        .select('*')
-        .order('registeredAt', { ascending: false });
-
-      if (!error && data) {
+    if (isDatabaseConfigured) {
+      try {
+        const data = await prisma.registration.findMany({
+          orderBy: { registeredAt: 'desc' }
+        });
         return res.json({ success: true, count: data.length, registrations: data });
+      } catch (e) {
+        console.warn('[Prisma registrations read error]:', e.message);
       }
     }
 
@@ -730,11 +840,11 @@ app.get('/api/registrations', async (req, res) => {
 });
 
 // Start server if run directly (local / Render / Railway)
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const server = app.listen(PORT, () => {
     console.log(`[IncuxAI Backend] Server listening at http://localhost:${PORT}`);
     console.log(`[IncuxAI Backend] Health check: http://localhost:${PORT}/api/health`);
-    console.log(`[IncuxAI Backend] Database status: ${isSupabaseConfigured ? 'Supabase (' + supabaseUrl + ')' : 'Local JSON Store'}`);
+    console.log(`[IncuxAI Backend] Database status: ${isDatabaseConfigured ? 'PostgreSQL (Railway via Prisma)' : 'Local JSON Store'}`);
   });
 
   server.on('error', (err) => {
@@ -746,5 +856,5 @@ if (require.main === module) {
   });
 }
 
-// Export for serverless environments (Vercel, AWS Lambda)
-module.exports = app;
+// Export for serverless environments (Railway, AWS Lambda)
+export default app;

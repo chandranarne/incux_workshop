@@ -2,6 +2,9 @@
 
 A modern, animation-rich website MVP for **IncuxAI** structured with separate **frontend** and **backend** layers, engineered in strict accordance with the **IncuxAI Workshop Website MVP Specification**.
 
+**Database:** Railway PostgreSQL + Prisma ORM (Supabase removed)
+**Deployment:** Railway (backend + frontend deployed individually)
+
 ---
 
 ## 🏗️ Architecture & Project Structure
@@ -43,7 +46,7 @@ d:\Incux_workshop\
 │   ├── tailwind.config.js
 │   └── vite.config.js
 │
-├── backend\                          # Node.js + Express REST API
+├── backend\                          # Node.js + Express REST API + Prisma ORM
 │   ├── data\
 │   │   ├── workshops.json            # Structured workshop cards & featured events
 │   │   ├── companies.json            # 8 practitioner companies
@@ -52,7 +55,46 @@ d:\Incux_workshop\
 │   │   ├── config.json               # Central configuration placeholders
 │   │   └── inquiries.json            # Persisted institutional inquiry submissions
 │   ├── server.js                     # Express server, CORS, input validation, endpoints
+│   ├── prisma\                       # Prisma schema & migrations
+│   │   └── schema.prisma             # Prisma data model (Railway PostgreSQL)
+│   ├── .env                          # Backend environment variables (DATABASE_URL)
+│   ├── railway.json                  # Railway deployment config
 │   └── package.json
+│
+├── frontend\                         # React.js + Vite + Tailwind CSS + GSAP
+│   ├── src\
+│   │   ├── components\
+│   │   │   ├── IntroAnimation.jsx    # Section 01: Character reveal (2-3s)
+│   │   │   ├── Navbar.jsx            # Header with bright rounded menu button
+│   │   │   ├── MenuOverlay.jsx       # Full-screen overlay menu (Escape/focus lock)
+│   │   │   ├── Hero.jsx              # Section 02: 100svh hero, 2 CTAs, oversized WORKSHOPS
+│   │   │   ├── OurWork.jsx           # Section 03: Pinned horizontal scroll on desktop
+│   │   │   ├── WorkshopCard.jsx      # Individual workshop format cards
+│   │   │   ├── CompanyGrid.jsx       # Section 04: 8 typographic wordmarks + disclaimer
+│   │   │   ├── ImpactStats.jsx       # Section 05: Warm cream background, count-up stats
+│   │   │   ├── FeaturedWorkshops.jsx # Section 06: 5 documented achievements (asymmetric layout)
+│   │   │   ├── Expertise.jsx         # Section 07: 15 topics in 5 groups with category switcher
+│   │   │   ├── HowWeWork.jsx         # Section 08: 4 delivery phases
+│   │   │   ├── About.jsx             # Section 09: Official mission statement
+│   │   │   ├── NewsSection.jsx       # Honest transparency placeholder
+│   │   │   ├── ContactCTA.jsx        # Section 10: Backend inquiry form + config placeholders
+│   │   │   └── Footer.jsx            # Section 11: Navigation, categories, and copyright
+│   │   ├── data\                     # Local static datasets (offline fallback)
+│   │   │   ├── config.js
+│   │   │   ├── workshops.js
+│   │   │   ├── companies.js
+│   │   │   ├── statistics.js
+│   │   │   └── expertise.js
+│   │   ├── services\
+│   │   │   └── api.js                # API client with automatic fallback
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── .env                          # Frontend environment variables (VITE_API_BASE)
+│   ├── railway.json                  # Railway deployment config
+│   ├── package.json
+│   ├── tailwind.config.js
+│   └── vite.config.js
 │
 └── package.json                      # Root workspace orchestrator
 ```
@@ -65,9 +107,12 @@ d:\Incux_workshop\
 ```bash
 cd backend
 npm install
+npx prisma generate
 npm run dev
 # Server listening at http://localhost:5000
 ```
+> Make sure `backend/.env` has a valid `DATABASE_URL` pointing to your Railway PostgreSQL.  
+> If no DATABASE_URL is set, the backend falls back to local JSON files.
 
 ### 2. Run the Frontend Client
 ```bash
@@ -76,6 +121,24 @@ npm install
 npm run dev
 # Vite client ready at http://localhost:5173
 ```
+> Set `VITE_API_BASE=http://localhost:5000/api` in `frontend/.env`.
+
+---
+
+## 🚄 Deploy on Railway
+
+Backend and frontend are deployed individually on Railway using `railway.json`.
+
+### Backend (Railway)
+1. Create a PostgreSQL database on Railway → copy `DATABASE_URL`
+2. Set `DATABASE_URL` in Railway Variables for the backend service
+3. Connect the `backend/` folder as a Railway service
+4. Railway runs: `npm run prisma:generate && npm run prisma:migrate && npm start`
+
+### Frontend (Railway)
+1. Connect the `frontend/` folder as a separate Railway service
+2. Set `VITE_API_BASE=https://<your-backend>.railway.app/api` in Railway Variables
+3. Railway runs: `npm install && npm run build`
 
 ---
 

@@ -7,7 +7,6 @@ import {
   Users,
   User,
   MapPin,
-  Sparkles,
   RotateCw,
   CheckCircle2,
   ArrowRight,
@@ -191,7 +190,7 @@ function TurningWorkshopCard({ item, index }) {
           {/* Back Face Action */}
           <div className="relative z-10 pt-3 border-t border-[#FACC15]/20 flex items-center justify-between">
             <span className="text-[11px] font-mono text-neutral-400">
-              Speaker: <strong className="text-white">{item.speaker.split('—')[0]}</strong>
+              Speaker: <strong className="text-white">{item.speaker.split('-')[0]}</strong>
             </span>
             <a
               href="#contact"
@@ -255,7 +254,7 @@ export default function FeaturedWorkshops({ workshops = featuredWorkshops }) {
     <section
       id="featured"
       ref={sectionRef}
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-16 sm:py-24 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-10 sm:py-14 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
       aria-label="Featured Workshops and Guest Lectures"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -263,7 +262,6 @@ export default function FeaturedWorkshops({ workshops = featuredWorkshops }) {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-12">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FACC15]/15 dark:bg-[#FACC15]/10 border border-[#FACC15]/30 text-xs font-mono text-neutral-900 dark:text-[#FACC15] uppercase tracking-widest mb-4 font-bold shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
               <span>Campus Immersions &amp; Industry Lectures</span>
             </div>
             <h2 className="font-headline font-black text-3xl sm:text-5xl md:text-6xl text-neutral-950 dark:text-[#F5F5F5] tracking-tight leading-tight">

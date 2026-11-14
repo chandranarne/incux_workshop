@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowDownRight, Sparkles } from 'lucide-react';
+import { ArrowDownRight } from 'lucide-react';
 import { siteConfig } from '../data/config';
 import { allEventPhotos } from '../data/eventPhotos';
 
-export default function Hero({ onOpenRegistration }) {
+export default function Hero() {
   useEffect(() => {
     try {
       localStorage.setItem('incuxai_hero_viewed', 'true');
@@ -39,7 +39,7 @@ export default function Hero({ onOpenRegistration }) {
   return (
     <section
       id="hero"
-      className="relative w-full min-h-[88vh] sm:min-h-[92vh] lg:min-h-screen bg-[#FDFCFA] dark:bg-[#0A0A0A] transition-colors duration-200 overflow-hidden flex flex-col justify-between"
+      className="relative w-full min-h-[70vh] sm:min-h-[75vh] lg:min-h-[80vh] bg-[#FDFCFA] dark:bg-[#0A0A0A] transition-colors duration-200 overflow-hidden flex flex-col justify-between"
       aria-label="Hero Section"
     >
       {/* ========================================================================= */}
@@ -128,7 +128,7 @@ export default function Hero({ onOpenRegistration }) {
       {/* ========================================================================= */}
       {/* HERO FOREGROUND CONTENT (Responsive, Mobile-Centric Typography & CTAs)    */}
       {/* ========================================================================= */}
-      <div className="relative z-20 max-w-5xl mx-auto px-4 sm:px-8 lg:px-12 pt-14 sm:pt-24 lg:pt-32 pb-12 sm:pb-16 flex flex-col items-center text-center my-auto">
+      <div className="relative z-20 max-w-5xl mx-auto px-4 sm:px-8 lg:px-12 pt-10 sm:pt-14 lg:pt-16 pb-8 sm:pb-10 flex flex-col items-center text-center my-auto">
         
         {/* Pre-header Pill */}
         <motion.div
@@ -195,13 +195,12 @@ export default function Hero({ onOpenRegistration }) {
           transition={{ duration: 0.55, delay: 0.4 }}
           className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto"
         >
-          {/* Primary CTA: Let's Start with a Hello! -> Opens Registration */}
+          {/* Primary CTA: Explore Our Work */}
           <button
-            onClick={() => onOpenRegistration ? onOpenRegistration('register') : scrollToWork()}
+            onClick={scrollToWork}
             className="w-full sm:w-auto justify-center group px-6 sm:px-7 py-3 sm:py-3.5 rounded-full bg-[#0A0A0A] hover:bg-[#1F1F1F] text-[#FACC15] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] dark:text-[#0A0A0A] font-headline font-bold text-xs sm:text-sm uppercase tracking-wider shadow-xl shadow-black/20 dark:shadow-yellow-500/25 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2.5 cursor-pointer"
           >
-            <Sparkles className="w-4 h-4 text-[#FACC15] dark:text-[#0A0A0A] shrink-0" />
-            <span>Let's Start with a Hello!</span>
+            <span>Let's Explore Workshops</span>
           </button>
 
           {/* Secondary CTA: Explore Our Work */}

@@ -169,7 +169,7 @@ export default function WorkshopVideoPlayer() {
       >
         <video
           ref={videoRef}
-          src="https://mpcxwgcjqyyfwtzdohfi.supabase.co/storage/v1/object/public/videos/video.mp4"
+          src="/video.mp4"
           autoPlay
           muted
           playsInline
@@ -179,7 +179,7 @@ export default function WorkshopVideoPlayer() {
           onLoadedMetadata={handleLoadedMetadata}
           className="w-full h-full object-cover"
         >
-          <source src="https://mpcxwgcjqyyfwtzdohfi.supabase.co/storage/v1/object/public/videos/video.mp4" type="video/mp4" />
+          <source src="/video.mp4" type="video/mp4" />
           <source src="/video.mp4" type="video/mp4" />
         </video>
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, HelpCircle, Sparkles, MessageCircle, ArrowRight } from 'lucide-react';
+import { ChevronDown, HelpCircle, MessageCircle, ArrowRight } from 'lucide-react';
 
 const faqItems = [
   {
@@ -49,7 +49,7 @@ export default function FaqSection() {
   };
 
   return (
-    <section id="faq" className="py-20 lg:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <section id="faq" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Section Side-Heading and Badge (No Section Number) */}
       <div className="text-center max-w-3xl mx-auto mb-16">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FEF9C3] dark:bg-yellow-950/40 border border-yellow-400/40 text-xs font-mono font-bold text-neutral-900 dark:text-[#FACC15] uppercase tracking-wider mb-4 shadow-sm">

@@ -15,10 +15,10 @@ import ContactCTA from './components/ContactCTA';
 import Footer from './components/Footer';
 import FloatingConnectWidget from './components/FloatingConnectWidget';
 import CustomCursor from './components/CustomCursor';
-
-import AuthModal from './components/AuthModal';
 import PortalModal from './components/PortalModal';
 import UpcomingWorkshopPopup from './components/UpcomingWorkshopPopup';
+import Terms from './components/Pages/Terms';
+import PrivacyPolicy from './components/Pages/PrivacyPolicy';
 
 import { workshopCards, featuredWorkshops } from './data/workshops';
 import { companiesData } from './data/companies';
@@ -32,6 +32,9 @@ gsap.registerPlugin(ScrollTrigger);
 export default function App() {
   const [introFinished, setIntroFinished] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isPortalOpen, setIsPortalOpen] = useState(false);
+  const [isUpcomingPopupOpen, setIsUpcomingPopupOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState<'home' | 'terms' | 'privacy'>('home');
 
   useEffect(() => {
     // Whenever intro finishes or layout settles, recalculate scroll triggers
@@ -40,21 +43,6 @@ export default function App() {
     }, 400);
     return () => clearTimeout(timer);
   }, [introFinished]);
-
-  // Authentication & Portal state
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem('incuxai_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch (e) {
-      return null;
-    }
-  });
-
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isPortalOpen, setIsPortalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState('register');
-  const [isUpcomingPopupOpen, setIsUpcomingPopupOpen] = useState(false);
 
   // App data state (defaults to local data, updates from backend if available)
   const [cards, setCards] = useState(workshopCards);
@@ -83,22 +71,33 @@ export default function App() {
     loadBackendData();
   }, []);
 
-  const handleAuthSuccess = (user) => {
-    setCurrentUser(user);
-    localStorage.setItem('incuxai_user', JSON.stringify(user));
-    setIsAuthModalOpen(false);
+  // Handle page navigation from Terms/Privacy pages
+  useEffect(() => {
+    const handleNavigateHome = () => navigateHome();
+    window.addEventListener('navigate-home', handleNavigateHome);
+    return () => window.removeEventListener('navigate-home', handleNavigateHome);
+  }, []);
+
+  const navigateToTerms = () => {
+    setCurrentPage('terms');
+    setIsMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToPrivacy = () => {
+    setCurrentPage('privacy');
+    setIsMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateHome = () => {
+    setCurrentPage('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const openPortal = () => {
     setIsPortalOpen(true);
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('incuxai_user');
-    setIsPortalOpen(false);
-  };
-
-  const openAuth = (mode = 'register') => {
-    setAuthMode(mode);
-    setIsAuthModalOpen(true);
+    setIsMenuOpen(false);
   };
 
   return (
@@ -115,86 +114,78 @@ export default function App() {
       <MenuOverlay
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
-        onOpenAuth={openAuth}
-        onOpenPortal={() => setIsPortalOpen(true)}
-        currentUser={currentUser}
+        onOpenPortal={openPortal}
       />
 
-      {/* Global Sticky Navbar with Login/Portal, Theme Toggle, & Menu button */}
+      {/* Global Sticky Navbar */}
       <Navbar
         onOpenMenu={() => setIsMenuOpen(true)}
-        currentUser={currentUser}
-        onOpenAuth={openAuth}
-        onOpenPortal={() => setIsPortalOpen(true)}
       />
 
-      {/* Authentication Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onAuthSuccess={handleAuthSuccess}
-        initialMode={authMode}
-      />
-
-      {/* Interactive Candidate & Admin Management Portal */}
+      {/* Interactive Candidate & Admin Management Portal (access without login) */}
       <PortalModal
         isOpen={isPortalOpen}
         onClose={() => setIsPortalOpen(false)}
-        user={currentUser}
-        onLogout={handleLogout}
       />
 
       {/* Real Upcoming Workshop Announcement Popup Modal */}
       <UpcomingWorkshopPopup
-        onOpenRegistration={openAuth}
+        isOpen={isUpcomingPopupOpen}
+        onClose={() => setIsUpcomingPopupOpen(false)}
       />
 
-      {/* Main Content: 11 Sections in Exact Fixed Order + Live Registration Portal */}
-      <main>
-        {/* Section 2: Hero */}
-        <Hero onOpenRegistration={openAuth} />
+      {/* Page Content: Main Landing or Legal Pages */}
+      {currentPage === 'terms' ? (
+        <Terms />
+      ) : currentPage === 'privacy' ? (
+        <PrivacyPolicy />
+      ) : (
+        <>
+          {/* Main Content: 11 Sections in Exact Fixed Order + Live Registration Portal */}
+          <main>
+            {/* Section 2: Hero */}
+            <Hero />
 
-        {/* Section: Bridging Education & Industry (Directly below landing page) */}
-        <About onOpenRegistration={openAuth} />
+            {/* Section: Bridging Education & Industry (Directly below landing page) */}
+            <About />
 
-        {/* Section 3: Our Work ("Where Ideas Become Experience" with fluid horizontal scrolling) */}
-        <OurWork cards={cards} onOpenRegistration={openAuth} />
+            {/* Section 3: Our Work ("Where Ideas Become Experience" with fluid horizontal scrolling) */}
+            <OurWork cards={cards} />
 
-        {/* Live Workshop Registration & Location Request Portal Section */}
-        <UpcomingWorkshopsSection
-          onOpenPortal={() => setIsPortalOpen(true)}
-          onOpenAuth={openAuth}
-          currentUser={currentUser}
-        />
+            {/* Live Workshop Registration & Location Request Portal Section */}
+            <UpcomingWorkshopsSection
+              onOpenPortal={openPortal}
+            />
 
-        {/* Section 4: Industry Connections (8 typographic wordmarks + official logos) */}
-        <CompanyGrid data={companies} />
+            {/* Section 4: Industry Connections (8 typographic wordmarks + official logos) */}
+            <CompanyGrid data={companies} />
 
-        {/* Section 5: Our Impact (Contrasting background, count-up) */}
-        <ImpactStats data={stats} />
+            {/* Section 5: Our Impact (Contrasting background, count-up) */}
+            <ImpactStats data={stats} />
 
-        {/* Featured Workshops */}
-        <FeaturedWorkshops workshops={featured} />
+            {/* Featured Workshops */}
+            <FeaturedWorkshops workshops={featured} />
 
-        {/* Creative Scrolling Student Reviews Section (Placed ABOVE FAQs as requested) */}
-        <ReviewsSection />
+            {/* Creative Scrolling Student Reviews Section (Placed ABOVE FAQs as requested) */}
+            <ReviewsSection />
 
-        {/* Frequently Asked Questions */}
-        <FaqSection />
+            {/* Frequently Asked Questions */}
+            <FaqSection />
 
-        {/* Contact Us & Institutional Collaboration Section */}
-        <ContactCTA />
-      </main>
+            {/* Contact Us & Institutional Collaboration Section */}
+            <ContactCTA />
+          </main>
+        </>
+      )}
 
       {/* Section 11: Footer (With giant subtle incuxai watermark) */}
-      <Footer />
-
-      {/* Floating Interactive Connect Widget (Inspired by glowlogics.in) */}
-      <FloatingConnectWidget
-        onOpenAuth={openAuth}
-        onOpenPortal={() => setIsPortalOpen(true)}
-        currentUser={currentUser}
+      <Footer
+        onNavigateToTerms={navigateToTerms}
+        onNavigateToPrivacy={navigateToPrivacy}
       />
+
+      {/* Floating Interactive Connect Widget */}
+      <FloatingConnectWidget />
     </div>
   );
 }

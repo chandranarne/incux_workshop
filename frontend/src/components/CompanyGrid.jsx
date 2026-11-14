@@ -1,5 +1,4 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
 import { companiesData } from '../data/companies';
 
 const premierCompanies = [
@@ -35,14 +34,13 @@ export default function CompanyGrid({ data = companiesData }) {
   return (
     <section
       id="industry"
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-16 md:py-24 border-t border-black/10 dark:border-yellow-400/20 overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-10 sm:py-14 border-t border-black/10 dark:border-yellow-400/20 overflow-hidden transition-colors duration-200"
       aria-label="Industry Connections"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="max-w-3xl mb-8 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-[#141414]/90 border border-black/10 dark:border-yellow-400/30 text-xs font-mono text-[#0A0A0A] dark:text-[#FACC15] uppercase tracking-widest mb-4 font-bold shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
             <span>Our Leading Collaborations</span>
           </div>
 

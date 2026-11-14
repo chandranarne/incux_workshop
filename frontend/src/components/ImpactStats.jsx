@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import gsap from 'gsap';
 import { impactStatsData } from '../data/statistics';
-import { Sparkles, Activity } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import IndiaReachMap from './IndiaReachMap';
 
 function SwipeableCounterCard({ stat, index, activeHoveredIndex, setActiveHoveredIndex }) {
@@ -162,14 +162,13 @@ export default function ImpactStats({ data = impactStatsData }) {
     <section
       id="impact"
       ref={sectionRef}
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-12 sm:py-24 border-t border-black/10 dark:border-yellow-400/20 overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-8 sm:py-12 border-t border-black/10 dark:border-yellow-400/20 overflow-hidden transition-colors duration-200"
       aria-label="Our Impact"
     >
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="max-w-3xl mb-8 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-white/90 dark:bg-[#141414]/90 border border-black/10 dark:border-yellow-400/30 text-xs font-mono text-[#0A0A0A] dark:text-[#FACC15] uppercase tracking-widest mb-3.5 sm:mb-4 font-bold shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
             <span>Students Reached</span>
           </div>
           <h2 className="font-headline font-black text-3xl sm:text-5xl md:text-6xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight leading-tight">

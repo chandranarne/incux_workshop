@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   MapPin,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
@@ -215,7 +214,6 @@ export default function WorkshopFormatDetailModal({ formatId, isOpen, onClose, o
               <div className="space-y-2.5 font-mono text-xs sm:text-sm text-[#525252] dark:text-[#A3A3A3]">
                 {detail.networking.points.map((pt, idx) => (
                   <div key={idx} className="flex items-start gap-2.5">
-                    <Sparkles className="w-4 h-4 text-[#EAB308] dark:text-[#FACC15] shrink-0 mt-0.5" />
                     <span className="leading-relaxed">{pt}</span>
                   </div>
                 ))}

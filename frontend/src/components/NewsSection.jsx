@@ -8,7 +8,7 @@ export default function NewsSection() {
   return (
     <section
       id="news"
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-20 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-10 sm:py-14 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
       aria-label="News and Announcements"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

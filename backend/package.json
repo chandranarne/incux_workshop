@@ -3,15 +3,20 @@
   "version": "1.0.0",
   "description": "Backend API for IncuxAI Workshop Platform",
   "main": "server.js",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "node scripts/seed.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.119.0",
+    "@prisma/client": "^6.0.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "morgan": "^1.10.0 "
+    "morgan": "^1.10.0",
+    "prisma": "^6.0.0"
   }
 }

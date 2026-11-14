@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Terminal, Play, Cpu, Sparkles, CheckCircle2, Shield, Search, ArrowRight, RefreshCw, Zap, Layers } from 'lucide-react';
+import { Terminal, Play, Cpu, CheckCircle2, Shield, Search, ArrowRight, RefreshCw, Zap, Layers } from 'lucide-react';
 
-export default function AiInteractiveLab({ onOpenAuth, onOpenPortal, currentUser }) {
+export default function AiInteractiveLab() {
   const [activeTab, setActiveTab] = useState('agentic');
   const [isRunning, setIsRunning] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
@@ -38,8 +38,8 @@ export default function AiInteractiveLab({ onOpenAuth, onOpenPortal, currentUser
         setIsRunning(false);
         setTerminalLogs(prev => [
           ...prev,
-          "✓ All 5 pipeline stages executed successfully with zero runtime assertions.",
-          "● Pipeline ready for production verification."
+          "[OK] All 5 pipeline stages executed successfully with zero runtime assertions.",
+          "[OK] Pipeline ready for production verification."
         ]);
       }
     }, 900);
@@ -50,23 +50,23 @@ export default function AiInteractiveLab({ onOpenAuth, onOpenPortal, currentUser
     if (activeTab === 'agentic') {
       setTerminalLogs([
         "$ incuxai-agent --status",
-        "✓ Multi-Agent LangGraph Node Runtime initialized.",
-        "💡 Click 'Run Agentic Simulation' below to see autonomous task orchestration in action."
+        "[OK] Multi-Agent LangGraph Node Runtime initialized.",
+        "Click 'Run Agentic Simulation' below to see autonomous task orchestration in action."
       ]);
     } else if (activeTab === 'rag') {
       setTerminalLogs([
         "$ incuxai-rag --query",
         `Query: "${ragQuery}"`,
-        "✓ Vector similarity search: cosine distance 0.942 against 150 campus PDF embeddings.",
-        "✓ Context window assembled: 3 top chunks injected into prompt.",
-        "✓ Synthesizing accurate answer with production citation links."
+        "[OK] Vector similarity search: cosine distance 0.942 against 150 campus PDF embeddings.",
+        "[OK] Context window assembled: 3 top chunks injected into prompt.",
+        "[OK] Synthesizing accurate answer with production citation links."
       ]);
     } else {
       setTerminalLogs([
         "$ incuxai-sec --scan --cluster=prod-aws-eu",
-        "● Ingress controller audit: 0 public ports exposed.",
-        "✓ mTLS mutual TLS cryptographic certificates validated.",
-        "✓ Zero-trust security policy enforced across all 18 microservice pods."
+        "[OK] Ingress controller audit: 0 public ports exposed.",
+        "[OK] mTLS mutual TLS cryptographic certificates validated.",
+        "[OK] Zero-trust security policy enforced across all 18 microservice pods."
       ]);
     }
   }, [activeTab]);
@@ -74,7 +74,7 @@ export default function AiInteractiveLab({ onOpenAuth, onOpenPortal, currentUser
   return (
     <section
       id="ai-lab"
-      className="relative w-full bg-[#faf9f5] dark:bg-navy-950 py-24 border-t border-neutral-200 dark:border-white/10 overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#faf9f5] dark:bg-navy-950 py-12 sm:py-16 border-t border-neutral-200 dark:border-white/10 overflow-hidden transition-colors duration-200"
       aria-label="Interactive AI Lab Sandbox"
     >
       {/* Background architectural glow & dot grid */}
@@ -86,7 +86,6 @@ export default function AiInteractiveLab({ onOpenAuth, onOpenPortal, currentUser
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 sm:mb-16">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-navy-900/90 backdrop-blur-md border border-neutral-200 dark:border-white/10 text-xs font-mono text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mb-4 font-semibold shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-500 animate-pulse" />
               <span>Interactive AI Engineering Sandbox</span>
             </div>
             <h2 className="font-headline font-bold text-3xl sm:text-5xl md:text-6xl text-neutral-950 dark:text-white tracking-tight leading-tight">
@@ -245,7 +244,7 @@ export default function AiInteractiveLab({ onOpenAuth, onOpenPortal, currentUser
 
                 {/* Live Console Output */}
                 <div className="lg:col-span-5">
-                  <div className="rounded-2xl bg-neutral-950 border border-neutral-800 p-4 font-mono text-xs text-neutral-300 shadow-xl min-h-[360px] flex flex-col justify-between">
+                  <div className="rounded-2xl bg-neutral-950 border border-neutral-800 p-4 font-mono text-xs text-neutral-300 shadow-xl min-h-[280px] sm:min-h-[320px] flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between pb-3 border-b border-neutral-800 text-[11px] text-neutral-500 mb-3">
                         <div className="flex items-center gap-1.5">
@@ -264,7 +263,7 @@ export default function AiInteractiveLab({ onOpenAuth, onOpenPortal, currentUser
                             className={`leading-relaxed text-[11px] sm:text-xs ${
                               log.startsWith('$')
                                 ? 'text-cyan-300 font-bold'
-                                : log.startsWith('✓')
+                                : log.startsWith('[OK]')
                                 ? 'text-emerald-400 font-semibold'
                                 : log.startsWith('>>')
                                 ? 'text-cyan-400 text-[10px]'
@@ -311,10 +310,10 @@ export default function AiInteractiveLab({ onOpenAuth, onOpenPortal, currentUser
                       onClick={() => {
                         setTerminalLogs([
                           `$ incuxai-rag --query "${ragQuery}"`,
-                          "✓ Embedding generated: 1536-dimensional float vector",
-                          "✓ HNSW Index queried in 8.4ms (99.1% recall)",
-                          "✓ Top 3 chunks retrieved from LangGraph Knowledge Base & Codebase",
-                          "✓ Synthesized Answer: LangGraph manages persistence using Checkpointer interfaces (e.g. MemorySaver, AsyncPostgresSaver) storing thread IDs and checkpoint states between node transitions."
+                          "[OK] Embedding generated: 1536-dimensional float vector",
+                          "[OK] HNSW Index queried in 8.4ms (99.1% recall)",
+                          "[OK] Top 3 chunks retrieved from LangGraph Knowledge Base & Codebase",
+                          "[OK] Synthesized Answer: LangGraph manages persistence using Checkpointer interfaces (e.g. MemorySaver, AsyncPostgresSaver) storing thread IDs and checkpoint states between node transitions."
                         ]);
                       }}
                       className="px-6 py-3 rounded-2xl bg-gradient-to-r from-electric-600 to-cyan-500 text-white font-mono font-bold text-xs uppercase tracking-wider shadow-sm cursor-pointer"
@@ -378,10 +377,10 @@ export default function AiInteractiveLab({ onOpenAuth, onOpenPortal, currentUser
                     onClick={() => {
                       setTerminalLogs([
                         "$ incuxai-sec --remediate --auto-apply",
-                        "● Vulnerability scanner: Port 8080 unencrypted ingress detected.",
-                        "✓ Generated Cilium NetworkPolicy: strictly limiting traffic to internal pods.",
-                        "✓ Mutual TLS (mTLS) cryptographic handshakes applied across 4 service meshes.",
-                        "✓ Compliance rating: 100% CIS Benchmark passed."
+                        "[OK] Vulnerability scanner: Port 8080 unencrypted ingress detected.",
+                        "[OK] Generated Cilium NetworkPolicy: strictly limiting traffic to internal pods.",
+                        "[OK] Mutual TLS (mTLS) cryptographic handshakes applied across 4 service meshes.",
+                        "[OK] Compliance rating: 100% CIS Benchmark passed."
                       ]);
                     }}
                     className="px-5 py-2.5 rounded-full bg-gradient-to-r from-electric-600 to-cyan-500 text-white font-mono font-bold text-xs uppercase tracking-wider shadow-sm cursor-pointer whitespace-nowrap"

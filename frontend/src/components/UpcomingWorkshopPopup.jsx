@@ -1,30 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, MapPin, Sparkles, ArrowRight, ShieldCheck, Cpu } from 'lucide-react';
+import { X, Calendar, MapPin, ArrowRight, ShieldCheck, Cpu } from 'lucide-react';
 import genAiBannerImg from '../assets/generative_ai_workshop_banner.jpg';
 
-export default function UpcomingWorkshopPopup({ onOpenRegistration, onExploreWorkshops }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    // Check if dismissed in this session
-    try {
-      const dismissed = sessionStorage.getItem('incuxai_upcoming_popup_dismissed');
-      if (!dismissed) {
-        const timer = setTimeout(() => {
-          setIsOpen(true);
-        }, 1800);
-        return () => clearTimeout(timer);
-      }
-    } catch (e) {
-      const timer = setTimeout(() => setIsOpen(true), 1800);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+export default function UpcomingWorkshopPopup({ isOpen, onClose }) {
+  const [isPopupOpen, setIsPopupOpen] = useState(isOpen || false);
 
   const handleClose = () => {
-    setIsOpen(false);
+    setIsPopupOpen(false);
+    if (onClose) onClose();
     try {
       sessionStorage.setItem('incuxai_upcoming_popup_dismissed', 'true');
     } catch (e) {}
@@ -32,16 +16,12 @@ export default function UpcomingWorkshopPopup({ onOpenRegistration, onExploreWor
 
   const handleCTAClick = () => {
     handleClose();
-    if (onOpenRegistration) {
-      onOpenRegistration('register');
-    } else {
-      document.querySelector('#upcoming-workshops')?.scrollIntoView({ behavior: 'smooth' });
-    }
+    document.querySelector('#upcoming-workshops')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isPopupOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
           {/* Backdrop Blur */}
           <motion.div
@@ -59,7 +39,7 @@ export default function UpcomingWorkshopPopup({ onOpenRegistration, onExploreWor
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-xl sm:max-w-2xl bg-[#0E0E10] text-[#F5F5F5] border border-[#FACC15]/30 rounded-3xl overflow-hidden shadow-2xl shadow-yellow-500/10 z-10 my-auto"
+            className="relative w-full max-w-xl sm:max-w-2xl bg-[#0E0E10] text-[#F5F5F5] border border-[#FACC15]/30 rounded-3xl overflow-hidden shadow-2xl shadow-yellow-500/10 z-10 my-auto max-h-[90vh] flex flex-col"
             role="dialog"
             aria-modal="true"
           >
@@ -84,7 +64,6 @@ export default function UpcomingWorkshopPopup({ onOpenRegistration, onExploreWor
               {/* Floating Top Tag */}
               <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FACC15] text-[#0A0A0A] text-[10px] sm:text-xs font-mono font-bold tracking-wider shadow-lg">
-                  <Sparkles className="w-3.5 h-3.5 fill-[#0A0A0A]" />
                   UPCOMING WORKSHOP // OPEN FOR REGISTRATION
                 </span>
               </div>
@@ -115,7 +94,7 @@ export default function UpcomingWorkshopPopup({ onOpenRegistration, onExploreWor
                   </div>
                   <div>
                     <span className="text-[10px] text-neutral-400 block uppercase">DATES</span>
-                    <span className="font-bold text-[#F5F5F5]">November 20–21, 2026 (2 Days)</span>
+                    <span className="font-bold text-[#F5F5F5]">November 20-21, 2026 (2 Days)</span>
                   </div>
                 </div>
 
@@ -150,7 +129,6 @@ export default function UpcomingWorkshopPopup({ onOpenRegistration, onExploreWor
                   onClick={handleCTAClick}
                   className="w-full sm:flex-1 py-3.5 px-6 rounded-2xl bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-black text-sm sm:text-base tracking-wide uppercase flex items-center justify-center gap-2.5 shadow-xl shadow-yellow-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  <Sparkles className="w-4 h-4 fill-current" />
                   <span>Your Next Big Thing Starts Here.</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>

@@ -1,0 +1,102 @@
+// ==============================================================================
+// INCUX AI PLATFORM - PRISMA SCHEMA (Railway PostgreSQL)
+// ==============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. USERS TABLE (Admin & Registered Candidates)
+model User {
+  id        String   @id @map("id")
+  role      String   @default("candidate") @map("role")
+  name      String   @map("name")
+  email     String   @unique @map("email")
+  password  String   @map("password")
+  institution String  @default("") @map("institution")
+  phone     String   @default("") @map("phone")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("public.users")
+}
+
+// 2. CUSTOM WORKSHOP REQUESTS (College / Department requests)
+model CustomRequest {
+  id                 String   @id @map("id")
+  requestedBy        String   @map("requestedBy")
+  email              String   @map("email")
+  phone              String   @default("") @map("phone")
+  institution        String   @map("institution")
+  preferredLocation  String   @map("preferredLocation")
+  topic              String   @map("topic")
+  targetAudience     String   @default("Undergraduate & Graduate Engineers") @map("targetAudience")
+  estimatedStudents  Int      @default(100) @map("estimatedStudents")
+  preferredDates     String   @default("Flexible / TBD") @map("preferredDates")
+  specialRequirements String  @default("") @map("specialRequirements")
+  status             String   @default("Pending") @map("status")
+  submittedAt        DateTime @default(now()) @map("submittedAt")
+  approvedAt         DateTime? @map("approvedAt")
+
+  @@map("public.custom_requests")
+}
+
+// 3. UPCOMING WORKSHOPS (Live published sessions)
+model UpcomingWorkshop {
+  id                    String   @id @map("id")
+  title                 String   @map("title")
+  category              String   @map("category")
+  dates                 String   @map("dates")
+  location              String   @map("location")
+  seats                 Int      @default(100) @map("seats")
+  registered            Int      @default(0) @map("registered")
+  mode                  String   @default("Offline") @map("mode")
+  speaker               String   @default("IncuxAI Technical Mentor") @map("speaker")
+  description           String   @default("") @map("description")
+  status                String   @default("Active") @map("status")
+  postedAt              DateTime @default(now()) @map("postedAt")
+  convertedFromRequestId String? @map("convertedFromRequestId")
+
+  @@map("public.upcoming_workshops")
+}
+
+// 4. REGISTRATIONS TABLE (Candidate enrollments in workshops)
+model Registration {
+  id                   String   @id @map("id")
+  workshopId           String   @map("workshopId")
+  workshopTitle        String   @map("workshopTitle")
+  workshopCategory     String?  @map("workshopCategory")
+  workshopDates        String?  @map("workshopDates")
+  workshopLocation     String?  @map("workshopLocation")
+  workshopMode         String?  @map("workshopMode")
+  candidateName        String   @map("candidateName")
+  candidateEmail       String   @map("candidateEmail")
+  candidateInstitution String?  @map("candidateInstitution")
+  candidatePhone       String?  @map("candidatePhone")
+  registeredAt         DateTime @default(now()) @map("registeredAt")
+  status               String   @default("Confirmed") @map("status")
+
+  @@map("public.registrations")
+}
+
+// 5. INQUIRIES TABLE (Landing page contact & custom corporate/college inquiries)
+model Inquiry {
+  id               String   @id @map("id")
+  createdAt        DateTime @default(now()) @map("createdAt")
+  name             String   @map("name")
+  institution      String   @map("institution")
+  role             String   @default("Academic / Administrator") @map("role")
+  email            String   @map("email")
+  phone            String   @default("Not provided") @map("phone")
+  workshopInterest String   @default("General AI & Tech Exploration") @map("workshopInterest")
+  estimatedStudents String  @default("50-100") @map("estimatedStudents")
+  mode             String   @default("Offline Campus Experience") @map("mode")
+  message          String   @default("") @map("message")
+  status           String   @default("Received") @map("status")
+
+  @@map("public.inquiries")
+}

@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { siteConfig } from '../data/config';
 import { submitInquiry } from '../services/api';
-import { Send, CheckCircle2, AlertCircle, Mail, Phone, MapPin, Sparkles } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle, Mail, Phone, MapPin } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -108,7 +108,7 @@ export default function ContactCTA() {
     <section
       id="contact"
       ref={sectionRef}
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-24 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-12 sm:py-16 border-t border-black/10 dark:border-[#262626] overflow-hidden transition-colors duration-200"
       aria-label="Collaboration and Contact"
     >
       {/* Background ambient orbs */}
@@ -202,11 +202,7 @@ export default function ContactCTA() {
                   <h3 className="font-headline font-bold text-2xl text-neutral-900 dark:text-[#F5F5F5]">
                     Submit Workshop Collaboration
                   </h3>
-                  <p className="text-xs text-amber-600 dark:text-[#FACC15] mt-1 font-mono">
-                    Connects directly to the IncuxAI Express backend API.
-                  </p>
                 </div>
-                <Sparkles className="w-5 h-5 text-amber-600 dark:text-[#FACC15]" />
               </div>
 
               {status.success && (
@@ -328,8 +324,8 @@ export default function ContactCTA() {
                       onChange={handleChange}
                       className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-neutral-900 dark:text-[#F5F5F5] text-sm focus:border-[#FACC15] dark:focus:border-[#FACC15] transition-colors outline-none shadow-sm"
                     >
-                      <option value="50-100 Students">50–100 Students (Departmental)</option>
-                      <option value="150-300 Students">150–300 Students (Multi-Batch)</option>
+                      <option value="50-100 Students">50-100 Students (Departmental)</option>
+                      <option value="150-300 Students">150-300 Students (Multi-Batch)</option>
                       <option value="500+ Students">500+ Students (Full Auditorium)</option>
                     </select>
                   </div>

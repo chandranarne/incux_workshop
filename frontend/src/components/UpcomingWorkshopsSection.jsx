@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Sparkles, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, ArrowRight } from 'lucide-react';
 import { fetchUpcomingWorkshops } from '../services/api';
 import genAiBannerImg from '../assets/generative_ai_workshop_banner.jpg';
 
@@ -7,7 +7,7 @@ const initialWorkshop = {
   id: "WS-GENAI-IIT",
   title: "Generative AI Workshop",
   category: "Generative AI",
-  dates: "November 20–21, 2026",
+  dates: "November 20-21, 2026",
   duration: "2-Day Hands-on Workshop",
   location: "IIT Campus",
   seats: 120,
@@ -19,7 +19,7 @@ const initialWorkshop = {
   isPrimary: true
 };
 
-export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, currentUser, onOpenUpcomingPopup }) {
+export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingPopup }) {
   const [workshop, setWorkshop] = useState(initialWorkshop);
 
   useEffect(() => {
@@ -44,11 +44,7 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, cur
   }, []);
 
   const handleAction = () => {
-    if (!currentUser) {
-      onOpenAuth('candidate');
-    } else {
-      onOpenPortal();
-    }
+    onOpenPortal();
   };
 
   const ws = workshop;
@@ -58,7 +54,7 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, cur
   return (
     <section
       id="upcoming-workshops"
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-16 sm:py-24 border-t border-black/10 dark:border-yellow-400/20 overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-10 sm:py-14 border-t border-black/10 dark:border-yellow-400/20 overflow-hidden transition-colors duration-200"
       aria-label="Upcoming Workshops and Registrations"
     >
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -66,7 +62,6 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, cur
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 sm:mb-12">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-[#141414]/90 backdrop-blur-md border border-black/10 dark:border-yellow-400/30 text-xs font-mono text-[#0A0A0A] dark:text-[#FACC15] uppercase tracking-widest mb-4 font-bold shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15]" />
               <span>Upcoming Workshop // Open For Registration</span>
             </div>
             <h2 className="font-headline font-black text-3xl sm:text-5xl md:text-6xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight leading-tight">
@@ -102,7 +97,6 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, cur
               {/* Click to open popup prompt */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px] pointer-events-none z-20">
                 <span className="px-4 py-2 rounded-full bg-[#FACC15] text-[#0A0A0A] font-headline font-black text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 fill-[#0A0A0A]" />
                   <span>Click To View Announcement Popup</span>
                 </span>
               </div>
@@ -193,7 +187,6 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenAuth, cur
                   onClick={handleAction}
                   className="w-full py-4 rounded-2xl bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-black/10 dark:shadow-yellow-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
                 >
-                  <Sparkles className="w-4 h-4 fill-current" />
                   <span>Register for Cohort</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
