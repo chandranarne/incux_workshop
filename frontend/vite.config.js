@@ -73,6 +73,9 @@ export default defineConfig({
   },
   preview: {
     host: true,
+    // Railway's edge forwards the public host (workshops.incuxai.com, *.up.railway.app),
+    // which Vite's preview host check rejects by default.
+    allowedHosts: true,
     // Railway injects PORT. strictPort makes a port mismatch fail loudly
     // instead of silently listening on 4173 while the edge returns 502.
     port: Number(process.env.PORT) || 4173,
