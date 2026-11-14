@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, ArrowRight } from 'lucide-react';
 import { fetchUpcomingWorkshops } from '../services/api';
-import genAiBannerImg from '../assets/generative_ai_workshop_banner.jpg';
 
 const initialWorkshop = {
   id: "WS-GENAI-IIT",
@@ -43,153 +42,134 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
     load();
   }, []);
 
-  const handleAction = () => {
-    onOpenPortal();
-  };
-
   const ws = workshop;
   const seatsLeft = Math.max(0, ws.seats - (ws.registered || 0));
   const percentFilled = Math.min(100, Math.round(((ws.registered || 0) / ws.seats) * 100));
 
+  const handleAction = () => {
+    onOpenUpcomingPopup();
+  };
+
   return (
     <section
       id="upcoming-workshops"
-      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-10 sm:py-14 border-t border-black/10 dark:border-yellow-400/20 overflow-hidden transition-colors duration-200"
+      className="relative w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] py-10 sm:py-14 lg:py-20 border-t border-black/10 dark:border-yellow-400/20 overflow-hidden transition-colors duration-200"
       aria-label="Upcoming Workshops and Registrations"
     >
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 sm:mb-12">
-          <div className="max-w-3xl">
-            <h2 className="font-headline font-black text-3xl sm:text-5xl md:text-6xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight leading-tight">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-12 lg:mb-16">
+          <div className="max-w-3xl text-center sm:text-left">
+            <h2 className="font-headline font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight leading-tight">
               Upcoming Workshop &amp; <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EAB308] via-[#FACC15] to-[#EAB308] dark:from-[#FACC15] dark:via-[#FEF08A] dark:to-[#FACC15]">
                 Open For Registration
               </span>
             </h2>
-            <p className="mt-4 text-base sm:text-lg text-[#525252] dark:text-[#A3A3A3] font-normal leading-relaxed max-w-xl">
+            <p className="mt-3 sm:mt-4 text-base sm:text-lg text-[#525252] dark:text-[#A3A3A3] font-normal leading-relaxed max-w-xl mx-auto sm:mx-0">
               Official workshop cohort actively accepting candidate registrations.
             </p>
           </div>
         </div>
 
-        {/* Live Workshop Card - Full-Aspect Clean Showcase Without Any Cutoffs */}
-        <div className="max-w-3xl mx-auto">
-          <div className="group rounded-3xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] hover:border-[#FACC15] dark:hover:border-[#FACC15] transition-all duration-300 flex flex-col overflow-hidden shadow-2xl hover:shadow-yellow-500/10">
-            {/* Visual Header / Banner - 16:9 Full View So Text is 100% Uncut */}
-            <div
-              onClick={onOpenUpcomingPopup}
-              role="button"
-              tabIndex={0}
-              aria-label="Click to open official workshop announcement popup"
-              className="relative w-full aspect-[16/9] sm:aspect-[2/1] overflow-hidden bg-neutral-950 cursor-pointer group"
-            >
+        {/* Simple Workshop Listing - fits tidily in the section view on all screens */}
+        <div className="flex flex-col gap-4 sm:gap-6 lg:gap-8 max-w-4xl mx-auto">
+          <div className="relative w-full rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] overflow-hidden shadow-sm">
+            {/* Visual banner */}
+            <div className="relative aspect-[2/1] sm:aspect-[16/9] md:aspect-[3/2] overflow-hidden bg-neutral-950 cursor-pointer group" onClick={handleAction}>
               <img
                 src={genAiBannerImg}
                 alt={ws.title}
                 loading="lazy"
                 decoding="async"
-                className="w-full h-full object-cover sm:object-cover group-hover:scale-102 transition-transform duration-700 opacity-95"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-95"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/20 pointer-events-none" />
-
-              {/* Click to open popup prompt */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px] pointer-events-none z-20">
-                <span className="px-4 py-2 rounded-full bg-[#FACC15] text-[#0A0A0A] font-headline font-black text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2">
-                  <span>Click To View Announcement Popup</span>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40 backdrop-blur-[2px] z-10">
+                <span className="px-4 py-2 rounded-full bg-[#FACC15] text-[#0A0A0A] font-headline font-black text-xs sm:text-sm tracking-wider shadow-xl">
+                  Click To View Announcement Popup
                 </span>
               </div>
-
-              {/* Top Status Badge */}
-              <div className="absolute top-3.5 sm:top-4 left-3.5 sm:left-4 z-10">
+              {/* Badges on the banner */}
+              <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
                 <span className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-[#FACC15] text-[#0A0A0A] text-[10px] sm:text-[11px] font-mono font-bold tracking-wider shadow-lg">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#0A0A0A] animate-pulse" />
                   UPCOMING COHORT
                 </span>
-              </div>
-
-              {/* Mode Pill - Offline IIT Campus */}
-              <div className="absolute top-3.5 sm:top-4 right-3.5 sm:right-4 z-10">
                 <span className="px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-black/80 backdrop-blur-md text-[#FACC15] text-[10px] sm:text-[11px] font-mono font-bold border border-[#FACC15]/40 shadow-lg">
-                  Offline IIT Campus
+                  {ws.mode}
                 </span>
               </div>
-
-              {/* Bottom Tag */}
-              <div className="absolute bottom-3 sm:bottom-4 left-3.5 sm:left-4 right-3.5 sm:right-4 text-white z-10">
-                <span className="text-[10px] sm:text-xs uppercase font-mono tracking-wider px-2.5 sm:px-3 py-1 rounded-md bg-black/75 backdrop-blur-sm border border-white/15 text-[#FACC15] font-bold">
-                  2-DAY IMMERSIVE LAB @ IIT CAMPUS
+              <div className="absolute bottom-4 left-4 right-4 z-20">
+                <span className="text-[10px] sm:text-xs uppercase font-mono tracking-wider px-3 sm:px-4 py-1 sm:py-1.5 rounded-md bg-black/75 backdrop-blur-sm border border-white/15 text-[#FACC15] font-bold block text-center sm:text-left">
+                  2-DAY IMMERSIVE LAB @ {ws.location}
                 </span>
               </div>
             </div>
 
-            {/* Card Body */}
-            <div className="p-6 sm:p-8 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs font-mono mb-2.5 text-[#525252] dark:text-[#A3A3A3]">
-                  <span className="px-3 py-1 rounded-full bg-[#F8F8F5] dark:bg-[#0A0A0A] text-[#0A0A0A] dark:text-[#FACC15] font-bold text-xs border border-black/10 dark:border-[#262626]">
-                    {ws.category}
-                  </span>
-                  <span className="text-xs font-mono text-[#EAB308] dark:text-[#FACC15] font-semibold">
-                    Offline IIT Campus
-                  </span>
-                </div>
-
-                <h3 className="font-headline font-black text-2xl sm:text-3xl text-[#0A0A0A] dark:text-[#F5F5F5] group-hover:text-[#EAB308] dark:group-hover:text-[#FACC15] transition-colors leading-snug">
-                  {ws.title}
-                </h3>
-
-                <p className="mt-2 text-sm sm:text-base text-[#525252] dark:text-[#A3A3A3] font-medium leading-relaxed">
-                  Two-day hands-on workshop at IIT Campus.
-                </p>
-
-                <div className="my-5 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm font-mono text-[#525252] dark:text-[#A3A3A3] p-4 rounded-2xl bg-[#F8F8F5] dark:bg-[#0A0A0A] border border-black/5 dark:border-[#262626]">
-                  <div className="flex items-center gap-2.5">
-                    <Calendar className="w-4 h-4 text-[#EAB308] dark:text-[#FACC15] flex-shrink-0" />
-                    <div>
-                      <span className="text-[10px] text-neutral-400 block uppercase font-sans">DATES</span>
-                      <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{ws.dates}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <MapPin className="w-4 h-4 text-[#737373] flex-shrink-0" />
-                    <div>
-                      <span className="text-[10px] text-neutral-400 block uppercase font-sans">VENUE</span>
-                      <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{ws.location}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-xs sm:text-sm text-[#525252] dark:text-[#A3A3A3] font-body line-clamp-3 leading-relaxed">
-                  {ws.description}
-                </p>
+            {/* Details pane - fits in section width on laptops */}
+            <div className="p-4 sm:p-6 lg:p-8 flex flex-col gap-4">
+              <div className="flex items-center justify-between gap-3 text-xs sm:text-sm font-mono text-[#525252] dark:text-[#A3A3A3]">
+                <span className="px-3 py-1 rounded-full bg-[#F8F8F5] dark:bg-[#0A0A0A] text-[#0A0A0A] dark:text-[#FACC15] font-bold text-[10px] sm:text-xs border border-black/10 dark:border-[#262626]">
+                  {ws.category}
+                </span>
+                <span className="text-xs sm:text-sm text-[#EAB308] dark:text-[#FACC15] font-semibold">
+                  Offline IIT Campus
+                </span>
               </div>
 
-              {/* Capacity Bar & Quick Enroll Button */}
-              <div className="mt-6 pt-5 border-t border-black/10 dark:border-[#262626]">
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-xs font-mono mb-1.5">
-                    <span className="text-[#525252] dark:text-[#A3A3A3] font-bold">SEATS STATUS</span>
-                    <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">
-                      {seatsLeft} / {ws.seats} seats remaining
-                    </span>
-                  </div>
-                  <div className="w-full h-2 bg-black/10 dark:bg-[#0A0A0A] rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#FACC15] via-[#EAB308] to-[#FACC15] rounded-full transition-all duration-500"
-                      style={{ width: `${percentFilled}%` }}
-                    />
+              <h3 className="font-headline font-black text-2xl sm:text-3xl lg:text-4xl text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight leading-snug">
+                {ws.title}
+              </h3>
+
+              <p className="mt-2 sm:mt-3 text-sm sm:text-base text-[#525252] dark:text-[#A3A3A3] font-medium leading-relaxed">
+                Two-day hands-on workshop at IIT Campus.
+              </p>
+
+              <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm font-mono text-[#525252] dark:text-[#A3A3A3] p-4 sm:p-5 rounded-2xl bg-[#F8F8F5] dark:bg-[#0A0A0A] border border-black/5 dark:border-[#262626]">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-[#EAB308] dark:text-[#FACC15] flex-shrink-0" />
+                  <div>
+                    <span className="text-[10px] text-neutral-400 block uppercase font-sans">DATES</span>
+                    <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{ws.dates}</span>
                   </div>
                 </div>
-
-                <button
-                  onClick={handleAction}
-                  className="w-full py-4 rounded-2xl bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-black/10 dark:shadow-yellow-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-                >
-                  <span>Register for Cohort</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[#737373] flex-shrink-0" />
+                  <div>
+                    <span className="text-[10px] text-neutral-400 block uppercase font-sans">VENUE</span>
+                    <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{ws.location}</span>
+                  </div>
+                </div>
               </div>
+
+              <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-[#525252] dark:text-[#A3A3A3] font-body line-clamp-2 sm:line-clamp-3 leading-relaxed">
+                {ws.description}
+              </p>
+
+              {/* Capacity bar */}
+              <div className="mt-4 sm:mt-6 pt-4 sm:pt-5 border-t border-black/10 dark:border-[#262626]">
+                <div className="flex items-center justify-between text-xs sm:text-sm font-mono mb-1.5">
+                  <span className="text-[#525252] dark:text-[#A3A3A3] font-bold">SEATS STATUS</span>
+                  <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">
+                    {seatsLeft} / {ws.seats} seats remaining
+                  </span>
+                </div>
+                <div className="w-full h-2 sm:h-2.5 bg-black/10 dark:bg-[#0A0A0A] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#FACC15] via-[#EAB308] to-[#FACC15] rounded-full transition-all duration-500"
+                    style={{ width: `${percentFilled}%` }}
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleAction}
+                className="w-full sm:w-auto py-3.5 sm:py-4 rounded-xl bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-black text-xs sm:text-sm tracking-wider shadow-lg shadow-black/10 dark:shadow-yellow-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              >
+                <span>Register for Cohort</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>

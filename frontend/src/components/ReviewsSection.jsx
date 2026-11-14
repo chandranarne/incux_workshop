@@ -4,7 +4,7 @@ import { studentReviews } from '../data/reviews';
 
 function ReviewCard({ review }) {
   return (
-    <div className="shrink-0 w-[360px] sm:w-[420px] p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#141414] backdrop-blur-xl border border-black/10 dark:border-[#262626] hover:border-[#FACC15] dark:hover:border-[#FACC15] shadow-xl hover:shadow-yellow-500/10 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+    <div className="shrink-0 w-[320px] sm:w-[380px] md:w-[420px] p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#141414] backdrop-blur-xl border border-black/10 dark:border-[#262626] hover:border-[#FACC15] dark:hover:border-[#FACC15] shadow-xl hover:shadow-yellow-500/10 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
       {/* Card Header: Avatar, Name, College, Session Badge */}
       <div>
         <div className="flex items-start justify-between gap-3 mb-4">

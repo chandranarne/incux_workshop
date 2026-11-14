@@ -116,9 +116,9 @@ export default function ContactCTA() {
       <div className="absolute bottom-10 left-10 w-96 h-96 rounded-full bg-[#FACC15]/5 blur-[130px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-16 items-start">
           {/* Left Column: CTA Pitch & Direct Official Channels */}
-          <div className="contact-left-col lg:col-span-5">
+          <div className="contact-left-col">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FACC15]/15 dark:bg-[#FACC15]/10 backdrop-blur-md border border-[#FACC15]/30 text-xs font-mono text-neutral-900 dark:text-[#FACC15] uppercase tracking-widest mb-4 font-semibold shadow-xs">
               <span className="w-2 h-2 rounded-full bg-[#FACC15]" />
               <span>Institutional Partnership</span>
@@ -195,7 +195,7 @@ export default function ContactCTA() {
           </div>
 
           {/* Right Column: Interactive Collaboration Inquiry Form */}
-          <div className="contact-right-form lg:col-span-7">
+          <div className="contact-right-form">
             <div className="p-8 sm:p-10 rounded-3xl bg-white dark:bg-[#141414] backdrop-blur-xl border border-black/10 dark:border-[#262626] relative shadow-2xl">
               <div className="flex items-center justify-between pb-6 border-b border-black/10 dark:border-[#262626] mb-6">
                 <div>

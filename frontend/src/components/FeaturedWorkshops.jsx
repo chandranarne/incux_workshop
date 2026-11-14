@@ -33,7 +33,7 @@ function TurningWorkshopCard({ item, index }) {
       onMouseEnter={() => setIsTurned(true)}
       onMouseLeave={() => setIsTurned(false)}
       onClick={() => setIsTurned(!isTurned)}
-      className="featured-card [perspective:1400px] h-[500px] w-full select-none cursor-pointer"
+      className="featured-card [perspective:1400px] min-h-[400px] sm:min-h-[460px] w-full select-none cursor-pointer"
     >
       {/* 3D Rotating Inner Card Body */}
       <div
@@ -304,7 +304,7 @@ export default function FeaturedWorkshops({ workshops = featuredWorkshops }) {
         </div>
 
         {/* Workshops & Guest Lectures Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredWorkshops.map((item, idx) => (
             <TurningWorkshopCard
               key={item.id}
