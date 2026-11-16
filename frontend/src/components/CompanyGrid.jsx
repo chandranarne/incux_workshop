@@ -1,5 +1,6 @@
 import React from 'react';
 import { companiesData } from '../data/companies';
+import { CompanyLogoMark } from './CompanyLogos';
 
 const premierCompanies = [
   "Walmart",
@@ -61,18 +62,19 @@ export default function CompanyGrid({ data = companiesData }) {
               GLOBAL PRACTITIONER FOOTPRINT
             </span>
             <h3 className="font-headline font-black text-2xl sm:text-3xl text-[#0A0A0A] tracking-tight">
-              Our Leading Collaborations & Mentors
+              Our Leading Collaborations &amp; Mentors
             </h3>
           </div>
 
-          {/* Clean Rectangular Pills Grid of Companies */}
+          {/* Clean Rectangular Pills Grid of Companies with Official Logo + Name Presentation */}
           <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
             {premierCompanies.map((name) => (
               <div
                 key={name}
-                className="group/chip bg-white/90 hover:bg-white text-[#0A0A0A] border border-amber-300/80 hover:border-amber-500 rounded-2xl px-4 py-3 sm:py-4 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 flex items-center justify-center text-center cursor-default"
+                className="group/chip bg-white/95 hover:bg-white text-[#0A0A0A] border border-amber-300/80 hover:border-amber-500 rounded-2xl px-3.5 sm:px-4 py-3 sm:py-3.5 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 flex items-center justify-start gap-2.5 sm:gap-3 cursor-default"
               >
-                <span className="font-headline font-bold text-sm sm:text-base tracking-tight text-[#0A0A0A] group-hover/chip:text-amber-800 transition-colors">
+                <CompanyLogoMark name={name} className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                <span className="font-headline font-bold text-xs sm:text-sm md:text-base tracking-tight text-[#0A0A0A] group-hover/chip:text-amber-800 transition-colors truncate">
                   {name}
                 </span>
               </div>

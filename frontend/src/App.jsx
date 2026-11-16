@@ -35,6 +35,7 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPortalOpen, setIsPortalOpen] = useState(false);
   const [isUpcomingPopupOpen, setIsUpcomingPopupOpen] = useState(false);
+  const [portalInitialWorkshop, setPortalInitialWorkshop] = useState(null);
   const [currentPage, setCurrentPage] = useState('home');
 
   useEffect(() => {
@@ -96,7 +97,10 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const openPortal = () => {
+  const openPortal = (defaultTab = 'register', preselectedWsId = null) => {
+    if (preselectedWsId) {
+      setPortalInitialWorkshop(preselectedWsId);
+    }
     setIsPortalOpen(true);
     setIsMenuOpen(false);
   };
@@ -132,7 +136,11 @@ export default function App() {
       {/* Interactive Candidate & Admin Management Portal (access without login) */}
       <PortalModal
         isOpen={isPortalOpen}
-        onClose={() => setIsPortalOpen(false)}
+        onClose={() => {
+          setIsPortalOpen(false);
+          setPortalInitialWorkshop(null);
+        }}
+        initialWorkshopId={portalInitialWorkshop}
       />
 
       {/* Real Upcoming Workshop Announcement Popup Modal */}
@@ -162,6 +170,7 @@ export default function App() {
             {/* Live Workshop Registration & Location Request Portal Section */}
             <UpcomingWorkshopsSection
               onOpenPortal={openPortal}
+              onOpenUpcomingPopup={() => setIsUpcomingPopupOpen(true)}
             />
 
             {/* Section 4: Industry Connections (8 typographic wordmarks + official logos) */}

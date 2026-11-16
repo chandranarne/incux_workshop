@@ -1,35 +1,13 @@
 import React from 'react';
 import { MapPin, ArrowUpRight, BookmarkCheck } from 'lucide-react';
 import TiltCard from './TiltCard';
+import { workshopFormatDetails } from '../data/workshopFormatDetails';
 import auditoriumImg from '../assets/auditorium_workshop.jpg';
-import labImg from '../assets/hands_on_lab.jpg';
-import mentorImg from '../assets/mentor_guidance.jpg';
-import campusHallImg from '../assets/campus_hall_card.jpg';
-import realHackathonImg from '../assets/real_hackathon_2k26.jpg';
-import guestLectureSpeakerImg from '../assets/guest_lecture_speaker.jpg';
 
 export default function WorkshopCard({ card, onSelect }) {
-  // Associate authentic workshop photographs with each format
-  const getCardImage = (id) => {
-    switch (id) {
-      case 'iit-workshops':
-        return auditoriumImg;
-      case 'offline-colleges':
-        return campusHallImg;
-      case 'hackathons':
-        return realHackathonImg;
-      case 'ai-bootcamps':
-        return labImg;
-      case 'guest-lectures':
-        return guestLectureSpeakerImg;
-      case 'online-workshops':
-        return labImg;
-      default:
-        return auditoriumImg;
-    }
-  };
-
-  const bgImage = getCardImage(card.id);
+  // Take authentic workshop photograph directly from the inside of each format's internal gallery
+  const formatDetail = workshopFormatDetails[card.id];
+  const bgImage = formatDetail?.gallery?.[0]?.image || formatDetail?.heroImage || card.image || auditoriumImg;
 
   const handleClick = (e) => {
     e.stopPropagation();
@@ -101,38 +79,15 @@ export default function WorkshopCard({ card, onSelect }) {
             </p>
           </div>
 
-          {/* Format Specs Box */}
-          <div className="my-2 sm:my-3 p-2.5 sm:p-3 rounded-2xl bg-[#F8F8F5] dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-xs font-mono">
-            <div className="flex items-center justify-between text-[10px] sm:text-[11px] mb-1">
-              <span className="text-[#0A0A0A]/70 dark:text-[#FACC15]/80 uppercase tracking-wider font-bold">
-                FORMAT SPECS
-              </span>
-              <span className="text-[#0A0A0A] dark:text-[#FACC15] font-bold bg-[#FACC15]/20 dark:bg-[#1A1A1A] px-2 sm:px-2.5 py-0.5 rounded-full border border-[#FACC15]/30">
-                {card.highlight}
-              </span>
-            </div>
-            <div className="flex items-center justify-between pt-1 text-[10px] sm:text-[11px] text-[#525252] dark:text-[#A3A3A3] border-t border-black/10 dark:border-[#262626]">
-              <span className="flex items-center gap-1.5 font-bold truncate">
-                <BookmarkCheck className="w-3.5 h-3.5 text-[#EAB308] dark:text-[#FACC15] shrink-0" />
-                <span className="truncate">{card.tag}</span>
-              </span>
-              <span className="font-bold text-[9px] sm:text-[10px] text-[#0A0A0A]/60 dark:text-[#FACC15]/70 shrink-0">[HANDS-ON]</span>
-            </div>
-          </div>
-
-          {/* Card Footer: Agency Series & The Yellow Magnetic Arrow Button */}
-          <div className="pt-2 sm:pt-3 border-t border-black/10 dark:border-[#262626] flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-mono text-[#525252] dark:text-[#A3A3A3] font-medium flex items-center gap-1.5">
-              <span>Explore Details</span>
+          {/* Bottom Card Footer with Highlight Tag & Arrow CTA */}
+          <div className="pt-4 sm:pt-5 border-t border-black/10 dark:border-[#262626] flex items-center justify-between">
+            <span className="font-mono text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-md bg-[#F8F8F5] dark:bg-[#1C1C1C] text-[#0A0A0A] dark:text-[#FACC15] border border-black/5 dark:border-white/5 truncate max-w-[190px] sm:max-w-[240px]">
+              {card.highlight || card.tag}
             </span>
-            <button
-              type="button"
-              onClick={handleClick}
-              className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] border border-[#EAB308] dark:border-[#FACC15] flex items-center justify-center transition-all duration-300 shadow-md hover:scale-110 active:scale-95 shrink-0 cursor-pointer"
-              aria-label={`Open detailed format popup for ${card.title}`}
-            >
-              <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 stroke-[2.5]" />
-            </button>
+
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/5 dark:bg-white/5 group-hover:bg-[#FACC15] flex items-center justify-center transition-colors">
+              <ArrowUpRight className="w-4 h-4 text-[#0A0A0A] dark:text-[#F5F5F5] group-hover:text-[#0A0A0A] transition-colors" />
+            </div>
           </div>
         </div>
       </div>
