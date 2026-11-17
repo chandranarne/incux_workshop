@@ -60,12 +60,7 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FACC15]/20 border border-[#FACC15]/40 text-[#0A0A0A] dark:text-[#FACC15] text-xs font-mono font-bold">
-              <span className="w-2 h-2 rounded-full bg-[#EAB308] dark:bg-[#FACC15] animate-ping" />
-              {workshops.length} COHORTS OPEN
-            </span>
-          </div>
+
         </div>
 
         {/* 2-Column Responsive Grid of Upcoming Workshops */}
