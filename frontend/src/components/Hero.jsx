@@ -39,7 +39,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative w-full min-h-[70vh] sm:min-h-[75vh] lg:min-h-[80vh] bg-[#FDFCFA] dark:bg-[#0A0A0A] transition-colors duration-200 overflow-hidden flex flex-col justify-between"
+      className="relative w-full min-h-screen bg-[#FDFCFA] dark:bg-[#0A0A0A] transition-colors duration-200 overflow-hidden flex flex-col justify-between"
       aria-label="Hero Section"
     >
       {/* ========================================================================= */}
