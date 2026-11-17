@@ -128,7 +128,7 @@ export default function Hero() {
       {/* ========================================================================= */}
       {/* HERO FOREGROUND CONTENT (Responsive, Mobile-Centric Typography & CTAs)    */}
       {/* ========================================================================= */}
-      <div className="relative z-20 max-w-5xl mx-auto px-4 sm:px-8 lg:px-12 pt-10 sm:pt-14 lg:pt-16 pb-8 sm:pb-10 flex flex-col items-center text-center my-auto">
+      <div className="relative z-20 max-w-5xl mx-auto px-4 sm:px-8 lg:px-12 pt-20 sm:pt-28 md:pt-32 lg:pt-36 pb-8 sm:pb-12 flex flex-col items-center text-center my-auto">
         
        {/* Main Heading */}
         <h1 className="font-headline font-black text-[32px] xs:text-4xl sm:text-6xl lg:text-7xl tracking-tight text-[#0A0A0A] dark:text-[#F5F5F5] leading-[1.08] max-w-4xl">
