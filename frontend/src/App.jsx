@@ -19,6 +19,7 @@ import PortalModal from './components/PortalModal';
 import UpcomingWorkshopPopup from './components/UpcomingWorkshopPopup';
 import Terms from './components/Pages/Terms';
 import PrivacyPolicy from './components/Pages/PrivacyPolicy';
+import AiWorkshopDetail from './components/Pages/AiWorkshopDetail';
 import AdminPage from './components/AdminPage';
 
 import { workshopCards, featuredWorkshops } from './data/workshops';
@@ -36,7 +37,12 @@ export default function App() {
   const [isPortalOpen, setIsPortalOpen] = useState(false);
   const [isUpcomingPopupOpen, setIsUpcomingPopupOpen] = useState(false);
   const [portalInitialWorkshop, setPortalInitialWorkshop] = useState(null);
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState(() => {
+    if (typeof window !== 'undefined' && /^\/ai-workshop\/?$/i.test(window.location.pathname)) {
+      return 'ai-workshop';
+    }
+    return 'home';
+  });
 
   useEffect(() => {
     // Whenever intro finishes or layout settles, recalculate scroll triggers
@@ -73,11 +79,24 @@ export default function App() {
     loadBackendData();
   }, []);
 
-  // Handle page navigation from Terms/Privacy pages
+  // Handle page navigation from Terms/Privacy/AI Workshop pages
   useEffect(() => {
     const handleNavigateHome = () => navigateHome();
     window.addEventListener('navigate-home', handleNavigateHome);
     return () => window.removeEventListener('navigate-home', handleNavigateHome);
+  }, []);
+
+  // Listen for browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      if (/^\/ai-workshop\/?$/i.test(window.location.pathname)) {
+        setCurrentPage('ai-workshop');
+      } else {
+        setCurrentPage('home');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const navigateToTerms = () => {
@@ -92,8 +111,20 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const navigateToAiWorkshop = () => {
+    setCurrentPage('ai-workshop');
+    setIsMenuOpen(false);
+    if (window.location.pathname !== '/ai-workshop') {
+      window.history.pushState({}, '', '/ai-workshop');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const navigateHome = () => {
     setCurrentPage('home');
+    if (window.location.pathname !== '/') {
+      window.history.pushState({}, '', '/');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -149,11 +180,13 @@ export default function App() {
         onClose={() => setIsUpcomingPopupOpen(false)}
       />
 
-      {/* Page Content: Main Landing or Legal Pages */}
+      {/* Page Content: Main Landing, Detailed Workshop, or Legal Pages */}
       {currentPage === 'terms' ? (
         <Terms />
       ) : currentPage === 'privacy' ? (
         <PrivacyPolicy />
+      ) : currentPage === 'ai-workshop' ? (
+        <AiWorkshopDetail onBackHome={navigateHome} />
       ) : (
         <>
           {/* Main Content: 11 Sections in Exact Fixed Order + Live Registration Portal */}
@@ -171,6 +204,7 @@ export default function App() {
             <UpcomingWorkshopsSection
               onOpenPortal={openPortal}
               onOpenUpcomingPopup={() => setIsUpcomingPopupOpen(true)}
+              onOpenAiWorkshopPage={navigateToAiWorkshop}
             />
 
             {/* Section 4: Industry Connections (8 typographic wordmarks + official logos) */}

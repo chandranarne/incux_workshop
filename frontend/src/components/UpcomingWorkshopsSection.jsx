@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, ArrowRight, ShieldCheck, Sparkles, Clock } from 'lucide-react';
 import { fetchUpcomingWorkshops, DEFAULT_UPCOMING_WORKSHOPS } from '../services/api';
 import genAiBannerImg from '../assets/generative_ai_workshop_banner.jpg';
-import hybridBannerImg from '../assets/autonomous_ai_workshop_banner.jpg';
+import hybridBannerImg from '../assets/ai_workshop_10d_banner.jpg';
 
-export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingPopup }) {
+export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingPopup, onOpenAiWorkshopPage }) {
   const [workshops, setWorkshops] = useState(DEFAULT_UPCOMING_WORKSHOPS);
 
   useEffect(() => {
@@ -24,6 +24,12 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
   }, []);
 
   const handleRegister = (wsId) => {
+    if (wsId === 'WS-HYBRID-10D' || wsId === 'WS-AI-10D') {
+      if (onOpenAiWorkshopPage) {
+        onOpenAiWorkshopPage();
+        return;
+      }
+    }
     if (onOpenPortal) {
       onOpenPortal('register', wsId);
     } else if (onOpenUpcomingPopup) {
@@ -34,6 +40,12 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
   const handleBannerClick = (ws, idx) => {
     if (idx === 0 && onOpenUpcomingPopup) {
       onOpenUpcomingPopup();
+    } else if (ws.id === 'WS-HYBRID-10D' || ws.id === 'WS-AI-10D' || idx === 1) {
+      if (onOpenAiWorkshopPage) {
+        onOpenAiWorkshopPage();
+      } else {
+        handleRegister(ws.id);
+      }
     } else {
       handleRegister(ws.id);
     }
@@ -59,8 +71,6 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
               Official workshop cohorts actively accepting candidate registrations for on-campus and hybrid immersion tracks.
             </p>
           </div>
-
-
         </div>
 
         {/* 2-Column Responsive Grid of Upcoming Workshops */}
@@ -94,7 +104,7 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
                   {/* Hover Prompt Overlay */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40 backdrop-blur-[2px] z-10">
                     <span className="px-4 py-2 rounded-full bg-[#FACC15] text-[#0A0A0A] font-headline font-black text-xs sm:text-sm tracking-wider shadow-xl">
-                      {isFirst ? 'Click To View Announcement Popup' : 'Click To Register Online'}
+                      {isFirst ? 'Click To View Announcement Popup' : 'Click To View Full 10-Day Workshop Details'}
                     </span>
                   </div>
 
@@ -112,7 +122,7 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
                   {/* Top Right Duration Pill */}
                   <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-20">
                     <span className="px-3 py-1 rounded-full bg-white/95 dark:bg-[#0A0A0A]/95 text-[#0A0A0A] dark:text-[#FACC15] font-mono text-[10px] sm:text-[11px] font-bold border border-black/10 dark:border-yellow-400/30 shadow-md">
-                      {ws.duration || (isFirst ? '2 Days' : 'November 27-28')}
+                      {ws.duration || (isFirst ? '2 Days' : '10 Days')}
                     </span>
                   </div>
 
@@ -121,7 +131,7 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
                     <span className="text-[10px] sm:text-xs uppercase font-mono tracking-wider px-3 sm:px-4 py-1 sm:py-1.5 rounded-md bg-black/80 backdrop-blur-sm border border-white/15 text-[#FACC15] font-bold block text-center sm:text-left truncate">
                       {isFirst
                         ? `2-DAY IMMERSIVE LAB @ ${ws.location || 'IIT Campus'}`
-                        : `COMBINED VIRTUAL + OFFLINE @ ${ws.location || 'Regional Hub'}`}
+                        : `COMBINED VIRTUAL + OFFLINE @ IIT CAMPUS & CLOUD LABS`}
                     </span>
                   </div>
                 </div>
@@ -146,7 +156,7 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
                     <p className="text-sm sm:text-base text-amber-700 dark:text-[#FACC15] font-semibold leading-relaxed">
                       {isFirst
                         ? 'Two-day hands-on workshop at IIT Campus.'
-                        : 'Two-day combined virtual and offline intensive workshop.'}
+                        : '10-day combined virtual and offline intensive workshop.'}
                     </p>
 
                     {/* Logistics Card */}
@@ -176,13 +186,13 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
                     </p>
                   </div>
 
-                  {/* Action Button */}
+                  {/* Action Button: "Register" */}
                   <div className="pt-4 border-t border-black/10 dark:border-[#262626]">
                     <button
                       onClick={() => handleRegister(ws.id)}
                       className="w-full py-3.5 sm:py-4 rounded-xl bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-black text-xs sm:text-sm tracking-wider shadow-lg shadow-black/10 dark:shadow-yellow-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                     >
-                      <span>Register for Cohort</span>
+                      <span>Register</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
