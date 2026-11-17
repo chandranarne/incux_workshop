@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, ArrowRight, ShieldCheck, Sparkles, Clock } from 'lucide-react';
+import { Calendar, MapPin, ArrowRight, Clock } from 'lucide-react';
 import { fetchUpcomingWorkshops, DEFAULT_UPCOMING_WORKSHOPS } from '../services/api';
 import genAiBannerImg from '../assets/generative_ai_workshop_banner.jpg';
 import hybridBannerImg from '../assets/ai_workshop_10d_banner.jpg';
@@ -84,7 +84,7 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
                 key={ws.id || idx}
                 className="relative rounded-3xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] hover:border-[#FACC15] dark:hover:border-[#FACC15] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col justify-between"
               >
-                {/* Visual Banner Showcase */}
+                {/* Visual Banner Showcase — Unobstructed, Clean Poster Display */}
                 <div
                   className="relative aspect-[16/9] w-full overflow-hidden bg-neutral-950 cursor-pointer group"
                   onClick={() => handleBannerClick(ws, idx)}
@@ -97,41 +97,13 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
                     alt={ws.title}
                     loading="lazy"
                     decoding="async"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-95"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/30 pointer-events-none" />
 
                   {/* Hover Prompt Overlay */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40 backdrop-blur-[2px] z-10">
                     <span className="px-4 py-2 rounded-full bg-[#FACC15] text-[#0A0A0A] font-headline font-black text-xs sm:text-sm tracking-wider shadow-xl">
                       {isFirst ? 'Click To View Announcement Popup' : 'Click To View Full 10-Day Workshop Details'}
-                    </span>
-                  </div>
-
-                  {/* Top Floating Badges */}
-                  <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-20 flex flex-col gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-[#FACC15] text-[#0A0A0A] text-[10px] sm:text-[11px] font-mono font-bold tracking-wider shadow-lg">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#0A0A0A] animate-pulse" />
-                      UPCOMING COHORT
-                    </span>
-                    <span className="px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-black/80 backdrop-blur-md text-[#FACC15] text-[10px] sm:text-[11px] font-mono font-bold border border-[#FACC15]/40 shadow-lg">
-                      {ws.mode || (isFirst ? 'Offline IIT Campus' : 'Combined Virtual & Offline')}
-                    </span>
-                  </div>
-
-                  {/* Top Right Duration Pill */}
-                  <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-20">
-                    <span className="px-3 py-1 rounded-full bg-white/95 dark:bg-[#0A0A0A]/95 text-[#0A0A0A] dark:text-[#FACC15] font-mono text-[10px] sm:text-[11px] font-bold border border-black/10 dark:border-yellow-400/30 shadow-md">
-                      {ws.duration || (isFirst ? '2 Days' : '10 Days')}
-                    </span>
-                  </div>
-
-                  {/* Bottom Strip on Banner */}
-                  <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 z-20">
-                    <span className="text-[10px] sm:text-xs uppercase font-mono tracking-wider px-3 sm:px-4 py-1 sm:py-1.5 rounded-md bg-black/80 backdrop-blur-sm border border-white/15 text-[#FACC15] font-bold block text-center sm:text-left truncate">
-                      {isFirst
-                        ? `2-DAY IMMERSIVE LAB @ ${ws.location || 'IIT Campus'}`
-                        : `COMBINED VIRTUAL + OFFLINE @ IIT CAMPUS & CLOUD LABS`}
                     </span>
                   </div>
                 </div>
