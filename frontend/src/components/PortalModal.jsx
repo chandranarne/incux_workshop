@@ -424,13 +424,7 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
                         )}
                       </div>
 
-                      <div className="pt-4 border-t border-black/10 dark:border-[#262626] flex items-center justify-between">
-                        <div className="text-xs font-mono">
-                          <span className="text-neutral-400 dark:text-neutral-500 block text-[10px]">SEATS STATUS</span>
-                          <span className="font-bold text-neutral-950 dark:text-[#F5F5F5]">
-                            {seatsLeft} remaining / {ws.seats}
-                          </span>
-                        </div>
+                      <div className="pt-4 border-t border-black/10 dark:border-[#262626] flex items-center justify-end">
 
                         {isRegistered ? (
                           <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FACC15]/15 dark:bg-[#FACC15]/10 text-neutral-900 dark:text-[#FACC15] border border-[#FACC15]/30 dark:border-[#FACC15]/30 text-xs font-mono font-bold">

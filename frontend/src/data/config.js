@@ -4,7 +4,7 @@ export const siteConfig = {
     wordmark: "INCUXAI",
     tagline: "Workshops that turn knowledge into real-world skills.",
     heroOversized: "WORKSHOPS",
-    mission: "IncuxAI organises online and offline workshops with colleges, universities, researchers and industry professionals. Its mission is to bridge academic knowledge and industry requirements through practical, expert-led learning."
+    mission: "IncuxAI organises online and offline workshops with colleges, researchers and industry professionals. Its mission is to bridge academic knowledge and industry requirements through practical, expert-led learning."
   },
   navigation: [
     { label: "Home", href: "#hero" },

@@ -172,7 +172,7 @@ export default function Hero() {
           className="mt-4 sm:mt-6 text-sm sm:text-lg lg:text-xl text-[#374151] dark:text-[#D4D4D4] font-normal leading-relaxed max-w-2xl px-2"
         >
           IncuxAI bridges academic foundations and enterprise engineering demands through intensive,
-          practitioner-led workshops, competitive hackathons, and global keynote lectures at universities across India.
+          practitioner-led workshops, competitive hackathons, and global keynote lectures at colleges across India.
         </motion.p>
 
         {/* Action CTAs: Full width on mobile, inline on desktop */}
