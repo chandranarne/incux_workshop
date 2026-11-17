@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, ArrowUpRight, BookmarkCheck } from 'lucide-react';
+import { MapPin, ArrowUpRight } from 'lucide-react';
 import TiltCard from './TiltCard';
 import { workshopFormatDetails } from '../data/workshopFormatDetails';
 import auditoriumImg from '../assets/auditorium_workshop.jpg';
@@ -79,12 +79,8 @@ export default function WorkshopCard({ card, onSelect }) {
             </p>
           </div>
 
-          {/* Bottom Card Footer with Highlight Tag & Arrow CTA */}
-          <div className="pt-4 sm:pt-5 border-t border-black/10 dark:border-[#262626] flex items-center justify-between">
-            <span className="font-mono text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-md bg-[#F8F8F5] dark:bg-[#1C1C1C] text-[#0A0A0A] dark:text-[#FACC15] border border-black/5 dark:border-white/5 truncate max-w-[190px] sm:max-w-[240px]">
-              {card.highlight || card.tag}
-            </span>
-
+          {/* Bottom Card Footer with Arrow CTA */}
+          <div className="pt-4 sm:pt-5 border-t border-black/10 dark:border-[#262626] flex items-center justify-end">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/5 dark:bg-white/5 group-hover:bg-[#FACC15] flex items-center justify-center transition-colors">
               <ArrowUpRight className="w-4 h-4 text-[#0A0A0A] dark:text-[#F5F5F5] group-hover:text-[#0A0A0A] transition-colors" />
             </div>
