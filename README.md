@@ -134,14 +134,14 @@ Backend and frontend are deployed individually on Railway.
    `TRUST_PAYMENT_SECRET`, `TRUST_PAYMENT_URL`, `TRUST_PAYMENT_APP_ID`,
    `PAYMENT_RETURN_URL`, `PAYMENT_WEBHOOK_URL` (see the payments section below)
 3. Connect the `backend/` folder as a Railway service
-4. `backend/railway.json` runs: `npm run prisma:generate && (npx prisma migrate deploy || npx prisma db push --skip-generate) && npm start`
+4. `backend/railway.json` runs `npm start`. The Prisma client is generated in the build phase by `backend/nixpacks.toml`. Do not add `migrate deploy` or `db push` to the start command; the production database already has the required tables and those commands fail on its existing schema.
 5. Healthcheck: `/api/health`
 
 ### Frontend (Railway)
 1. Connect the `frontend/` folder as a separate Railway service
 2. Node 22 is picked up from `.nvmrc` / `engines.node`
 3. No deploy config file is needed. Railway builds with `npm run build` and starts with `npm start` (`vite preview`), which reads `PORT` from the environment
-4. `/api/*` is proxied to the backend from `vite.config.js`. Set `API_PROXY_TARGET` in Railway Variables to the backend URL (the private URL `http://backend.railway.internal:5000` keeps traffic off the public edge). Nothing is hardcoded: if it is missing, `/api` answers `503` with a message naming the variable instead of falling back to `localhost`
+4. `/api/*` is proxied to the backend from `vite.config.js`. Set `API_PROXY_TARGET` in Railway Variables to the backend private URL `http://steadfast-beauty.railway.internal:5000` (keeps traffic off the public edge). Nothing is hardcoded: if it is missing, `/api` answers `503` with a message naming the variable instead of falling back to `localhost`
 
 Production behaviour of `vite preview`, configured in `vite.config.js`:
 
@@ -184,6 +184,7 @@ Backend variables:
 | `TRUST_PAYMENT_URL` | `https://www.incuxaieducationtrust.org` |
 | `TRUST_PAYMENT_APP_ID` | `workshops` |
 | `PAYMENT_RETURN_URL` | `https://workshops.incuxai.com/payment/success` |
+| `PAYMENT_CANCEL_URL` | `https://workshops.incuxai.com/payment/cancel` |
 | `PAYMENT_WEBHOOK_URL` | `https://workshops.incuxai.com/api/payments/webhook` |
 
 Register the app on the trust platform so it can sign callbacks and issue success
@@ -200,8 +201,10 @@ Use a dedicated app id (`workshops`) and the same shared secret as
 incuxai.com payments. The trust verifies this token with the app's `secretKey`, so
 the value must be byte-for-byte identical on both services.
 
-The full flow, routes and database notes are documented in
-`PAYMENT_INTEGRATION_PLAN.md`.
+The full flow, routes, database notes, and the checklist for adding a new payment
+form are documented in `RAZORPAY_INTEGRATION.md`. A short implementation summary
+is in `PAYMENT_INTEGRATION_PLAN.md` and the two-site app/secret reference is in
+`PAYMENT_CONFIG.md`.
 
 ---
 

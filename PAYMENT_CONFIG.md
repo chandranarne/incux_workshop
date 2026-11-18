@@ -1,5 +1,8 @@
 # Payment Configuration: incuxai.com + workshops.incuxai.com
 
+> For the complete integration guide, new form checklist, and troubleshooting,
+> see `RAZORPAY_INTEGRATION.md` in this repository.
+
 Both sites initiate payments through the **same** IncuXai Education Trust platform,
 but use **different app ids and different shared secrets**. The trust picks the
 correct secret by the `app` query parameter in the checkout URL.
@@ -95,7 +98,7 @@ Flow:
 
 | Variable | Value |
 | :--- | :--- |
-| `API_PROXY_TARGET` | `http://backend.railway.internal:5000` |
+| `API_PROXY_TARGET` | `http://steadfast-beauty.railway.internal:5000` |
 
 ### Backend service (workshops)
 

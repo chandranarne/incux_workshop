@@ -1,5 +1,8 @@
 # Payment Gateway Integration - Implementation Summary
 
+> For the complete integration guide, new form checklist, and troubleshooting,
+> see `RAZORPAY_INTEGRATION.md` in this repository.
+
 ## Architecture
 
 Two services, separate Railway deployments:
@@ -53,10 +56,11 @@ the admin console under the Payments tab.
 - `UpcomingWorkshop`: `fee` (rupees) and `isPaid`
 - `Registration`: `paymentStatus` (`pending`, `paid`, `failed`)
 
-The single init migration in `backend/prisma/migrations/20260101000000_init` creates
-all tables with schema-qualified names (`public.*`) matching the `@@map` values in
-`schema.prisma`. For an existing database, `prisma db push` is a safe alternative to
-`migrate deploy`.
+The tables are created with schema-qualified names (`public.*`) matching the
+`@@map` values in `schema.prisma`. The production database already contains the
+required tables and columns, and has drifted from the current schema file, so
+neither `migrate deploy` nor `db push` is run at startup. See
+`RAZORPAY_INTEGRATION.md` section 17 for the Railway configuration.
 
 ## Environment Variables
 
@@ -79,7 +83,7 @@ cancel pages handle.
 ### Frontend (Railway Variables)
 
 ```
-API_PROXY_TARGET=http://backend.railway.internal:5000
+API_PROXY_TARGET=http://steadfast-beauty.railway.internal:5000
 ```
 
 Use the private Railway URL for the backend so `/api` traffic stays off the public
@@ -89,20 +93,26 @@ edge. Without it the frontend answers `/api` with an explicit `503`.
 
 ### 1. Register the workshops app on the trust platform
 
-On the `Incuxai_education_trust` backend:
+On the `Incuxai_education_trust` backend (the CLI path is `server/cli`):
 
 ```bash
-node src/cli/payment-apps.js add incuxai "IncuXai.com" --callback https://workshops.incuxai.com/api/payments/webhook
+node server/cli/payment-apps.js add workshops "IncuXai Workshops" \
+  --secret YJzdcqnlnQloysQ2jrmwk1TxzktTxTaqj-p6UiCUIulajN4gIx41H-Nj70yelXU6 \
+  --callback https://workshops.incuxai.com/api/payments/webhook
 ```
 
-Save the printed secret. It is the value of `TRUST_PAYMENT_SECRET` on the workshops
-backend and is not stored in the repository.
+The secret is the value of `TRUST_PAYMENT_SECRET` on the workshops backend. It is
+set in Railway and is not stored in the repository. Do not rotate or reuse the
+`incuxai` app, which serves live incuxai.com payments.
 
 ### 2. Set Railway variables
 
-Set the backend and frontend variables listed above. `backend/railway.json` already
-runs `prisma generate`, then `prisma migrate deploy` with a `prisma db push` fallback,
-then `npm start`.
+Set the backend and frontend variables listed above. The Prisma client is
+generated during the build phase (`backend/nixpacks.toml`), and
+`backend/railway.json` starts the server with `npm start` only. Do not add
+`prisma migrate deploy` or `prisma db push` to the start command: the production
+database already has all required tables, and those commands fail on the existing
+schema and prevent the server from starting.
 
 ### 3. Verify
 
