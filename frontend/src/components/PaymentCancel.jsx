@@ -2,6 +2,8 @@ import React from 'react';
 import { AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function PaymentCancel() {
+  const registrationId = new URLSearchParams(window.location.search).get('registration') || '';
+
   return (
     <main className="min-h-screen w-full bg-[#FDFCFA] dark:bg-[#0A0A0A] text-[#0A0A0A] dark:text-[#F5F5F5] flex items-center justify-center px-4 py-12">
       <div className="max-w-sm w-full">
@@ -17,10 +19,17 @@ export default function PaymentCancel() {
           </p>
 
           <button
-            onClick={() => window.location.assign('/')}
+            onClick={() =>
+              window.location.assign(
+                registrationId
+                  ? `/gen-ai-workshop?registration=${encodeURIComponent(registrationId)}`
+                  : '/'
+              )
+            }
             className="w-full py-4 sm:py-5 rounded-xl bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-black text-base sm:text-lg tracking-wider transition-colors cursor-pointer shadow-lg shadow-yellow-500/20"
           >
-            Back to Homepage <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 inline ml-2" />
+            {registrationId ? 'Back to Registration' : 'Back to Homepage'}{' '}
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 inline ml-2" />
           </button>
         </div>
       </div>

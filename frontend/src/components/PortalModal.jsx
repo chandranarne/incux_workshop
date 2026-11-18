@@ -18,7 +18,9 @@ import {
   Building,
   AlertCircle,
   CreditCard,
-  LogOut
+  LogOut,
+  Copy,
+  Tag
 } from 'lucide-react';
 import {
   fetchUpcomingWorkshops,
@@ -27,7 +29,10 @@ import {
   registerForWorkshop,
   fetchAllRegistrations,
   fetchCandidateRegistrations,
-  fetchAllPayments
+  fetchAllPayments,
+  fetchReferralCodes,
+  createReferralCode,
+  deleteReferralCode
 } from '../services/api';
 
 const CANDIDATE_KEY = 'incuxai_candidate_profile';
@@ -71,6 +76,8 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
   const [myRegistrations, setMyRegistrations] = useState([]);
   const [allRegistrations, setAllRegistrations] = useState([]);
   const [allPayments, setAllPayments] = useState([]);
+  const [referralCodes, setReferralCodes] = useState([]);
+  const [newReferral, setNewReferral] = useState({ code: '', label: '', discountAmount: '' });
   const [loading, setLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState({ type: '', text: '' });
 
@@ -104,13 +111,15 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
       setWorkshops(wsList);
 
       if (isAdmin) {
-        const [regs, payments] = await Promise.all([
+        const [regs, payments, referrals] = await Promise.all([
           fetchAllRegistrations(),
-          fetchAllPayments()
+          fetchAllPayments(),
+          fetchReferralCodes()
         ]);
         setAllRegistrations(regs);
         setMyRegistrations(regs);
         setAllPayments(payments);
+        setReferralCodes(referrals);
       } else if (candidate.email) {
         const regs = await fetchCandidateRegistrations(candidate.email);
         setMyRegistrations(regs);
@@ -217,6 +226,44 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
     }
   };
 
+  // --- Admin Action: Create and share referral codes ---
+  const handleCreateReferral = async (event) => {
+    event.preventDefault();
+    try {
+      await createReferralCode({
+        code: newReferral.code,
+        label: newReferral.label,
+        discountAmount: Number(newReferral.discountAmount)
+      });
+      setNewReferral({ code: '', label: '', discountAmount: '' });
+      notify('success', 'Referral code created. Copy its shareable link below.');
+      loadData();
+    } catch (err) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleDeleteReferral = async (code) => {
+    if (!window.confirm(`Remove referral code ${code}?`)) return;
+    try {
+      await deleteReferralCode(code);
+      notify('success', 'Referral code removed.');
+      loadData();
+    } catch (err) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleCopyReferral = async (code) => {
+    const link = `${window.location.origin}/gen-ai-workshop?ref=${encodeURIComponent(code)}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      notify('success', 'Shareable referral link copied.');
+    } catch {
+      window.prompt('Copy this referral link', link);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 w-screen h-screen min-h-screen flex flex-col bg-[#FDFCFA] dark:bg-[#0A0A0A] text-neutral-950 dark:text-[#F5F5F5] animate-in fade-in duration-200 overflow-hidden">
       <div className="relative w-full h-full flex flex-col overflow-hidden">
@@ -301,6 +348,13 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
               >
                 <CreditCard className="w-4 h-4" />
                 <span>Payments ({allPayments.length})</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('referrals')}
+                className={`py-3.5 px-4 text-xs font-mono font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer ${activeTab === 'referrals' ? 'border-[#FACC15] dark:border-[#FACC15] text-amber-600 dark:text-[#FACC15] font-bold' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-amber-600 dark:hover:text-[#FACC15]'}`}
+              >
+                <Tag className="w-4 h-4" />
+                <span>Referral Codes ({referralCodes.length})</span>
               </button>
             </>
           ) : (
@@ -868,6 +922,135 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
                           </td>
                         </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* ADMIN VIEW: REFERRAL CODES FOR THE GEN AI WORKSHOP        */}
+          {/* ========================================================= */}
+          {isAdmin && activeTab === 'referrals' && (
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h4 className="font-headline font-bold text-2xl text-neutral-950 dark:text-[#F5F5F5]">
+                  Referral Codes
+                </h4>
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                  Create a code and assign a discount. Share the generated link. There is no coupon field on the form.
+                </p>
+              </div>
+
+              <form
+                onSubmit={handleCreateReferral}
+                className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_150px_auto] gap-3 items-end p-5 rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626]"
+              >
+                <div>
+                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
+                    Code
+                  </label>
+                  <input
+                    value={newReferral.code}
+                    onChange={(event) =>
+                      setNewReferral((previous) => ({ ...previous, code: event.target.value.toUpperCase() }))
+                    }
+                    placeholder="IITHYD500"
+                    required
+                    className="w-full px-3 py-2.5 rounded-xl bg-neutral-50 dark:bg-[#1A1A1A] border border-black/15 dark:border-[#333333] text-sm outline-none focus:border-[#FACC15]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
+                    Label, optional
+                  </label>
+                  <input
+                    value={newReferral.label}
+                    onChange={(event) =>
+                      setNewReferral((previous) => ({ ...previous, label: event.target.value }))
+                    }
+                    placeholder="IIT Hyderabad outreach"
+                    className="w-full px-3 py-2.5 rounded-xl bg-neutral-50 dark:bg-[#1A1A1A] border border-black/15 dark:border-[#333333] text-sm outline-none focus:border-[#FACC15]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
+                    Discount, rupees
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="6000"
+                    value={newReferral.discountAmount}
+                    onChange={(event) =>
+                      setNewReferral((previous) => ({ ...previous, discountAmount: event.target.value }))
+                    }
+                    placeholder="500"
+                    required
+                    className="w-full px-3 py-2.5 rounded-xl bg-neutral-50 dark:bg-[#1A1A1A] border border-black/15 dark:border-[#333333] text-sm outline-none focus:border-[#FACC15]"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-mono font-bold text-xs cursor-pointer"
+                >
+                  Create
+                </button>
+              </form>
+
+              {referralCodes.length === 0 ? (
+                <div className="p-8 text-center rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626]">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">No referral codes created yet.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-2xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#141414] shadow-sm">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead className="bg-[#FDFCFA] dark:bg-[#0A0A0A] text-amber-600 dark:text-[#FACC15] border-b border-black/10 dark:border-[#262626]">
+                      <tr>
+                        <th className="p-3">Code</th>
+                        <th className="p-3">Label</th>
+                        <th className="p-3">Discount</th>
+                        <th className="p-3">Uses</th>
+                        <th className="p-3">Shareable Link</th>
+                        <th className="p-3">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/10 dark:divide-[#262626] text-neutral-950 dark:text-[#F5F5F5]">
+                      {referralCodes.map((referral) => {
+                        const link = `${window.location.origin}/gen-ai-workshop?ref=${encodeURIComponent(referral.code)}`;
+                        return (
+                          <tr key={referral.id} className="hover:bg-[#FDFCFA]/50 dark:hover:bg-[#0A0A0A]/60">
+                            <td className="p-3 font-bold text-amber-600 dark:text-[#FACC15]">{referral.code}</td>
+                            <td className="p-3 text-neutral-500 dark:text-neutral-400">{referral.label || 'Not provided'}</td>
+                            <td className="p-3 font-semibold">₹{Number(referral.discountAmount || 0).toLocaleString('en-IN')}</td>
+                            <td className="p-3">{referral.usageCount || 0}</td>
+                            <td className="p-3 max-w-[260px] truncate" title={link}>
+                              {link}
+                            </td>
+                            <td className="p-3">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyReferral(referral.code)}
+                                  className="p-2 rounded-lg text-amber-600 dark:text-[#FACC15] hover:bg-[#FACC15]/10 cursor-pointer"
+                                  title="Copy shareable link"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteReferral(referral.code)}
+                                  className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                                  title="Remove referral code"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

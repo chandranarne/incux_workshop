@@ -77,18 +77,24 @@ success token before marking its local database row paid.
 | Browser return (success) | `https://workshops.incuxai.com/payment/success` |
 | Browser return (cancel) | `https://workshops.incuxai.com/payment/cancel` |
 | Token signer | `backend/server.js` (`signTrustToken`) |
-| Paid workshop | AI Workshop, Rs.6,000, id `WS-HYBRID-10D` |
+| Paid workshop | Generative AI Workshop, Rs.6,000, id `WS-GENAI-IIT-HYD-NOV28`, November 28-29, 2026 at IIT Hyderabad |
 
 Flow:
 
 ```
-/payment details form
-  -> POST /api/payments/initiate
-  -> redirect https://www.incuxaieducationtrust.org/pay?token=...&app=workshops&redirect=https://workshops.incuxai.com/payment/success
+/gen-ai-workshop four-step form
+  -> POST /api/genai/registrations/step1, step2, step3 (accommodation gate)
+  -> POST /api/genai/registrations/:id/payment  (amount computed server-side)
+  -> redirect https://www.incuxaieducationtrust.org/pay?token=...&app=workshops&redirect=https://workshops.incuxai.com/payment/success?registration=<ID>
   -> trust webhook POST /api/payments/webhook  (marks Railway DB paid)
-  -> browser /payment/success?status=success&token=<SUCCESS_TOKEN>
+  -> browser /payment/success?status=success&token=<SUCCESS_TOKEN>&registration=<ID>
   -> GET /api/payments/confirm?reference=<SUCCESS_TOKEN>  (idempotent re-check)
+  -> /gen-ai-workshop?registration=<ID>  (shows saved step and paid status)
 ```
+
+Referral codes are created in the `/admin` Referral Codes tab and applied only
+through `/gen-ai-workshop?ref=CODE`. The form has no coupon input. A discount is
+subtracted from the ₹6,000 base, then the 2% platform fee is recalculated.
 
 ---
 

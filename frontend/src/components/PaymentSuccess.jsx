@@ -6,12 +6,14 @@ export default function PaymentSuccess() {
   const [state, setState] = useState('verifying');
   const [error, setError] = useState('');
   const [details, setDetails] = useState(null);
+  const [registrationId, setRegistrationId] = useState('');
 
   useEffect(() => {
     let active = true;
     const params = new URLSearchParams(window.location.search);
     const status = params.get('status') || '';
     const reference = params.get('token') || params.get('reference') || '';
+    setRegistrationId(params.get('registration') || '');
 
     if (status === 'cancelled' || status === 'failed') {
       setState('failed');
@@ -115,10 +117,17 @@ export default function PaymentSuccess() {
           {!details?.transaction_id && <div className="mb-8" />}
 
           <button
-            onClick={() => window.location.assign('/')}
+            onClick={() =>
+              window.location.assign(
+                registrationId
+                  ? `/gen-ai-workshop?registration=${encodeURIComponent(registrationId)}`
+                  : '/'
+              )
+            }
             className="w-full py-4 sm:py-5 rounded-xl bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-black text-base sm:text-lg tracking-wider transition-colors cursor-pointer shadow-lg shadow-yellow-500/20"
           >
-            Return to Homepage <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 inline ml-2" />
+            {registrationId ? 'Back to Registration' : 'Return to Homepage'}{' '}
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 inline ml-2" />
           </button>
         </div>
       </div>

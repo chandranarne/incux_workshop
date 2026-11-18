@@ -85,9 +85,39 @@ model Registration {
   status               String   @default("Confirmed") @map("status")
   paymentStatus        String   @default("pending") @map("paymentStatus") // pending, paid, failed
 
+  // Gen AI Workshop (Nov 28-29) step-wise registration fields
+  gender               String?  @map("gender")
+  department           String?  @map("department")
+  yearOfStudy          String?  @map("year_of_study")
+  college              String?  @map("college")
+  collegeLocation      String?  @map("college_location")
+  registrationCode     String?  @unique @map("registration_code")
+  hostelAccommodation  String?  @map("hostel_accommodation")
+  accommodationPaid    Boolean  @default(false) @map("accommodation_paid")
+  termsAccepted        Boolean  @default(false) @map("terms_accepted")
+  referralCode         String?  @map("referral_code")
+  discountAmount       Int      @default(0) @map("discount_amount") // rupees
+  currentStep          Int      @default(1) @map("current_step")
+  ipAddress            String?  @map("ip_address")
+  userAgent            String?  @map("user_agent")
+
   payments             Payment[]
 
   @@map("registrations")
+}
+
+// Referral / discount codes created in the admin console. The code is carried
+// in the public shareable URL (?ref=CODE) and never typed into the form.
+model ReferralCode {
+  id             String   @id @default(cuid()) @map("id")
+  code           String   @unique @map("code")
+  label          String   @default("") @map("label")
+  discountAmount Int      @map("discount_amount") // rupees off the workshop base
+  active         Boolean  @default(true) @map("active")
+  usageCount     Int      @default(0) @map("usage_count")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("referral_codes")
 }
 
 // 6. PAYMENTS TABLE (Razorpay payment records)

@@ -163,38 +163,22 @@ export const registerCandidate = async (userData) => {
 // ==========================================
 export const DEFAULT_UPCOMING_WORKSHOPS = [
   {
-    id: "WS-GENAI-IIT",
+    id: "WS-GENAI-IIT-HYD-NOV28",
     title: "Generative AI Workshop",
-    category: "Generative AI",
-    dates: "November 20-21, 2026",
-    duration: "2-Day Hands-on Workshop",
-    location: "IIT Campus",
+    category: "Generative AI, Campus Immersion",
+    dates: "November 28-29, 2026",
+    duration: "2-Day Offline Workshop",
+    location: "IIT Hyderabad",
     seats: 120,
-    registered: 42,
-    mode: "Offline IIT Campus",
-    speaker: "IncuxAI Senior AI Architects & Google/IIT Research Scholars",
-    description: "Two-day hands-on workshop at IIT Campus. Deep-dive into LLM fine-tuning, prompt engineering pipelines, autonomous agent architectures, retrieval-augmented generation (RAG), and enterprise deployment sandboxes.",
-    status: "Active",
-    isPrimary: true,
-    postedAt: "2026-11-01T09:00:00Z"
-  },
-  {
-    id: "WS-HYBRID-10D",
-    title: "AI Workshop",
-    category: "Combined Virtual & Offline Workshop",
-    dates: "November 24 - December 3, 2026",
-    duration: "10 Days",
-    location: "IIT Campus (Offline) + Virtual Cloud Labs",
-    seats: 150,
-    registered: 34,
-    mode: "Combined Virtual & Offline Workshop",
+    registered: 0,
+    mode: "Offline Campus Immersion",
     fee: 6000,
     isPaid: true,
-    speaker: "IncuxAI Senior Architects, Enterprise Leads & IIT Faculty",
-    description: "10-day comprehensive AI workshop bridging virtual live deep-dives and on-campus physical immersion at IIT Campus. Features Generative AI mastery, LinkedIn personal branding, 2-day in-person IIT lab & networking, hands-on AI Bot building mini-project, and concluding with a grand 24h AI Hackathon.",
+    speaker: "Elan & nVision with IncuxAI mentors and IIT Hyderabad faculty",
+    description: "A two-day beginner-friendly campus immersion at IIT Hyderabad. Learn, explore, build and present with hands-on generative AI tracks, mentor guidance and a mini-project showcase.",
     status: "Active",
-    isPrimary: false,
-    postedAt: "2026-11-16T12:00:00Z"
+    isPrimary: true,
+    postedAt: "2026-11-18T00:00:00Z"
   }
 ];
 
@@ -364,3 +348,80 @@ export const fetchAllPayments = async () => {
     return [];
   }
 };
+
+// ==========================================
+// GEN AI WORKSHOP (NOVEMBER 28-29) STEP FLOW
+// ==========================================
+const jsonRequest = async (url, options = {}) => {
+  const res = await fetch(url, options);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Request failed. Please try again.');
+  return data;
+};
+
+export const fetchGenAiConfig = async () =>
+  jsonRequest(`${API_BASE}/genai/config`);
+
+export const validateGenAiReferral = async (code) =>
+  jsonRequest(`${API_BASE}/genai/referrals/${encodeURIComponent(code)}/validate`);
+
+export const submitGenAiStep1 = async (details) =>
+  jsonRequest(`${API_BASE}/genai/registrations/step1`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(details)
+  });
+
+export const resumeGenAiRegistration = async (email) => {
+  const data = await jsonRequest(
+    `${API_BASE}/genai/registrations/resume?email=${encodeURIComponent(email)}`
+  );
+  return data.registration;
+};
+
+export const fetchGenAiRegistration = async (registrationId) => {
+  const data = await jsonRequest(`${API_BASE}/genai/registrations/${encodeURIComponent(registrationId)}`);
+  return data.registration;
+};
+
+export const submitGenAiStep2 = async (registrationId) =>
+  jsonRequest(`${API_BASE}/genai/registrations/${encodeURIComponent(registrationId)}/step2`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  });
+
+export const submitGenAiStep3 = async (registrationId, details) =>
+  jsonRequest(`${API_BASE}/genai/registrations/${encodeURIComponent(registrationId)}/step3`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(details)
+  });
+
+export const initiateGenAiPayment = async (registrationId) =>
+  jsonRequest(`${API_BASE}/genai/registrations/${encodeURIComponent(registrationId)}/payment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  });
+
+// ==========================================
+// ADMIN REFERRAL CODES
+// ==========================================
+export const fetchReferralCodes = async () => {
+  const data = await jsonRequest(`${API_BASE}/referrals`, { headers: adminHeaders() });
+  return data.referrals || [];
+};
+
+export const createReferralCode = async (details) =>
+  jsonRequest(`${API_BASE}/referrals`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...adminHeaders() },
+    body: JSON.stringify(details)
+  });
+
+export const deleteReferralCode = async (code) =>
+  jsonRequest(`${API_BASE}/referrals/${encodeURIComponent(code)}`, {
+    method: 'DELETE',
+    headers: adminHeaders()
+  });

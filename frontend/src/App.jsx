@@ -16,10 +16,9 @@ import Footer from './components/Footer';
 import FloatingConnectWidget from './components/FloatingConnectWidget';
 import CustomCursor from './components/CustomCursor';
 import PortalModal from './components/PortalModal';
-import UpcomingWorkshopPopup from './components/UpcomingWorkshopPopup';
 import Terms from './components/Pages/Terms';
 import PrivacyPolicy from './components/Pages/PrivacyPolicy';
-import AiWorkshopDetail from './components/Pages/AiWorkshopDetail';
+import GenAiWorkshopRegistration from './components/GenAiWorkshopRegistration';
 import AdminPage from './components/AdminPage';
 import PaymentPage from './components/PaymentPage';
 import PaymentSuccess from './components/PaymentSuccess';
@@ -38,11 +37,13 @@ export default function App() {
   const [introFinished, setIntroFinished] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPortalOpen, setIsPortalOpen] = useState(false);
-  const [isUpcomingPopupOpen, setIsUpcomingPopupOpen] = useState(false);
   const [portalInitialWorkshop, setPortalInitialWorkshop] = useState(null);
   const [currentPage, setCurrentPage] = useState(() => {
-    if (typeof window !== 'undefined' && /^\/ai-workshop\/?$/i.test(window.location.pathname)) {
-      return 'ai-workshop';
+    if (
+      typeof window !== 'undefined' &&
+      /^\/(ai-workshop|gen-ai-workshop)\/?$/i.test(window.location.pathname)
+    ) {
+      return 'gen-ai-workshop';
     }
     return 'home';
   });
@@ -92,8 +93,8 @@ export default function App() {
   // Listen for browser back/forward buttons
   useEffect(() => {
     const handlePopState = () => {
-      if (/^\/ai-workshop\/?$/i.test(window.location.pathname)) {
-        setCurrentPage('ai-workshop');
+      if (/^\/(ai-workshop|gen-ai-workshop)\/?$/i.test(window.location.pathname)) {
+        setCurrentPage('gen-ai-workshop');
       } else {
         setCurrentPage('home');
       }
@@ -114,11 +115,11 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const navigateToAiWorkshop = () => {
-    setCurrentPage('ai-workshop');
+  const navigateToGenAiWorkshop = () => {
+    setCurrentPage('gen-ai-workshop');
     setIsMenuOpen(false);
-    if (window.location.pathname !== '/ai-workshop') {
-      window.history.pushState({}, '', '/ai-workshop');
+    if (window.location.pathname !== '/gen-ai-workshop') {
+      window.history.pushState({}, '', '/gen-ai-workshop');
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -188,19 +189,13 @@ export default function App() {
         initialWorkshopId={portalInitialWorkshop}
       />
 
-      {/* Real Upcoming Workshop Announcement Popup Modal */}
-      <UpcomingWorkshopPopup
-        isOpen={isUpcomingPopupOpen}
-        onClose={() => setIsUpcomingPopupOpen(false)}
-      />
-
       {/* Page Content: Main Landing, Detailed Workshop, or Legal Pages */}
       {currentPage === 'terms' ? (
         <Terms />
       ) : currentPage === 'privacy' ? (
         <PrivacyPolicy />
-      ) : currentPage === 'ai-workshop' ? (
-        <AiWorkshopDetail onBackHome={navigateHome} />
+      ) : currentPage === 'gen-ai-workshop' ? (
+        <GenAiWorkshopRegistration onBackHome={navigateHome} />
       ) : (
         <>
           {/* Main Content: 11 Sections in Exact Fixed Order + Live Registration Portal */}
@@ -216,9 +211,7 @@ export default function App() {
 
             {/* Live Workshop Registration & Location Request Portal Section */}
             <UpcomingWorkshopsSection
-              onOpenPortal={openPortal}
-              onOpenUpcomingPopup={() => setIsUpcomingPopupOpen(true)}
-              onOpenAiWorkshopPage={navigateToAiWorkshop}
+              onOpenAiWorkshopPage={navigateToGenAiWorkshop}
             />
 
             {/* Section 4: Industry Connections (8 typographic wordmarks + official logos) */}

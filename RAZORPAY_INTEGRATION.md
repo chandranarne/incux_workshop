@@ -217,7 +217,7 @@ header.payload.signature
   },
   "metadata": {
     "registrationId": "REG-1794990319437",
-    "workshopTitle": "AI Workshop",
+    "workshopTitle": "Generative AI Workshop",
     "source": "workshops_incuxai_com"
   },
   "callback_url": "https://workshops.incuxai.com/api/payments/webhook"
@@ -243,12 +243,14 @@ recompute HMAC over `header + "." + body`, compare, then parse the payload.
 ### Checkout URL
 
 ```
-https://www.incuxaieducationtrust.org/pay?token=<JWT>&redirect=<RETURN_URL>&app=workshops
+https://www.incuxaieducationtrust.org/pay?token=<JWT>&app=workshops&redirect=<RETURN_URL>
 ```
 
-All three query values are URL-encoded. `redirect` is the browser return URL;
-`callback_url` inside the token is the server webhook. They are different and
-both are required.
+All three query values are URL-encoded. The parameter order is `token`, `app`,
+then `redirect`. `redirect` is the browser return URL; `callback_url` inside the
+token is the server webhook. They are different and both are required. For the
+GenAI workshop the return URL also carries `registration=<REGISTRATION_ID>` so
+the registration screen can show the confirmed status.
 
 ### Webhook signature
 
@@ -272,35 +274,60 @@ with HTTP 401 if any field does not match.
 
 ## 6. The complete payment flow
 
-1. User opens `/payment?workshopId=WS-HYBRID-10D&amount=6000&workshopTitle=AI%20Workshop`
-   from the workshop detail page.
-2. `PaymentPage` shows a personal-details form: full name and email required,
-   phone and institution optional.
-3. On submit, the frontend calls `POST /api/payments/initiate` with workshop id,
-   amount in rupees, title, and payer fields.
-4. The backend multiplies rupees by 100 to get paise, creates or reuses a
-   `Registration` with `paymentStatus: pending`, and creates a `Payment` with
-   `status: pending`. The `gatewayResponse` JSON stores `transactionId`,
-   `trustUrl`, and the signed `token`.
-5. The backend signs the token and returns `trustUrl` plus ids to the frontend.
-6. The frontend redirects the browser with `window.location.assign(data.trustUrl)`.
-7. The trust verifies the token against the `workshops` secret, creates a
-   Razorpay order, and opens its checkout page.
-8. The user pays ₹6,000 in the Razorpay modal.
-9. The trust verifies the Razorpay signature, marks its order paid, and issues a
-   single-use `success_token` that expires after 30 minutes.
-10. The trust POSTs a signed `payment.captured` webhook to
+The current paid workshop is the single Generative AI Workshop,
+`WS-GENAI-IIT-HYD-NOV28`, on November 28-29, 2026 at IIT Hyderabad. Its entry
+point is `/gen-ai-workshop`, reached from the "Register for Workshop" button on
+the home page. Legacy `/ai-workshop` routes to the same page.
+
+1. The user opens `/gen-ai-workshop`. An optional `?ref=CODE` in the URL applies
+   an admin-created referral discount. There is no coupon input on the form.
+2. Step 1 collects full name, gender, email, phone, department, year of study,
+   college and college location. `POST /api/genai/registrations/step1` creates
+   or resumes a `Registration` with `paymentStatus: pending` and `currentStep: 1`.
+3. Step 2 shows what is included and calls
+   `POST /api/genai/registrations/:id/step2` to advance to step 3.
+4. Step 3 requires a hostel accommodation choice. Choosing "Yes" reveals the
+   accommodation payment link and WhatsApp group and asks whether the
+   accommodation payment was completed. The backend refuses step 3 with HTTP 400
+   unless accommodation is paid, so the user cannot reach the workshop payment
+   step otherwise. Choosing "No" has no extra gate.
+5. Step 4 shows a trusted quote and the user clicks the payment button. The
+   frontend calls `POST /api/genai/registrations/:id/payment` with no amount.
+6. The backend recomputes the amount from `GENAI_BASE_PRICE` (₹6,000) minus the
+   stored referral discount, then adds a 2% platform fee. With a ₹100 discount
+   the total is ₹6,018, signed as `601800` paise. The browser never supplies the
+   amount.
+7. `createTrustPaymentSession` signs the token, stores a `Payment` with
+   `status: pending` and the `transactionId`, `trustUrl` and `token` in
+   `gatewayResponse`, and returns `trustUrl` with the registration id in the
+   return URL.
+8. The frontend redirects the browser with `window.location.assign(data.trustUrl)`.
+9. The trust verifies the token against the `workshops` secret, creates a
+   Razorpay order, and opens its checkout page at `/pay`.
+10. The trust verifies the Razorpay signature, marks its order paid, and issues a
+    single-use `success_token` that expires after 30 minutes.
+11. The trust POSTs a signed `payment.captured` webhook to
     `/api/payments/webhook`. The backend verifies the signature and calls
-    `markPaymentPaid`, which sets `payments.status = paid`,
+    `markPaymentPaid`, which sets `payments.status = paid` and
     `registrations.paymentStatus = paid`, and increments
     `upcoming_workshops.registered` once.
-11. The trust redirects the browser to
-    `/payment/success?status=success&token=<SUCCESS_TOKEN>`.
-12. `PaymentSuccess` calls `GET /api/payments/confirm?reference=<SUCCESS_TOKEN>`.
-13. The backend POSTs `{ reference }` to trust `/api/payments/confirm`, receives
+12. The trust redirects the browser to
+    `/payment/success?status=success&token=<SUCCESS_TOKEN>&registration=<ID>`.
+13. `PaymentSuccess` calls `GET /api/payments/confirm?reference=<SUCCESS_TOKEN>`.
+14. The backend POSTs `{ reference }` to trust `/api/payments/confirm`, receives
     the transaction details, and applies the same idempotent update.
-14. The user sees the confirmation screen. The admin can see the payment in the
-    `/admin` Payments tab.
+15. The "Back to Registration" button returns to
+    `/gen-ai-workshop?registration=<ID>` and shows the confirmed status. The
+    admin can see the payment in the `/admin` Payments tab.
+
+Cancelled and failed paths:
+
+- Cancelled: trust redirects with `status=cancelled`; no amount charged; DB stays
+  `pending`.
+- Failed: trust redirects with `status=failed&error=<message>`; no amount charged;
+  DB stays `pending`.
+- The user can retry from step 4 with a fresh initiate call and a new
+  transaction id.
 
 Cancelled and failed paths:
 
@@ -318,21 +345,35 @@ All routes are defined in `backend/server.js`.
 
 | Route | Method | Auth | Purpose |
 | :--- | :--- | :--- | :--- |
-| `/api/payments/initiate` | POST | Public | Create pending registration and payment, sign token, return `trustUrl` |
+| `/api/genai/config` | GET | Public | Workshop id, dates, base price, fee percent, accommodation links, quote |
+| `/api/genai/referrals/:code/validate` | GET | Public | Validate an admin-created code and return the discounted quote |
+| `/api/genai/registrations/step1` | POST | Public | Create or resume a GenAI registration from the 8 required fields |
+| `/api/genai/registrations/resume?email=` | GET | Public | Find a registration by email to resume |
+| `/api/genai/registrations/:id` | GET | Public | Load a registration and its quote |
+| `/api/genai/registrations/:id/step2` | POST | Public | Advance to step 3 |
+| `/api/genai/registrations/:id/step3` | POST | Public | Save accommodation choice and terms; enforces the accommodation gate |
+| `/api/genai/registrations/:id/payment` | POST | Public | Compute the trusted quote and return a signed checkout URL |
+| `/api/referrals` | GET / POST / DELETE | Admin token | List, create and remove referral codes with their discount |
+| `/api/payments/initiate` | POST | Public | Legacy entry point; amount comes from the request, unlike the GenAI route |
 | `/api/payments/webhook` | POST | HMAC signature | Trust server-to-server `payment.captured` notification |
 | `/api/payments/confirm` | GET | Public | Redeem `success_token` with trust and apply idempotent update |
 | `/api/payments/status/:registrationId` | GET | Public | Latest payment for a registration |
 | `/api/payments/all` | GET | Admin token | List all payments with registration data |
 
-`initiate` request body:
+`POST /api/genai/registrations/:id/payment` takes no amount in its body. The
+backend derives everything from the stored registration and configuration. Its
+response includes `trustUrl`, `token`, `appId`, `registrationId`, `paymentId`,
+`transactionId`, `amount` (paise), `currency` and the full `quote`.
+
+Legacy `initiate` request body (kept for existing callers):
 
 ```json
 {
   "registrationId": "optional existing id",
-  "workshopId": "WS-HYBRID-10D",
+  "workshopId": "WS-GENAI-IIT-HYD-NOV28",
   "amount": 6000,
   "currency": "INR",
-  "workshopTitle": "AI Workshop",
+  "workshopTitle": "Generative AI Workshop",
   "payerName": "Candidate Name",
   "payerEmail": "candidate@example.com",
   "payerPhone": "9876543210",
@@ -360,27 +401,32 @@ Routing is handled in `frontend/src/App.jsx`.
 
 | Route | Component | Purpose |
 | :--- | :--- | :--- |
-| `/payment` | `PaymentPage` | Personal-details form, initiate call, redirect to trust, handles direct return tokens |
-| `/payment/success` | `PaymentSuccess` | Confirms success token, shows receipt, handles cancelled and failed |
-| `/payment/cancel` | `PaymentCancel` | Cancelled or failed payment help page |
+| `/gen-ai-workshop` | `GenAiWorkshopRegistration` | Four-step registration page, accommodation gate and trusted payment |
+| `/ai-workshop` | `GenAiWorkshopRegistration` | Legacy alias for the same page |
+| `/payment/success` | `PaymentSuccess` | Confirms success token, shows receipt, returns to the registration |
+| `/payment/cancel` | `PaymentCancel` | Cancelled or failed payment help page with a return to registration |
 
-`PaymentPage` reads `workshopId`, `amount`, and `workshopTitle` from the query
-string. It calls `initiatePayment(...)` from `frontend/src/services/api.js`, then
-redirects to `data.trustUrl`.
+`GenAiWorkshopRegistration` reads `?ref=CODE` and `?registration=ID` from the URL,
+calls the `/api/genai/*` helpers from `frontend/src/services/api.js`, and
+redirects to `data.trustUrl` from the payment route.
 
-`PaymentSuccess` reads `status` and `token` (or `reference`) and calls
-`confirmPayment(reference)`.
+`PaymentSuccess` reads `status`, `token` (or `reference`) and `registration`,
+calls `confirmPayment(reference)`, then offers "Back to Registration" which
+returns to `/gen-ai-workshop?registration=<ID>`.
 
-The paid workshop entry point is `AiWorkshopDetail.jsx`, whose register buttons
-navigate to `/payment` with the ₹6,000 parameters. It must not open a
-candidate or guest portal.
+The "Register for Workshop" button in `UpcomingWorkshopsSection` and the "Full
+details" link both open `/gen-ai-workshop`, not the guest or candidate portal.
+The section is a text list, not cards. There is no auto-opening popup.
 
 Service helpers in `frontend/src/services/api.js`:
 
-- `initiatePayment(registrationId, workshopId, amount, workshopTitle, payerName, payerEmail, payerPhone, candidateInstitution)`
-- `confirmPayment(reference)`
-- `fetchPaymentStatus(registrationId)`
-- `fetchAllPayments()` with admin headers
+- `fetchGenAiConfig()`, `validateGenAiReferral(code)`
+- `submitGenAiStep1(details)`, `resumeGenAiRegistration(email)`,
+  `fetchGenAiRegistration(id)`, `submitGenAiStep2(id)`, `submitGenAiStep3(id, details)`
+- `initiateGenAiPayment(id)`
+- `fetchReferralCodes()`, `createReferralCode(details)`, `deleteReferralCode(code)` (admin)
+- `initiatePayment(...)` (legacy), `confirmPayment(reference)`,
+  `fetchPaymentStatus(id)`, `fetchAllPayments()` (admin)
 
 ---
 
@@ -395,6 +441,12 @@ Prisma schema: `backend/prisma/schema.prisma`. Database: Railway PostgreSQL.
 | `id` | e.g. `REG-<timestamp>` |
 | `workshopId`, `workshopTitle`, category, dates, location, mode | Workshop snapshot |
 | `candidateName`, `candidateEmail`, `candidatePhone`, `candidateInstitution` | Payer details |
+| `gender`, `department`, `yearOfStudy`, `college`, `collegeLocation` | GenAI step 1 fields |
+| `registrationCode` | Unique reference such as `GAIC6K_20261118_AB12CD34` |
+| `hostelAccommodation`, `accommodationPaid`, `termsAccepted` | Step 3 gate |
+| `referralCode`, `discountAmount` | Admin referral code and the rupee discount applied |
+| `currentStep` | `_1` to `_4`, used to resume the form |
+| `ipAddress`, `userAgent` | Audit metadata |
 | `registeredAt` | Timestamp |
 | `status` | Default `Confirmed` |
 | `paymentStatus` | `pending`, `paid`, `failed` |
@@ -416,7 +468,25 @@ Prisma schema: `backend/prisma/schema.prisma`. Database: Railway PostgreSQL.
 **`upcoming_workshops`**
 
 `fee` is in rupees, `isPaid` marks paid workshops, `registered` counts confirmed
-seats. The ₹6,000 workshop is `WS-HYBRID-10D`.
+seats. The only workshop is `WS-GENAI-IIT-HYD-NOV28`, fee ₹6,000, on
+November 28-29, 2026 at IIT Hyderabad. All historical workshops and
+registrations were removed when this workshop was installed.
+
+**`referral_codes`**
+
+| Column | Notes |
+| :--- | :--- |
+| `id` | Primary key |
+| `code` | Unique, uppercased, 3 to 40 letters, numbers or hyphens |
+| `label` | Optional admin note |
+| `discountAmount` | Rupee discount off the ₹6,000 base |
+| `active` | Boolean, only active codes validate |
+| `usageCount` | Incremented when a code is used in step 1 |
+| `createdAt` | Timestamp |
+
+Codes are created in the `/admin` Referral Codes tab and shared through
+`/gen-ai-workshop?ref=CODE`. The platform fee is recalculated after the
+discount, so a ₹100 discount with a 2% fee gives a ₹6,018 total.
 
 **`markPaymentPaid` behavior**
 
@@ -454,25 +524,29 @@ Because of this, never remove the `status === 'paid'` guard or replace
 
 Current implementation:
 
-- `AiWorkshopDetail.jsx` passes `amount=6000` in the URL.
-- `PaymentPage.jsx` parses it and sends it to `/api/payments/initiate`.
-- The backend does `Math.round(amount * 100)` and signs that value.
+- `POST /api/genai/registrations/:id/payment` accepts no amount from the browser.
+- The backend reads `GENAI_BASE_PRICE` (₹6,000) and the registration's stored
+  `discountAmount`, subtracts the discount and adds
+  `GENAI_PLATFORM_FEE_PERCENT` (2%) on the discounted base.
+- `calculateGenAiQuote` returns the base, discount, discounted base, platform
+  fee, percent, total and currency. `createTrustPaymentSession` signs
+  `total * 100` paise.
+- The legacy `POST /api/payments/initiate` still accepts a rupee amount from the
+  caller for backwards compatibility. New forms must not use it.
 
-This works, but it trusts a client-supplied amount. The documented security rule
-is to derive the amount server-side. When adding a new paid form, follow the
-hardened pattern:
+This follows the documented security rule: derive the amount server-side and
+never accept a price from the browser. When adding a new paid form, follow the
+same pattern, for example:
 
 ```js
-// Preferred: look up the trusted price by workshopId and ignore client amount.
 const workshop = await prisma.upcomingWorkshop.findUnique({ where: { id: workshopId } });
 if (!workshop?.isPaid) return res.status(400).json({ error: 'Workshop is not paid.' });
 const amountInPaise = workshop.fee * 100; // fee is stored in rupees
 ```
 
-For the existing ₹6,000 flow, a safe future change is to compute `amountInPaise`
-from `upcoming_workshops.fee` using `workshopId`, and only use the request amount
-as a fallback for legacy frontend-only workshops. Do not make this change
-without re-running the verification checklist in section 14.
+The legacy `initiate` route is the only remaining caller-supplied-amount path.
+Do not build a new form on it; use the trusted GenAI route as the model. Any
+change to amount handling requires re-running the verification in section 14.
 
 ---
 
@@ -530,40 +604,43 @@ DO NOT:
 ### Local
 
 1. Start backend with `npm run dev` and a valid `DATABASE_URL`.
-2. Start frontend with `npm run dev` and `VITE_API_BASE=http://localhost:5000/api`.
-3. Open the paid workshop detail page and click Register.
-4. Confirm the personal-details form appears, not a guest portal.
-5. Submit with test data and confirm the browser goes to the trust `/pay` page.
-6. Use a small test amount if available, otherwise use the production checks below.
+2. Start frontend with `npm run dev`. The same-origin `/api` proxy handles calls.
+3. Open `/gen-ai-workshop` and confirm the four-step form appears, not a guest
+   or candidate portal.
+4. Submit step 1 with test data, then advance through steps 2, 3 and 4.
+5. With accommodation set to "Yes" and "No, not yet", confirm step 3 is blocked.
+6. On step 4 confirm the trusted amount, then check the browser goes to the
+   trust `/pay` page with `app=workshops` and `registration` in the return URL.
+7. Clear any test registrations, payments and referral codes afterwards so the
+   production table stays clean.
 
 ### Production checks already performed
 
 - `GET https://workshops.incuxai.com/api/health` returns HTTP 200.
-- `POST /api/payments/initiate` returns HTTP 200 with `appId: workshops`,
-  `amount: 600000`, and a URL beginning
-  `https://www.incuxaieducationtrust.org/pay?`.
+- `GET /api/workshops/upcoming` returns only `WS-GENAI-IIT-HYD-NOV28`.
+- `GET /api/genai/config` returns `basePrice: 6000` and `platformFeePercent: 2`.
+- Admin `/api/referrals` lists codes created in the `/admin` Referral Codes tab.
+- A step 3 request with `hostelAccommodation: 'Yes'` and unpaid accommodation
+  returns HTTP 400.
+- A trusted payment with a ₹100 discount signs `601800` paise, uses `/pay`,
+  `app=workshops`, and carries `registration=<ID>` in the return URL.
 - The generated token verifies against the trust's stored `workshops` secret.
 - `https://www.incuxaieducationtrust.org/pay?app=workshops` returns HTTP 200.
 
 ### Reusable verification commands
 
-Health:
+Health, workshops, config and referral share links:
 
 ```powershell
 Invoke-RestMethod https://workshops.incuxai.com/api/health
+Invoke-RestMethod https://workshops.incuxai.com/api/workshops/upcoming
+Invoke-RestMethod https://workshops.incuxai.com/api/genai/config
 ```
 
-Initiate:
+Trusted quote check with a discount, after creating a code in `/admin`:
 
 ```powershell
-$body = @{
-  workshopId='WS-HYBRID-10D'; amount=6000; currency='INR';
-  workshopTitle='AI Workshop'; payerName='Test User';
-  payerEmail='test@example.com'; payerPhone='9999999999'
-} | ConvertTo-Json
-Invoke-RestMethod -Method Post `
-  -Uri https://workshops.incuxai.com/api/payments/initiate `
-  -Body $body -ContentType 'application/json'
+Invoke-RestMethod https://workshops.incuxai.com/api/genai/referrals/TESTREF100/validate
 ```
 
 Webhook replay check (use a real captured transaction and a correctly signed
@@ -576,8 +653,12 @@ Database check in Railway Postgres:
 SELECT id, "registrationId", amount, status, "gatewayResponse"
 FROM payments ORDER BY created_at DESC LIMIT 10;
 
-SELECT id, "paymentStatus" FROM registrations
-WHERE "workshopId" = 'WS-HYBRID-10D';
+SELECT id, "paymentStatus", "currentStep", "referralCode", "discountAmount"
+FROM registrations WHERE "workshopId" = 'WS-GENAI-IIT-HYD-NOV28';
+
+SELECT code, "discountAmount", "usageCount" FROM referral_codes;
+
+SELECT id, dates, fee FROM upcoming_workshops;
 ```
 
 ---
@@ -606,26 +687,31 @@ Use this for every new paid form, program, or workshop. Do not skip items.
 
 - [ ] Define the product or workshop id and confirm it exists in
       `upcoming_workshops` (or add it) with `isPaid = true` and `fee` in rupees.
-- [ ] Decide the price. For the existing AI Workshop it is ₹6,000.
+- [ ] Decide the price. For the GenAI Workshop it is ₹6,000 plus a 2% platform
+      fee, less any admin referral discount applied to the base.
 - [ ] Derive the amount server-side from the trusted product record. Do not
       accept the price from the browser for new forms.
-- [ ] Convert correctly: `amountInPaise = feeInRupees * 100`.
-- [ ] Enforce a minimum of 100 paise.
+- [ ] Convert correctly: `amountInPaise = totalRupees * 100`.
+- [ ] Enforce a positive amount.
 
 ### B. User-facing form
 
 - [ ] Route the entry button to a dedicated form page, not a guest or candidate
-      portal. Existing example: `/payment?workshopId=...&amount=...&workshopTitle=...`.
-- [ ] Collect, at minimum: full name and email address.
-- [ ] Collect optional but recommended: phone and institution.
+      portal. Current example: `/gen-ai-workshop`.
+- [ ] Define the step layout and persist `currentStep` so a user can resume.
+- [ ] Collect the required registration fields (for GenAI: full name, gender,
+      email, phone, department, year of study, college and college location).
 - [ ] Validate client-side: required fields, valid email, phone format if used.
 - [ ] Validate server-side again: never rely only on browser validation.
 - [ ] Normalize email with `trim().toLowerCase()` before storage and lookup.
-- [ ] Show the amount clearly on the form.
-- [ ] Button text should say it goes to a secure payment, for example
-      "Proceed to Secure Payment".
+- [ ] Show a clear quote including base, discount, platform fee and total.
+- [ ] If a discount is supported, derive it from `?ref=CODE` validated against
+      `referral_codes`. Do not show a coupon input on the form.
+- [ ] If accommodation is involved, make the choice mandatory and gate progress
+      on the separate payment being confirmed.
+- [ ] Button text should say it goes to a secure payment.
 - [ ] Do not render any card fields or Razorpay script on this site.
-- [ ] Keep the popup/page inside the viewport. No popups on load.
+- [ ] Keep the page inside the viewport. No popups on load.
 - [ ] No emojis, sparkles, or decorative dashes in UI copy.
 
 ### C. Registration and payment rows
@@ -645,10 +731,11 @@ Use this for every new paid form, program, or workshop. Do not skip items.
 - [ ] Payload includes `transaction_id`, `amount`, `currency`, `customer`,
       `metadata.registrationId`, and `callback_url`.
 - [ ] `callback_url` is the webhook URL, not the browser return URL.
-- [ ] Build the checkout URL:
-      `https://www.incuxaieducationtrust.org/pay?token=<JWT>&redirect=<RETURN_URL>&app=workshops`.
-- [ ] URL-encode `token` and `redirect`.
-- [ ] `redirect` is `PAYMENT_RETURN_URL` (`/payment/success`).
+- [ ] Build the checkout URL in `token&app&redirect` order:
+      `https://www.incuxaieducationtrust.org/pay?token=<JWT>&app=workshops&redirect=<RETURN_URL>`.
+- [ ] URL-encode `token`, `app` and `redirect`.
+- [ ] `redirect` is `PAYMENT_RETURN_URL` (`/payment/success`) plus any
+      `registration=<ID>` context the return page needs.
 - [ ] Confirm the app id is `workshops` in both the env and the URL.
 
 ### E. Return handling
@@ -658,6 +745,8 @@ Use this for every new paid form, program, or workshop. Do not skip items.
 - [ ] Success page handles `status=failed&error=...` and shows the error.
 - [ ] Success page handles a bare `status` with no token by trusting the webhook.
 - [ ] Provide `/payment/cancel` help page for cancelled or failed payments.
+- [ ] Return the user to `/gen-ai-workshop?registration=<ID>` so the saved step
+      and payment status are visible.
 - [ ] Give the user a retry path that creates a new transaction id.
 
 ### F. Webhook and confirmation
@@ -747,12 +836,14 @@ All required tables and columns already exist.
 | `backend/prisma/schema.prisma` | Payment, Registration, UpcomingWorkshop models |
 | `backend/railway.json` | Start command and healthcheck |
 | `backend/nixpacks.toml` | Build phase Prisma generation |
-| `frontend/src/services/api.js` | `initiatePayment`, `confirmPayment`, status helpers |
-| `frontend/src/components/PaymentPage.jsx` | Personal-details form and redirect |
-| `frontend/src/components/PaymentSuccess.jsx` | Browser return confirmation |
+| `frontend/src/services/api.js` | GenAI step helpers, referral admin helpers, `initiatePayment`, `confirmPayment`, status helpers |
+| `frontend/src/components/GenAiWorkshopRegistration.jsx` | Four-step registration, accommodation gate and trusted checkout |
+| `frontend/src/components/UpcomingWorkshopsSection.jsx` | Single-workshop text list and registration CTA |
+| `frontend/src/components/PortalModal.jsx` | Admin Payments and Referral Codes tabs |
+| `frontend/src/components/PaymentSuccess.jsx` | Browser return confirmation and back to registration |
 | `frontend/src/components/PaymentCancel.jsx` | Cancelled or failed help page |
-| `frontend/src/components/Pages/AiWorkshopDetail.jsx` | ₹6,000 entry point |
-| `frontend/src/App.jsx` | Payment route declarations |
+| `frontend/src/components/Navbar.jsx`, `MenuOverlay.jsx` | Admin console links for desktop and mobile |
+| `frontend/src/App.jsx` | `/gen-ai-workshop`, `/ai-workshop` and payment route declarations |
 | `frontend/vite.config.js` | Same-origin `/api` proxy |
 | `PAYMENT_CONFIG.md` | Two-site app and secret reference |
 | `PAYMENT_INTEGRATION_PLAN.md` | Implementation summary |
