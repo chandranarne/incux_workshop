@@ -1,172 +1,116 @@
-# Payment Gateway Integration - Implementation Plan
+# Payment Gateway Integration — Implementation Summary
 
-## Overview
-Integrate Razorpay payment gateway (via IncuXai Education Trust) for paid workshop registrations on workshops.incuxai.com. Students pay ₹6,000, are redirected to the trust platform for payment, and return to the website after success. Payment status is stored in Railway PostgreSQL and visible to admins.
+## Architecture
 
-## Prerequisites (from incuxai.com / incux_educational_trust)
+**Two services, separate deployments:**
 
-| Item | Source | Where to get |
-|------|--------|--------------|
-| Razorpay Key ID | `incuxai.com` PHP files | `incuxai.com` website PHP source |
-| Razorpay Key Secret | `incuxai.com` PHP files | `incuxai.com` website PHP source |
-| Webhook Secret | `incux_educational_trust` folder | Trust platform dashboard |
-| Return URLs | `incuxai.com` integration docs | Trust platform settings |
+| Service | Role | Technology |
+|---------|------|------------|
+| `workshops.incuxai.com` (frontend + backend) | Workshop listings, registration, payment initiation/confirmation | Vite + Express + Prisma + Railway PostgreSQL |
+| `pay.incuxaieducationtrust.org` (trust platform) | Razorpay checkout, payment verification, webhook | Node.js + Express + Prisma + Railway PostgreSQL |
 
-> **Action needed**: Share the `incux_educational_trust` folder contents and the PHP secret codes from `incuxai.com` so I can hardcode the correct keys. Until then, env vars are used as placeholders.
+## Payment Flow
 
-## Database Changes (Railway PostgreSQL via Prisma)
-
-### New model: `Payment`
-```prisma
-model Payment {
-  id               String   @id @map("id")
-  registrationId   String   @map("registrationId")
-  razorpayOrderId  String?  @map("razorpayOrderId")
-  razorpayPaymentId String? @map("razorpayPaymentId")
-  razorpaySignature String? @map("razorpaySignature")
-  amount           Int      @map("amount")        // in paise (₹6000 = 600000)
-  currency         String   @default("INR") @map("currency")
-  status           String   @default("pending") @map("status") // pending, paid, failed, refunded
-  gatewayResponse  Json?    @map("gatewayResponse")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
-
-  registration     Registration @relation(fields: [registrationId], references: [id])
-
-  @@map("public.payments")
-}
+```
+1. User clicks "Pay ₹6,000 & Register" on workshops.incuxai.com
+2. Frontend → POST /api/payments/initiate (backend)
+3. Backend creates Registration (pending) + Payment (pending), signs HMAC-SHA256 token
+4. Backend returns trust platform URL
+5. Frontend redirects user to trust platform pay.html?token=XXX
+6. Trust platform creates Razorpay order, user pays ₹6,000
+7. Trust platform verifies Razorpay signature, issues success_token
+8. Trust platform redirects back to workshops.incuxai.com/payment/success?status=success&token=XXX
+9. Frontend → GET /api/payments/confirm?reference=XXX (backend)
+10. Backend verifies with trust platform /api/payments/confirm
+11. Backend updates Payment + Registration to "paid" in Railway PostgreSQL
+12. User sees confirmation page
 ```
 
-### Updated model: `UpcomingWorkshop`
-Add `fee` and `isPaid` fields:
-```prisma
-model UpcomingWorkshop {
-  ...
-  fee              Int      @default(0) @map("fee")       // in rupees, 0 = free
-  isPaid           Boolean  @default(false) @map("isPaid")
-  ...
-}
+## Backend Routes (`backend/server.js`)
+
+| Route | Method | Auth | Purpose |
+|-------|--------|------|---------|
+| `/api/payments/initiate` | POST | Public | Sign token, create Registration + Payment, return trust URL |
+| `/api/payments/confirm` | GET | Public | Verify success_token with trust platform, update DB to paid |
+| `/api/payments/status/:id` | GET | Public | Check payment status for a registration |
+| `/api/payments/all` | GET | Admin token | List all payments (admin dashboard) |
+
+## Database Models (Prisma, Railway PostgreSQL)
+
+- **Payment**: id, registrationId, razorpayOrderId, razorpayPaymentId, razorpaySignature, amount (paise), currency, status, gatewayResponse, timestamps
+- **UpcomingWorkshop**: added `fee` (₹, default 0), `isPaid` (boolean)
+- **Registration**: added `paymentStatus` (pending/paid/failed)
+
+## Environment Variables
+
+### Backend (Railway Variables)
 ```
-
-### Updated model: `Registration`
-Add `paymentStatus` field:
-```prisma
-model Registration {
-  ...
-  paymentStatus    String   @default("pending") @map("paymentStatus") // pending, paid, failed
-  ...
-}
-```
-
-## Backend Changes (`backend/server.js`)
-
-### New routes (all under `/api/payments`)
-
-| Method | Route | Auth | Description |
-|--------|-------|------|-------------|
-| POST | `/api/payments/create-order` | Public | Create Razorpay order for workshop registration |
-| POST | `/api/payments/verify` | Public | Verify Razorpay payment signature |
-| POST | `/api/payments/webhook` | Public (webhook secret) | Razorpay webhook for async payment status |
-| GET | `/api/payments/status/:registrationId` | Public | Get payment status for a registration |
-| GET | `/api/payments/all` | Admin token | List all payments (admin view) |
-
-### Environment variables needed
-```
-RAZORPAY_KEY_ID=rzp_live_XXXXXXXXXXXXXX
-RAZORPAY_KEY_SECRET=XXXXXXXXXXXXXXXXXXXXXXXX
-RAZORPAY_WEBHOOK_SECRET=whsec_XXXXXXXXXXXXXX
+TRUST_PAYMENT_SECRET=<secret from trust platform payment-apps.js>
+TRUST_PAYMENT_URL=https://pay.incuxaieducationtrust.org
+TRUST_PAYMENT_APP_ID=incuxai
 PAYMENT_RETURN_URL=https://workshops.incuxai.com/payment/success
 PAYMENT_CANCEL_URL=https://workshops.incuxai.com/payment/cancel
+DATABASE_URL=<Railway PostgreSQL connection string>
 ```
 
-## Frontend Changes
-
-### New component: `frontend/src/components/PaymentPage.jsx`
-- Accepts `registrationId` and `amount` as props/query params
-- Creates Razorpay order via `/api/payments/create-order`
-- Opens Razorpay checkout (redirects to trust platform)
-- Handles success callback → redirects to `/payment/success`
-- Handles failure → redirects to `/payment/cancel`
-
-### New page: `frontend/src/components/PaymentSuccess.jsx`
-- Shows payment confirmation
-- Displays registration details
-- Link back to home
-
-### New page: `frontend/src/components/PaymentCancel.jsx`
-- Shows payment failed message
-- Retry payment option
-
-### Updated: `frontend/src/components/UpcomingWorkshopsSection.jsx`
-- Show "Pay ₹6,000 & Register" button for paid workshops
-- Show "Register Free" for free workshops
-- Pass `fee` and `isPaid` from workshop data
-
-### Updated: `frontend/src/components/PortalModal.jsx`
-- Payment status shown in "My Enrolled Workshops"
-- Link to payment page if payment pending
-
-### New API service: `frontend/src/services/api.js`
-```js
-export const createPaymentOrder = async (registrationId, amount) => { ... }
-export const verifyPayment = async (paymentData) => { ... }
-export const fetchPaymentStatus = async (registrationId) => { ... }
+### Frontend (.env, gitignored)
+```
+VITE_API_BASE=/api
+VITE_TRUST_PAYMENT_URL=https://pay.incuxaieducationtrust.org
 ```
 
-### New route in `frontend/src/App.jsx`
-- `/payment` → `PaymentPage`
-- `/payment/success` → `PaymentSuccess`
-- `/payment/cancel` → `PaymentCancel`
+## Setup Steps (Required Before Deploy Works)
 
-## Railway Database Authentication
+### 1. Register workshops app on trust platform
+Run on the `Incuxai_education_trust` backend:
+```bash
+node src/cli/payment-apps.js add incuxai "IncuXai.com" --callback https://workshops.incuxai.com/api/payments/webhook
+```
+Save the `Secret Key` output — it won't be shown again.
 
-The backend already connects to Railway PostgreSQL via `DATABASE_URL` in `prisma/schema.prisma`. No additional auth needed - Prisma uses the connection string directly.
+### 2. Set Railway Variables
+On the **workshops.incuxai.com backend** service in Railway:
+- `TRUST_PAYMENT_SECRET` = the secret key from step 1
+- `TRUST_PAYMENT_URL` = `https://pay.incuxaieducationtrust.org`
+- `TRUST_PAYMENT_APP_ID` = `incuxai`
+- `ADMIN_PASSCODE` = your admin passcode (for /admin console)
 
-### Admin payment dashboard
-Add to AdminPage (PortalModal admin tabs):
-- "Payments" tab showing all payments with status
-- Filter by status (pending, paid, failed)
-- Export option
+### 3. Run Prisma Migrate
+On the backend service, run:
+```
+npx prisma migrate deploy
+```
+This creates the `payments` table and adds `fee`/`isPaid`/`paymentStatus` columns.
 
-## Redirect Flow
+## Frontend Routes
+
+| Route | Component | Purpose |
+|-------|-----------|---------|
+| `/payment` | `PaymentPage` | Candidate details form → redirect to trust platform |
+| `/payment/success` | `PaymentSuccess` | Payment confirmation page |
+| `/payment/cancel` | `PaymentCancel` | Payment cancelled/failed page |
+
+## Token Signing (HMAC-SHA256 JWT-like)
+
+The backend signs tokens using the same algorithm as `incuxai.com`'s `TrustPaymentToken.php`:
 
 ```
-1. User clicks "Pay ₹6,000 & Register" on upcoming workshop
-2. Frontend creates registration (pending) via /api/workshops/:id/register
-3. Frontend calls /api/payments/create-order with registrationId
-4. Backend creates Razorpay order, returns orderId
-5. Frontend opens Razorpay checkout (redirects to trust platform)
-6. User pays ₹6,000 on trust platform
-7. Razorpay redirects to /payment/success with payment details
-8. Frontend calls /api/payments/verify to confirm signature
-9. Backend verifies signature, updates Payment + Registration status to "paid"
-10. User sees confirmation page
+header = base64url({"alg":"HS256","typ":"JWT"})
+body   = base64url({transaction_id, amount, currency, customer, metadata, callback_url})
+sig    = HMAC-SHA256(secret, header + "." + body)
+token  = header + "." + body + "." + sig
 ```
 
-## Files to Create/Modify
+The trust platform verifies this token at `/api/payments/session` before creating the Razorpay order.
 
-### Create
-- `backend/prisma/migrations/xxxx_add_payment_model/` (migration)
-- `frontend/src/components/PaymentPage.jsx`
-- `frontend/src/components/PaymentSuccess.jsx`
-- `frontend/src/components/PaymentCancel.jsx`
+## Files Changed
 
-### Modify
-- `backend/prisma/schema.prisma` — add Payment model, update Workshop & Registration
-- `backend/server.js` — add payment routes
-- `frontend/src/services/api.js` — add payment API functions
-- `frontend/src/components/UpcomingWorkshopsSection.jsx` — paid workshop button
-- `frontend/src/components/PortalModal.jsx` — payment status display
-- `frontend/src/App.jsx` — payment routes
-- `frontend/.env` — Razorpay keys (placeholder)
-- `backend/.env` — Razorpay keys (placeholder)
-
-## Testing Checklist
-- [ ] Payment order creation returns valid Razorpay order ID
-- [ ] Razorpay checkout opens with correct amount (₹6,000)
-- [ ] Successful payment redirects back to /payment/success
-- [ ] Payment status updates to "paid" in database
-- [ ] Webhook updates status asynchronously
-- [ ] Admin can view all payments in portal
-- [ ] Failed payments show "failed" status
-- [ ] Free workshops (₹0) skip payment flow
+- `backend/server.js` — payment routes (initiate, confirm, status, all)
+- `backend/prisma/schema.prisma` — Payment model, fee/isPaid/paymentStatus fields
+- `frontend/src/components/PaymentPage.jsx` — details form, trust redirect, confirm
+- `frontend/src/components/PaymentSuccess.jsx` — success page
+- `frontend/src/components/PaymentCancel.jsx` — cancel/failed page
+- `frontend/src/components/UpcomingWorkshopsSection.jsx` — Pay button for paid workshops
+- `frontend/src/services/api.js` — initiatePayment, confirmPayment, fetchPaymentStatus, fetchAllPayments
+- `frontend/index.html` — no longer needs Razorpay script (trust platform handles it)
+- `PAYMENT_INTEGRATION_PLAN.md` — this document
