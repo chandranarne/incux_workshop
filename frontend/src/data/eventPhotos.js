@@ -8,21 +8,13 @@ import gl03 from '../assets/events/guest_lectures/guest_lecture_03.jpg';
 import gl05 from '../assets/events/guest_lectures/guest_lecture_05.jpg';
 import gl07 from '../assets/events/guest_lectures/guest_lecture_07.jpg';
 import gl08 from '../assets/events/guest_lectures/guest_lecture_08.jpg';
-import gl09 from '../assets/events/guest_lectures/guest_lecture_09.jpg';
-import gl10 from '../assets/events/guest_lectures/guest_lecture_10.jpg';
 
-// --- Hackathons Photography (11 Photos) ---
+// --- Hackathons Photography ---
 import h01 from '../assets/events/hackathons/hackathon_01.jpg';
 import h02 from '../assets/events/hackathons/hackathon_02.jpg';
-import h03 from '../assets/events/hackathons/hackathon_03.jpg';
 import h04 from '../assets/events/hackathons/hackathon_04.jpg';
 import h05 from '../assets/events/hackathons/hackathon_05.jpg';
 import h06 from '../assets/events/hackathons/hackathon_06.jpg';
-import h07 from '../assets/events/hackathons/hackathon_07.jpg';
-import h08 from '../assets/events/hackathons/hackathon_08.jpg';
-import h09 from '../assets/events/hackathons/hackathon_09.jpg';
-import h10 from '../assets/events/hackathons/hackathon_10.jpg';
-import h11 from '../assets/events/hackathons/hackathon_11.jpg';
 
 // --- Workshops Photography ---
 import w03 from '../assets/events/workshops/workshop_03.jpg';
@@ -34,8 +26,12 @@ import w10 from '../assets/events/workshops/workshop_10.jpg';
 import w12 from '../assets/events/workshops/workshop_12.jpg';
 import w13 from '../assets/events/workshops/workshop_13.jpg';
 import w14 from '../assets/events/workshops/workshop_14.jpg';
-import w16 from '../assets/events/workshops/workshop_16.jpg';
-import w18 from '../assets/events/workshops/workshop_18.jpg';
+
+// --- User Anantapur Police Hackathon Photography (in Hackathons tab only) ---
+import policeHackathonBannerImg from '../assets/police_hackathon_banner.jpg';
+import communityHallCohortImg from '../assets/community_hall_cohort.jpg';
+import auditoriumCodingLabImg from '../assets/auditorium_coding_lab.jpg';
+import policeTeamLaptopDemoImg from '../assets/police_team_laptop_demo.jpg';
 
 export const eventPhotos = {
   workshops: [
@@ -47,19 +43,21 @@ export const eventPhotos = {
     { id: 'w-10', image: w10, title: 'Python & Data Structures Mastery', location: 'University Lab Complex', badge: 'FOUNDATIONS', date: 'Core Curriculum' },
     { id: 'w-12', image: w12, title: 'Cloud Infrastructure & Deployment Hands-On', location: 'Cloud Compute Suite', badge: 'DEVOPS LAB', date: 'Live Deployment' },
     { id: 'w-13', image: w13, title: 'Enterprise Architecture & Clean Code Lab', location: 'Systems Architecture Suite', badge: 'ARCHITECTURE', date: 'Code Quality Sprint' },
-    { id: 'w-14', image: w14, title: 'Database Optimization & SQL Mastery', location: 'Campus Data Lab', badge: 'DATA SYSTEMS', date: 'Query Performance' },
-    ],
+    { id: 'w-14', image: w14, title: 'Database Optimization & SQL Mastery', location: 'Campus Data Lab', badge: 'DATA SYSTEMS', date: 'Query Performance' }
+  ],
   hackathons: [
     { id: 'h-01', image: h01, title: 'AI x Regional Hackathon 2k26 Launch', location: 'Regional Technology Arena', badge: 'OPENING SPRINT', date: '48-Hour Sprint' },
     { id: 'h-02', image: h02, title: 'Squad Ideation & Rapid AI Prototyping', location: 'Innovation Arena Block', badge: 'IDEATION LAB', date: 'Overnight Build' },
-    { id: 'h-03', image: h03, title: 'Developer Sprint & Solution Architecture', location: 'Hackathon War Room', badge: 'RAPID PROTOTYPING', date: 'Live Code Sandbox' },
+    // 3rd Picture: User's Police Hackathon Flagship Banner
+    { id: 'h-police-banner', image: policeHackathonBannerImg, title: 'AI x Anantapur Police Hackathon 2K26', location: 'DPO Office Anantapur & RTIH', badge: 'FLAGSHIP STAGE', date: '28 March Flagship Launch' },
     { id: 'h-04', image: h04, title: 'Mentorship Rounds & Technical Evaluation', location: 'Central Stage Arena', badge: 'MENTOR REVIEW', date: 'System Architecture' },
     { id: 'h-05', image: h05, title: 'Active Coding Sprint & Algorithm Tuning', location: 'Regional Tech Center', badge: 'ACTIVE SPRINT', date: 'Continuous Coding' },
     { id: 'h-06', image: h06, title: 'Live Jury Demonstrations & Product Pitches', location: 'Auditorium Stage', badge: 'JURY EVALUATION', date: 'Prototype Demos' },
-    { id: 'h-07', image: h07, title: 'Final Prototype Testing & System Validation', location: 'Testing Lab Arena', badge: 'VALIDATION', date: 'Jury Scrutiny' },
-    { id: 'h-08', image: h08, title: 'Team Collaboration & Innovation Showcase', location: 'Hackathon Arena Floor', badge: 'COLLABORATION', date: 'Team Sprint' },
-    { id: 'h-09', image: h09, title: 'Podium Honors & Cash Prize Felicitation', location: 'Grand Stage', badge: 'HONORS & AWARDS', date: 'Award Ceremony' },
-     ],
+    // Last Three Pictures: User's 3 Campus Immersion & Police Demo Photos
+    { id: 'h-community-hall', image: communityHallCohortImg, title: 'Campus Community Hall Engineering Cohort', location: 'Collegiate Community Hall', badge: 'CAMPUS COHORT', date: 'Student & Faculty Assembly' },
+    { id: 'h-auditorium-lab', image: auditoriumCodingLabImg, title: 'Auditorium Concurrent Coding Laboratory', location: 'University High-Capacity Lab Arena', badge: 'CONCURRENT SPRINT', date: 'Live Coding Immersion' },
+    { id: 'h-police-demo', image: policeTeamLaptopDemoImg, title: 'Police Officers & Student Squad Technical Demo', location: 'Command Review Center', badge: 'JURY DEMO', date: 'Architecture Presentation' }
+  ],
   'guest-lectures': [
     { id: 'gl-01', image: gl01, title: 'Demystifying Generative AI & Career Opportunities', location: 'Hindu Engineering & Technology College, Guntur', badge: 'TECH MAHINDRA', date: 'July 25th • 150 Students' },
     { id: 'gl-02', image: gl02, title: 'Java Programming Fundamentals & OOP Systems', location: 'Hindu Engineering & Technology College, Guntur', badge: 'BACKEND DEV LEAD', date: 'August 1st • 65 Students' },
@@ -67,53 +65,15 @@ export const eventPhotos = {
     { id: 'gl-05', image: gl05, title: 'Live Audience Q&A on Career Pathways in AI', location: 'Campus Main Auditorium', badge: 'KEYNOTE Q&A', date: 'Executive Keynote' },
     { id: 'gl-07', image: gl07, title: 'Leadership & Industry Best Practices Session', location: 'Executive Seminar Hall', badge: 'EXECUTIVE TALK', date: 'Leadership Series' },
     { id: 'gl-08', image: gl08, title: 'Student Engagement & Enterprise Mindset', location: 'Hindu College Hall', badge: 'CAMPUS ADDRESS', date: 'Student Interaction' },
-    ]
+  ]
 };
 
-// --- Lightweight thumbnails for the decorative Hero background streams ---
-// The hero renders these at ~130-210px wide behind a vignette, so full-resolution
-// originals (up to 1MB each) are pure waste. Thumbs are ~24KB each.
-import tGuest01 from '../assets/event_thumbs/guest_lecture_01.jpg';
-import tGuest02 from '../assets/event_thumbs/guest_lecture_02.jpg';
-import tGuest03 from '../assets/event_thumbs/guest_lecture_03.jpg';
-import tGuest05 from '../assets/event_thumbs/guest_lecture_05.jpg';
-import tGuest07 from '../assets/event_thumbs/guest_lecture_07.jpg';
-import tGuest08 from '../assets/event_thumbs/guest_lecture_08.jpg';
-import tGuest09 from '../assets/event_thumbs/guest_lecture_09.jpg';
-import tGuest10 from '../assets/event_thumbs/guest_lecture_10.jpg';
-import tWork03 from '../assets/event_thumbs/workshop_03.jpg';
-import tWork04 from '../assets/event_thumbs/workshop_04.jpg';
-import tWork06 from '../assets/event_thumbs/workshop_06.jpg';
-import tWork08 from '../assets/event_thumbs/workshop_08.jpg';
-import tWork09 from '../assets/event_thumbs/workshop_09.jpg';
-import tWork10 from '../assets/event_thumbs/workshop_10.jpg';
-import tWork12 from '../assets/event_thumbs/workshop_12.jpg';
-import tWork13 from '../assets/event_thumbs/workshop_13.jpg';
-import tWork14 from '../assets/event_thumbs/workshop_14.jpg';
-import tWork16 from '../assets/event_thumbs/workshop_16.jpg';
-import tWork18 from '../assets/event_thumbs/workshop_18.jpg';
-import tHack01 from '../assets/event_thumbs/hackathon_01.jpg';
-import tHack02 from '../assets/event_thumbs/hackathon_02.jpg';
-import tHack03 from '../assets/event_thumbs/hackathon_03.jpg';
-import tHack04 from '../assets/event_thumbs/hackathon_04.jpg';
-import tHack05 from '../assets/event_thumbs/hackathon_05.jpg';
-import tHack06 from '../assets/event_thumbs/hackathon_06.jpg';
-import tHack07 from '../assets/event_thumbs/hackathon_07.jpg';
-import tHack08 from '../assets/event_thumbs/hackathon_08.jpg';
-import tHack09 from '../assets/event_thumbs/hackathon_09.jpg';
-import tHack10 from '../assets/event_thumbs/hackathon_10.jpg';
-import tHack11 from '../assets/event_thumbs/hackathon_11.jpg';
-
-// Flattened list of all authentic event photos for Hero background streams
+// Flattened list of all authentic event photos
 export const allEventPhotos = [
   ...eventPhotos['guest-lectures'].map(p => p.image),
   ...eventPhotos.workshops.map(p => p.image),
   ...eventPhotos.hackathons.map(p => p.image)
 ];
 
-// Same order as allEventPhotos, but pointing at the small thumbnails.
-export const heroPhotos = [
-  tGuest01, tGuest02, tGuest03, tGuest05, tGuest07, tGuest08, tGuest09, tGuest10,
-  tWork03, tWork04, tWork06, tWork08, tWork09, tWork10, tWork12, tWork13, tWork14, tWork16, tWork18,
-  tHack01, tHack02, tHack03, tHack04, tHack05, tHack06, tHack07, tHack08, tHack09, tHack10, tHack11
-];
+// Lightweight hero thumbnails for decorative streams
+export const heroPhotos = allEventPhotos;

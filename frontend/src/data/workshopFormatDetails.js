@@ -10,6 +10,8 @@ import guestLectureSpeakerImg from '../assets/guest_lecture_speaker.jpg';
 import aiPresentationSpeakerImg from '../assets/ai_presentation_speaker.jpg';
 import staircaseCohortImg from '../assets/staircase_group_cohort.jpg';
 import campusOutdoorCohortImg from '../assets/campus_outdoor_cohort.jpg';
+import realCampusCohortImg from '../assets/real_campus_cohort.jpg';
+import realHandsOnLabImg from '../assets/real_hands_on_lab.jpg';
 
 // Event photography imports
 import w03 from '../assets/events/workshops/workshop_03.jpg';
@@ -43,8 +45,9 @@ export const workshopFormatDetails = {
     category: 'Premier Academic Track',
     location: 'IIT Hyderabad & Premier Research Institutions',
     badge: 'Tier-1 Research Campus Immersion',
-    heroImage: auditoriumImg,
+    heroImage: realCampusCohortImg,
     gallery: [
+      { image: realCampusCohortImg, caption: 'Premier Research Campus Cohort at IIT' },
       { image: auditoriumImg, caption: 'Auditorium Session at IIT Hyderabad with 200+ attendees' },
       { image: w03, caption: 'Generative AI & Agentic Workflow Design Lab' },
       { image: w06, caption: 'Full-Stack Agentic AI Immersion Cohort' }
@@ -136,8 +139,9 @@ export const workshopFormatDetails = {
     category: 'Campus Experiences Track',
     location: 'Collegiate Campuses Across Andhra Pradesh, Telangana & Pan-India',
     badge: '500+ Auditorium & Lab Capacity',
-    heroImage: campusHallImg,
+    heroImage: staircaseCohortImg,
     gallery: [
+      { image: staircaseCohortImg, caption: 'Collegiate Campus Cohort on Main Steps' },
       { image: campusHallImg, caption: 'Collegiate Auditorium Session with 500+ Students' },
       { image: w08, caption: 'Department Computer Lab Hands-On ML Pipelines' },
       { image: w09, caption: 'Student Team Collaborative Sprints & Peer Code Audits' },
@@ -230,8 +234,9 @@ export const workshopFormatDetails = {
     category: 'Intensive Immersion Track',
     location: 'College Advanced Computing Laboratories',
     badge: '5-Day Hands-on Intensive Bootcamp',
-    heroImage: labImg,
+    heroImage: realHandsOnLabImg,
     gallery: [
+      { image: realHandsOnLabImg, caption: 'Intensive Hands-on Code Sprint in Campus Lab' },
       { image: labImg, caption: 'Continuous Coding & Code Inspection in Campus Lab' },
       { image: w16, caption: 'Applied Machine Learning Engineering Sprints' },
       { image: w13, caption: 'Enterprise Architecture & Clean Code Refactoring' },

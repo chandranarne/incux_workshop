@@ -171,12 +171,29 @@ export const DEFAULT_UPCOMING_WORKSHOPS = [
     location: "IIT Campus",
     seats: 120,
     registered: 42,
-    mode: "Offline Hands-on Lab",
+    mode: "Offline IIT Campus",
     speaker: "IncuxAI Senior AI Architects & Google/IIT Research Scholars",
     description: "Two-day hands-on workshop at IIT Campus. Deep-dive into LLM fine-tuning, prompt engineering pipelines, autonomous agent architectures, retrieval-augmented generation (RAG), and enterprise deployment sandboxes.",
     status: "Active",
     isPrimary: true,
     postedAt: "2026-11-01T09:00:00Z"
+  },
+  {
+    id: "WS-HYBRID-10D",
+    title: "AI Workshop",
+    category: "Combined Virtual & Offline Workshop",
+    dates: "November 24 - December 3, 2026",
+    duration: "10 Days",
+    location: "IIT Campus (Offline) + Virtual Cloud Labs",
+    seats: 150,
+    registered: 34,
+    mode: "Combined Virtual & Offline Workshop",
+    price: 6000,
+    speaker: "IncuxAI Senior Architects, Enterprise Leads & IIT Faculty",
+    description: "10-day comprehensive AI workshop bridging virtual live deep-dives and on-campus physical immersion at IIT Campus. Features Generative AI mastery, LinkedIn personal branding, 2-day in-person IIT lab & networking, hands-on AI Bot building mini-project, and concluding with a grand 24h AI Hackathon.",
+    status: "Active",
+    isPrimary: false,
+    postedAt: "2026-11-16T12:00:00Z"
   }
 ];
 

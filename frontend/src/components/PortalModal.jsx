@@ -49,7 +49,7 @@ const readCandidateProfile = () => {
   return EMPTY_CANDIDATE;
 };
 
-export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout }) {
+export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout, initialWorkshopId = null }) {
   const [candidate, setCandidate] = useState(readCandidateProfile);
 
   const user = isAdmin
@@ -85,6 +85,12 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
 
   // Candidate details captured inline on first registration (no login)
   const [detailsFor, setDetailsFor] = useState('');
+  useEffect(() => {
+    if (isOpen && initialWorkshopId) {
+      setDetailsFor(initialWorkshopId);
+      setActiveTab('browse-workshops');
+    }
+  }, [isOpen, initialWorkshopId]);
   const [details, setDetails] = useState(EMPTY_CANDIDATE);
 
   // Load portal data
@@ -321,11 +327,9 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
                 </div>
               </div>
 
-              {/* Only 1 upcoming workshop shown in candidate portal as requested */}
-              <div className="max-w-2xl">
-                {(workshops.filter(ws => ws.id === 'WS-GENAI-IIT' || ws.title?.toLowerCase().includes('generative ai')).slice(0, 1).length > 0
-                  ? workshops.filter(ws => ws.id === 'WS-GENAI-IIT' || ws.title?.toLowerCase().includes('generative ai')).slice(0, 1)
-                  : workshops.slice(0, 1)).map((ws) => {
+              {/* Upcoming workshops available for candidate registration */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-5xl">
+                {workshops.map((ws) => {
                   const isRegistered = myRegistrations.some((r) => r.workshopId === ws.id);
                   const seatsLeft = Math.max(0, ws.seats - (ws.registered || 0));
 
@@ -420,13 +424,7 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
                         )}
                       </div>
 
-                      <div className="pt-4 border-t border-black/10 dark:border-[#262626] flex items-center justify-between">
-                        <div className="text-xs font-mono">
-                          <span className="text-neutral-400 dark:text-neutral-500 block text-[10px]">SEATS STATUS</span>
-                          <span className="font-bold text-neutral-950 dark:text-[#F5F5F5]">
-                            {seatsLeft} remaining / {ws.seats}
-                          </span>
-                        </div>
+                      <div className="pt-4 border-t border-black/10 dark:border-[#262626] flex items-center justify-end">
 
                         {isRegistered ? (
                           <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FACC15]/15 dark:bg-[#FACC15]/10 text-neutral-900 dark:text-[#FACC15] border border-[#FACC15]/30 dark:border-[#FACC15]/30 text-xs font-mono font-bold">
