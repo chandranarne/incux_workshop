@@ -17,11 +17,11 @@ import {
 } from 'lucide-react';
 import bannerImg from '../../assets/ai_workshop_10d_banner.jpg';
 
-export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
+export default function AiWorkshopDetail({ onBackHome }) {
   const handleRegisterClick = () => {
-    if (onOpenPortal) {
-      onOpenPortal();
-    }
+    window.location.assign(
+      `/payment?workshopId=WS-HYBRID-10D&amount=6000&workshopTitle=${encodeURIComponent('AI Workshop')}`
+    );
   };
 
   return (
@@ -37,17 +37,9 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
             <span>Back to Home</span>
           </button>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline-block px-3 py-1 rounded-full bg-[#FACC15]/15 text-neutral-900 dark:text-[#FACC15] text-xs font-mono font-bold border border-[#FACC15]/30">
-              10 Days • Nov 24 - Dec 3, 2026
-            </span>
-            <button
-              onClick={handleRegisterClick}
-              className="px-4 py-2 rounded-xl bg-[#0A0A0A] dark:bg-[#FACC15] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-black text-xs sm:text-sm tracking-wider shadow-md hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
-            >
-              Register Now - ₹6,000
-            </button>
-          </div>
+          <span className="hidden sm:inline-block px-3 py-1 rounded-full bg-[#FACC15]/15 text-neutral-900 dark:text-[#FACC15] text-xs font-mono font-bold border border-[#FACC15]/30">
+            10 Days • Nov 24 - Dec 3, 2026
+          </span>
         </div>
       </div>
 

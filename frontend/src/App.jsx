@@ -200,10 +200,7 @@ export default function App() {
       ) : currentPage === 'privacy' ? (
         <PrivacyPolicy />
       ) : currentPage === 'ai-workshop' ? (
-        <AiWorkshopDetail
-          onBackHome={navigateHome}
-          onOpenPortal={() => openPortal('register', 'WS-HYBRID-10D')}
-        />
+        <AiWorkshopDetail onBackHome={navigateHome} />
       ) : (
         <>
           {/* Main Content: 11 Sections in Exact Fixed Order + Live Registration Portal */}

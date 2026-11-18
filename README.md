@@ -180,9 +180,9 @@ Backend variables:
 
 | Variable | Example |
 | :--- | :--- |
-| `TRUST_PAYMENT_SECRET` | Secret from `payment-apps.js` on the trust platform |
-| `TRUST_PAYMENT_URL` | `https://pay.incuxaieducationtrust.org` |
-| `TRUST_PAYMENT_APP_ID` | `incuxai` |
+| `TRUST_PAYMENT_SECRET` | The secret registered with the trust platform for this app (must match on both sides) |
+| `TRUST_PAYMENT_URL` | `https://www.incuxaieducationtrust.org` |
+| `TRUST_PAYMENT_APP_ID` | `workshops` |
 | `PAYMENT_RETURN_URL` | `https://workshops.incuxai.com/payment/success` |
 | `PAYMENT_WEBHOOK_URL` | `https://workshops.incuxai.com/api/payments/webhook` |
 
@@ -190,8 +190,15 @@ Register the app on the trust platform so it can sign callbacks and issue succes
 tokens:
 
 ```bash
-node src/cli/payment-apps.js add incuxai "IncuXai.com" --callback https://workshops.incuxai.com/api/payments/webhook
+node server/cli/payment-apps.js add workshops "IncuXai Workshops" \
+  --secret <SAME_SECRET_AS_TRUST_PAYMENT_SECRET> \
+  --callback https://workshops.incuxai.com/api/payments/webhook
 ```
+
+Use a dedicated app id (`workshops`) and the same shared secret as
+`TRUST_PAYMENT_SECRET`. Do not reuse or rotate the `incuxai` app; that would break
+incuxai.com payments. The trust verifies this token with the app's `secretKey`, so
+the value must be byte-for-byte identical on both services.
 
 The full flow, routes and database notes are documented in
 `PAYMENT_INTEGRATION_PLAN.md`.

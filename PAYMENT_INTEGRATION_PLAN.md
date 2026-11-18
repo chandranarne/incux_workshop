@@ -8,7 +8,7 @@ Two services, separate Railway deployments:
 |---------|------|------------|
 | `workshops.incuxai.com` frontend | Workshop listings, payment form, return pages | Vite + React, served by `vite preview` |
 | Workshops backend | Registration, trust token signing, confirmation, webhook, admin API | Express + Prisma + Railway PostgreSQL |
-| `pay.incuxaieducationtrust.org` | Razorpay checkout, verification, success token | Node.js + Express + Prisma |
+| `www.incuxaieducationtrust.org` | Trust checkout at `/pay`, verification, success token and webhook | Node.js + Express + Prisma |
 
 The frontend talks to the backend through the same-origin `/api` proxy configured in
 `frontend/vite.config.js`. No backend URL is hardcoded in the frontend.
@@ -21,7 +21,7 @@ The frontend talks to the backend through the same-origin `/api` proxy configure
 3. Frontend POST /api/payments/initiate with workshopId, amount (rupees), payer fields.
 4. Backend creates Registration (pending) + Payment (pending, amount in paise),
    signs an HMAC-SHA256 token, and returns the trust platform URL.
-5. Frontend redirects to trust/pay.html?token=<token>&redirect=<PAYMENT_RETURN_URL>&app=incuxai.
+5. Frontend redirects to `https://www.incuxaieducationtrust.org/pay?token=<token>&redirect=<PAYMENT_RETURN_URL>&app=workshops`.
 6. Trust creates the Razorpay order and the user pays Rs.6,000.
 7. Trust verifies the Razorpay signature, issues a success_token, and:
    a. POSTs a signed webhook to /api/payments/webhook, and
@@ -64,9 +64,9 @@ all tables with schema-qualified names (`public.*`) matching the `@@map` values 
 
 ```
 DATABASE_URL=<Railway PostgreSQL connection string>
-TRUST_PAYMENT_SECRET=<secret from trust platform payment-apps.js>
-TRUST_PAYMENT_URL=https://pay.incuxaieducationtrust.org
-TRUST_PAYMENT_APP_ID=incuxai
+TRUST_PAYMENT_SECRET=<same secret registered for the workshops app on the trust platform>
+TRUST_PAYMENT_URL=https://www.incuxaieducationtrust.org
+TRUST_PAYMENT_APP_ID=workshops
 PAYMENT_RETURN_URL=https://workshops.incuxai.com/payment/success
 PAYMENT_WEBHOOK_URL=https://workshops.incuxai.com/api/payments/webhook
 ADMIN_PASSCODE=<admin console passphrase>

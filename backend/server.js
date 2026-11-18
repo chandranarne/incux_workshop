@@ -150,8 +150,8 @@ app.get('/api/admin/session', requireAdmin, (req, res) => {
 // incuxai.com's TrustPaymentToken.php.
 // ==========================================
 const TRUST_PAYMENT_SECRET = process.env.TRUST_PAYMENT_SECRET || '';
-const TRUST_PAYMENT_URL = process.env.TRUST_PAYMENT_URL || 'https://pay.incuxaieducationtrust.org';
-const TRUST_PAYMENT_APP_ID = process.env.TRUST_PAYMENT_APP_ID || 'incuxai';
+const TRUST_PAYMENT_URL = process.env.TRUST_PAYMENT_URL || 'https://www.incuxaieducationtrust.org';
+const TRUST_PAYMENT_APP_ID = process.env.TRUST_PAYMENT_APP_ID || 'workshops';
 const PAYMENT_RETURN_URL = process.env.PAYMENT_RETURN_URL || 'https://workshops.incuxai.com/payment/success';
 const PAYMENT_CANCEL_URL = process.env.PAYMENT_CANCEL_URL || 'https://workshops.incuxai.com/payment/cancel';
 const PAYMENT_WEBHOOK_URL = process.env.PAYMENT_WEBHOOK_URL || 'https://workshops.incuxai.com/api/payments/webhook';
@@ -337,7 +337,7 @@ app.post('/api/payments/initiate', async (req, res) => {
       callback_url: PAYMENT_WEBHOOK_URL
     });
 
-    const trustUrl = `${TRUST_PAYMENT_URL}/pay.html?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent(PAYMENT_RETURN_URL)}&app=${TRUST_PAYMENT_APP_ID}`;
+    const trustUrl = `${TRUST_PAYMENT_URL}/pay?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent(PAYMENT_RETURN_URL)}&app=${TRUST_PAYMENT_APP_ID}`;
 
     // Save pending payment record
     let payment = null;
