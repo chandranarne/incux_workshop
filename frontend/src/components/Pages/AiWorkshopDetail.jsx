@@ -1,144 +1,28 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Calendar,
   MapPin,
   Clock,
-  ShieldCheck,
-  CheckCircle2,
-  Users,
   Sparkles,
   ArrowRight,
   ArrowLeft,
   Laptop,
   Building2,
-  Share2,
-  Award,
+  Users,
   Terminal,
-  Bot,
   Trophy,
-  CreditCard,
-  QrCode,
-  Copy,
   Check,
-  Download,
+  CheckCircle2,
   AlertCircle,
-  ExternalLink,
   ChevronRight
 } from 'lucide-react';
 import bannerImg from '../../assets/ai_workshop_10d_banner.jpg';
-import { registerForWorkshop } from '../../services/api';
 
-export default function AiWorkshopDetail({ onBackHome }) {
-  // Form State
-  const [formData, setFormData] = useState({
-    candidateName: '',
-    candidateEmail: '',
-    candidatePhone: '',
-    candidateInstitution: '',
-    candidateDepartment: '',
-    academicYear: '3rd Year',
-    experienceLevel: 'Intermediate',
-    notes: ''
-  });
-
-  // Payment State
-  const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi' | 'card' | 'netbanking'
-  const [utrNumber, setUtrNumber] = useState('');
-  const [cardDetails, setCardDetails] = useState({
-    cardNumber: '•••• •••• •••• 4242',
-    cardName: '',
-    expiry: '12/28',
-    cvv: '•••'
-  });
-  const [copiedUpi, setCopiedUpi] = useState(false);
-
-  // Submission State
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [isConfirmed, setIsConfirmed] = useState(false);
-  const [registrationReceipt, setRegistrationReceipt] = useState(null);
-
-  const upiId = 'payments@incuxai.com';
-
-  const handleCopyUpi = () => {
-    navigator.clipboard.writeText(upiId);
-    setCopiedUpi(true);
-    setTimeout(() => setCopiedUpi(false), 2000);
-  };
-
-  const scrollToRegister = () => {
-    const el = document.getElementById('registration-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
+  const handleRegisterClick = () => {
+    if (onOpenPortal) {
+      onOpenPortal();
     }
-  };
-
-  const handleSubmitRegistration = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
-
-    if (!formData.candidateName.trim() || !formData.candidateEmail.trim()) {
-      setErrorMsg('Please enter your full name and valid email address.');
-      return;
-    }
-
-    if (paymentMethod === 'upi' && !utrNumber.trim()) {
-      setErrorMsg('Please provide the 12-digit UPI / UTR Transaction Reference Number after making the payment.');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const payload = {
-        candidateName: formData.candidateName.trim(),
-        candidateEmail: formData.candidateEmail.trim(),
-        candidatePhone: formData.candidatePhone.trim(),
-        candidateInstitution: formData.candidateInstitution.trim() || 'Not specified',
-        candidateDepartment: formData.candidateDepartment.trim(),
-        academicYear: formData.academicYear,
-        experienceLevel: formData.experienceLevel,
-        paymentMethod,
-        paymentStatus: 'Paid',
-        amountPaid: 6000,
-        utrNumber: paymentMethod === 'upi' ? utrNumber.trim() : `CARD-TXN-${Date.now().toString().slice(-6)}`,
-        notes: formData.notes
-      };
-
-      const result = await registerForWorkshop('WS-HYBRID-10D', payload);
-
-      const receipt = {
-        registrationId: result?.registration?.id || `INCUX-AI-${Date.now().toString().slice(-6)}`,
-        candidateName: payload.candidateName,
-        candidateEmail: payload.candidateEmail,
-        candidatePhone: payload.candidatePhone,
-        candidateInstitution: payload.candidateInstitution,
-        workshopTitle: 'AI Workshop (10-Day Combined Virtual & Offline)',
-        dates: 'November 24 – December 3, 2026',
-        venue: 'IIT Campus (Offline Nov 27-28) + Virtual Cloud Labs',
-        amountPaid: 6000,
-        utrNumber: payload.utrNumber,
-        registeredAt: new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      };
-
-      setRegistrationReceipt(receipt);
-      setIsConfirmed(true);
-      window.scrollTo({ top: 300, behavior: 'smooth' });
-    } catch (err) {
-      setErrorMsg(err.message || 'Registration failed. Please verify your connection and try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handlePrintReceipt = () => {
-    window.print();
   };
 
   return (
@@ -159,7 +43,7 @@ export default function AiWorkshopDetail({ onBackHome }) {
               10 Days • Nov 24 – Dec 3, 2026
             </span>
             <button
-              onClick={scrollToRegister}
+              onClick={handleRegisterClick}
               className="px-4 py-2 rounded-xl bg-[#0A0A0A] dark:bg-[#FACC15] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-black text-xs sm:text-sm tracking-wider shadow-md hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
             >
               Register Now — ₹6,000
@@ -228,7 +112,7 @@ export default function AiWorkshopDetail({ onBackHome }) {
             {/* Action Buttons */}
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <button
-                onClick={scrollToRegister}
+                onClick={handleRegisterClick}
                 className="px-6 py-3.5 sm:py-4 rounded-xl bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-headline font-black text-sm tracking-wider shadow-xl shadow-yellow-500/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
               >
                 <span>Register for Workshop</span>
@@ -660,364 +544,14 @@ export default function AiWorkshopDetail({ onBackHome }) {
               </span>
 
               <button
-                onClick={scrollToRegister}
+                onClick={handleRegisterClick}
                 className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#0A0A0A] dark:bg-[#FACC15] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-black text-xs sm:text-sm tracking-wider shadow-md hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
               >
-                Proceed to Register &amp; Pay
+                Register for Workshop
               </button>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Registration & Payment Section */}
-      <section id="registration-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#EAB308] dark:text-[#FACC15]">
-            RESERVE YOUR SEAT
-          </span>
-          <h2 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-headline font-black text-[#0A0A0A] dark:text-[#F5F5F5] tracking-tight">
-            Register for AI Workshop
-          </h2>
-          <p className="mt-3 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 font-body">
-            Fill in your candidate details, complete the course payment of ₹6,000, and receive instant confirmation for both the virtual sessions and the IIT campus pass.
-          </p>
-        </div>
-
-        {/* Confirmation Screen */}
-        {isConfirmed && registrationReceipt ? (
-          <div className="max-w-2xl mx-auto p-6 sm:p-10 rounded-3xl bg-white dark:bg-[#141414] border-2 border-emerald-500/50 shadow-2xl space-y-6">
-            <div className="text-center space-y-2">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
-                <CheckCircle2 className="w-10 h-10" />
-              </div>
-              <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold border border-emerald-500/20 inline-block">
-                REGISTRATION CONFIRMED • SEAT ALLOCATED
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-headline font-black text-[#0A0A0A] dark:text-[#F5F5F5]">
-                Welcome to the AI Workshop Cohort!
-              </h3>
-              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-body">
-                A confirmation email with your Discord lounge invite, onboarding credentials, and IIT campus entry pass has been sent to <strong>{registrationReceipt.candidateEmail}</strong>.
-              </p>
-            </div>
-
-            {/* Receipt Summary Box */}
-            <div className="p-5 rounded-2xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] font-mono text-xs space-y-2.5">
-              <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                <span className="text-neutral-400">REGISTRATION ID</span>
-                <span className="font-bold text-[#0A0A0A] dark:text-[#FACC15]">{registrationReceipt.registrationId}</span>
-              </div>
-              <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                <span className="text-neutral-400">CANDIDATE</span>
-                <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{registrationReceipt.candidateName}</span>
-              </div>
-              <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                <span className="text-neutral-400">COLLEGE / INSTITUTION</span>
-                <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{registrationReceipt.candidateInstitution}</span>
-              </div>
-              <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                <span className="text-neutral-400">PROGRAM</span>
-                <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{registrationReceipt.workshopTitle}</span>
-              </div>
-              <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                <span className="text-neutral-400">DATES</span>
-                <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{registrationReceipt.dates}</span>
-              </div>
-              <div className="flex justify-between border-b border-black/5 dark:border-white/5 pb-2">
-                <span className="text-neutral-400">AMOUNT PAID</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">₹6,000 INR (PAID)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-400">TXN / UTR NUMBER</span>
-                <span className="font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">{registrationReceipt.utrNumber}</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                onClick={handlePrintReceipt}
-                className="flex-1 py-3.5 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 font-mono text-xs font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Save / Print Receipt</span>
-              </button>
-
-              <button
-                onClick={onBackHome}
-                className="flex-1 py-3.5 rounded-xl bg-[#FACC15] text-[#0A0A0A] font-headline font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#EAB308] transition-colors cursor-pointer"
-              >
-                <span>Return to Homepage</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Registration Form & Payment Split */
-          <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Column: Candidate Info */}
-            <div className="lg:col-span-7 p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] shadow-sm">
-              <h3 className="text-xl sm:text-2xl font-headline font-bold text-[#0A0A0A] dark:text-[#F5F5F5] mb-6">
-                Step 1: Participant Information
-              </h3>
-
-              <form onSubmit={handleSubmitRegistration} id="reg-form" className="space-y-4">
-                <div>
-                  <label className="block text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300 uppercase mb-1">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.candidateName}
-                    onChange={(e) => setFormData({ ...formData, candidateName: e.target.value })}
-                    placeholder="e.g. Rahul Sharma"
-                    className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm focus:outline-none focus:border-[#FACC15] text-[#0A0A0A] dark:text-[#F5F5F5]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300 uppercase mb-1">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.candidateEmail}
-                      onChange={(e) => setFormData({ ...formData, candidateEmail: e.target.value })}
-                      placeholder="rahul@example.com"
-                      className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm focus:outline-none focus:border-[#FACC15] text-[#0A0A0A] dark:text-[#F5F5F5]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300 uppercase mb-1">
-                      WhatsApp / Mobile *
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.candidatePhone}
-                      onChange={(e) => setFormData({ ...formData, candidatePhone: e.target.value })}
-                      placeholder="+91 9876543210"
-                      className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm focus:outline-none focus:border-[#FACC15] text-[#0A0A0A] dark:text-[#F5F5F5]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300 uppercase mb-1">
-                    College / University / Company *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.candidateInstitution}
-                    onChange={(e) => setFormData({ ...formData, candidateInstitution: e.target.value })}
-                    placeholder="e.g. JNTU Hyderabad / IIT Madras / Engineering College"
-                    className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm focus:outline-none focus:border-[#FACC15] text-[#0A0A0A] dark:text-[#F5F5F5]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300 uppercase mb-1">
-                      Department / Major
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.candidateDepartment}
-                      onChange={(e) => setFormData({ ...formData, candidateDepartment: e.target.value })}
-                      placeholder="e.g. CSE / AI &amp; Data Science"
-                      className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm focus:outline-none focus:border-[#FACC15] text-[#0A0A0A] dark:text-[#F5F5F5]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300 uppercase mb-1">
-                      Academic Year / Status
-                    </label>
-                    <select
-                      value={formData.academicYear}
-                      onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm focus:outline-none focus:border-[#FACC15] text-[#0A0A0A] dark:text-[#F5F5F5]"
-                    >
-                      <option value="1st Year">1st Year Undergraduate</option>
-                      <option value="2nd Year">2nd Year Undergraduate</option>
-                      <option value="3rd Year">3rd Year Undergraduate</option>
-                      <option value="4th Year">4th Year Undergraduate</option>
-                      <option value="Postgraduate / Masters">Postgraduate / Masters</option>
-                      <option value="Working Professional">Working Professional</option>
-                    </select>
-                  </div>
-                </div>
-
-                {errorMsg && (
-                  <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-mono flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{errorMsg}</span>
-                  </div>
-                )}
-              </form>
-            </div>
-
-            {/* Right Column: Step 2 Payment Options */}
-            <div className="lg:col-span-5 p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl sm:text-2xl font-headline font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">
-                    Step 2: Course Fee Payment
-                  </h3>
-                  <span className="font-headline font-black text-xl text-[#EAB308] dark:text-[#FACC15]">
-                    ₹6,000
-                  </span>
-                </div>
-
-                {/* Payment Method Selector */}
-                <div className="grid grid-cols-2 gap-2 mb-6 font-mono text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('upi')}
-                    className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                      paymentMethod === 'upi'
-                        ? 'bg-[#FACC15]/15 border-[#FACC15] text-neutral-900 dark:text-[#FACC15] font-bold'
-                        : 'bg-neutral-50 dark:bg-[#0A0A0A] border-black/10 dark:border-[#262626] text-neutral-500'
-                    }`}
-                  >
-                    <QrCode className="w-4 h-4" />
-                    <span>UPI / QR Code</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('card')}
-                    className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                      paymentMethod === 'card'
-                        ? 'bg-[#FACC15]/15 border-[#FACC15] text-neutral-900 dark:text-[#FACC15] font-bold'
-                        : 'bg-neutral-50 dark:bg-[#0A0A0A] border-black/10 dark:border-[#262626] text-neutral-500'
-                    }`}
-                  >
-                    <CreditCard className="w-4 h-4" />
-                    <span>Card / NetBanking</span>
-                  </button>
-                </div>
-
-                {/* Method A: UPI */}
-                {paymentMethod === 'upi' && (
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-center space-y-3">
-                      <div className="w-36 h-36 mx-auto bg-white p-2.5 rounded-xl border border-black/10 flex items-center justify-center">
-                        {/* Mock QR Code Pattern */}
-                        <div className="w-full h-full bg-neutral-950 flex flex-col items-center justify-center p-2 rounded text-white font-mono text-[9px] text-center leading-tight">
-                          <span className="font-bold text-[#FACC15]">UPI QR CODE</span>
-                          <span className="text-neutral-400 mt-1">₹6,000.00</span>
-                          <span className="text-[8px] text-neutral-500 mt-0.5">Scan with GPay / PhonePe / Paytm</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] text-xs font-mono">
-                        <span className="truncate">{upiId}</span>
-                        <button
-                          type="button"
-                          onClick={handleCopyUpi}
-                          className="px-2.5 py-1 rounded bg-[#FACC15] text-[#0A0A0A] font-bold text-[10px] flex items-center gap-1 cursor-pointer shrink-0"
-                        >
-                          {copiedUpi ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                          <span>{copiedUpi ? 'Copied' : 'Copy'}</span>
-                        </button>
-                      </div>
-
-                      <p className="text-[11px] text-neutral-500 font-body">
-                        Scan the QR code or send <strong>₹6,000</strong> to the UPI ID. Once paid, paste your 12-digit UPI / UTR Transaction Reference Number below.
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300 uppercase mb-1">
-                        12-Digit UPI / UTR Reference Number *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={utrNumber}
-                        onChange={(e) => setUtrNumber(e.target.value)}
-                        placeholder="e.g. 432109876543"
-                        className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-sm focus:outline-none focus:border-[#FACC15] text-[#0A0A0A] dark:text-[#F5F5F5] font-mono"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Method B: Card */}
-                {paymentMethod === 'card' && (
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] space-y-3">
-                      <div>
-                        <label className="block text-[11px] font-mono text-neutral-500 uppercase mb-1">Card Number</label>
-                        <input
-                          type="text"
-                          readOnly
-                          value={cardDetails.cardNumber}
-                          className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] text-xs font-mono"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-[11px] font-mono text-neutral-500 uppercase mb-1">Valid Thru</label>
-                          <input
-                            type="text"
-                            readOnly
-                            value={cardDetails.expiry}
-                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] text-xs font-mono"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-mono text-neutral-500 uppercase mb-1">CVV</label>
-                          <input
-                            type="text"
-                            readOnly
-                            value={cardDetails.cvv}
-                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] text-xs font-mono"
-                          />
-                        </div>
-                      </div>
-
-                      <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono block">
-                        ✓ Secure 256-bit encrypted simulated gateway enabled.
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Submit CTA */}
-              <div className="mt-6 pt-4 border-t border-black/10 dark:border-[#262626]">
-                <button
-                  type="submit"
-                  form="reg-form"
-                  disabled={isSubmitting}
-                  className="w-full py-4 rounded-xl bg-[#0A0A0A] hover:bg-[#1A1A1A] dark:bg-[#FACC15] dark:hover:bg-[#EAB308] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-black text-sm tracking-wider shadow-xl shadow-yellow-500/10 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  {isSubmitting ? (
-                    <span>Processing Registration &amp; Payment...</span>
-                  ) : (
-                    <>
-                      <span>Pay ₹6,000 &amp; Confirm Registration</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-
-                <p className="mt-2.5 text-[11px] text-center text-neutral-500 font-mono">
-                  Instant receipt &amp; IIT Campus pass generated immediately upon submission.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </section>
     </div>
   );
