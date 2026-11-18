@@ -64,6 +64,7 @@ model UpcomingWorkshop {
   convertedFromRequestId String? @map("convertedFromRequestId")
 
   payments            Payment[]
+  referralCodes       ReferralCode[]
 
   @@map("upcoming_workshops")
 }
@@ -106,17 +107,22 @@ model Registration {
   @@map("registrations")
 }
 
-// Referral / discount codes created in the admin console. The code is carried
-// in the public shareable URL (?ref=CODE) and never typed into the form.
+// Referral / discount codes created in the admin console. Every code belongs to
+// one workshop, is carried in the public shareable URL (?ref=CODE) and is never
+// typed into the form. Validation only accepts a code tagged to that workshop.
 model ReferralCode {
   id             String   @id @default(cuid()) @map("id")
   code           String   @unique @map("code")
   label          String   @default("") @map("label")
+  workshopId     String   @map("workshop_id")
   discountAmount Int      @map("discount_amount") // rupees off the workshop base
   active         Boolean  @default(true) @map("active")
   usageCount     Int      @default(0) @map("usage_count")
   createdAt      DateTime @default(now()) @map("created_at")
 
+  workshop       UpcomingWorkshop @relation(fields: [workshopId], references: [id])
+
+  @@index([workshopId])
   @@map("referral_codes")
 }
 

@@ -77,7 +77,12 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
   const [allRegistrations, setAllRegistrations] = useState([]);
   const [allPayments, setAllPayments] = useState([]);
   const [referralCodes, setReferralCodes] = useState([]);
-  const [newReferral, setNewReferral] = useState({ code: '', label: '', discountAmount: '' });
+  const [newReferral, setNewReferral] = useState({
+    code: '',
+    label: '',
+    workshopId: '',
+    discountAmount: ''
+  });
   const [loading, setLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState({ type: '', text: '' });
 
@@ -103,12 +108,20 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
   }, [isOpen, initialWorkshopId]);
   const [details, setDetails] = useState(EMPTY_CANDIDATE);
 
+  const workshopLabel = (workshopId) =>
+    workshops.find((workshop) => workshop.id === workshopId)?.title || workshopId || 'Not set';
+
   // Load portal data
   const loadData = async () => {
     setLoading(true);
     try {
       const wsList = await fetchUpcomingWorkshops();
       setWorkshops(wsList);
+      if (isAdmin && wsList.length > 0) {
+        setNewReferral((previous) =>
+          previous.workshopId ? previous : { ...previous, workshopId: wsList[0].id }
+        );
+      }
 
       if (isAdmin) {
         const [regs, payments, referrals] = await Promise.all([
@@ -226,17 +239,23 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
     }
   };
 
-  // --- Admin Action: Create and share referral codes ---
+  // --- Admin Action: Create and share workshop-scoped referral codes ---
   const handleCreateReferral = async (event) => {
     event.preventDefault();
     try {
       await createReferralCode({
         code: newReferral.code,
         label: newReferral.label,
+        workshopId: newReferral.workshopId,
         discountAmount: Number(newReferral.discountAmount)
       });
-      setNewReferral({ code: '', label: '', discountAmount: '' });
-      notify('success', 'Referral code created. Copy its shareable link below.');
+      setNewReferral((previous) => ({
+        code: '',
+        label: '',
+        workshopId: previous.workshopId,
+        discountAmount: ''
+      }));
+      notify('success', 'Referral code created for the selected workshop. Copy its shareable link below.');
       loadData();
     } catch (err) {
       notify('error', err.message);
@@ -939,14 +958,34 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
                   Referral Codes
                 </h4>
                 <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                  Create a code and assign a discount. Share the generated link. There is no coupon field on the form.
+                  Choose a workshop, create a code and assign a discount. A code only works for its own workshop. Share the generated link, there is no coupon field on the form.
                 </p>
               </div>
 
               <form
                 onSubmit={handleCreateReferral}
-                className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_150px_auto] gap-3 items-end p-5 rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626]"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_140px_auto] gap-3 items-end p-5 rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626]"
               >
+                <div>
+                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
+                    Workshop
+                  </label>
+                  <select
+                    value={newReferral.workshopId}
+                    onChange={(event) =>
+                      setNewReferral((previous) => ({ ...previous, workshopId: event.target.value }))
+                    }
+                    required
+                    className="w-full px-3 py-2.5 rounded-xl bg-neutral-50 dark:bg-[#1A1A1A] border border-black/15 dark:border-[#333333] text-sm outline-none focus:border-[#FACC15]"
+                  >
+                    <option value="" disabled>Select a workshop</option>
+                    {workshops.map((workshop) => (
+                      <option key={workshop.id} value={workshop.id}>
+                        {workshop.title} ({workshop.dates})
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
                     Code
@@ -1009,6 +1048,7 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
                     <thead className="bg-[#FDFCFA] dark:bg-[#0A0A0A] text-amber-600 dark:text-[#FACC15] border-b border-black/10 dark:border-[#262626]">
                       <tr>
                         <th className="p-3">Code</th>
+                        <th className="p-3">Workshop</th>
                         <th className="p-3">Label</th>
                         <th className="p-3">Discount</th>
                         <th className="p-3">Uses</th>
@@ -1022,6 +1062,9 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
                         return (
                           <tr key={referral.id} className="hover:bg-[#FDFCFA]/50 dark:hover:bg-[#0A0A0A]/60">
                             <td className="p-3 font-bold text-amber-600 dark:text-[#FACC15]">{referral.code}</td>
+                            <td className="p-3 text-neutral-500 dark:text-neutral-400" title={referral.workshopId || ''}>
+                              {workshopLabel(referral.workshopId)}
+                            </td>
                             <td className="p-3 text-neutral-500 dark:text-neutral-400">{referral.label || 'Not provided'}</td>
                             <td className="p-3 font-semibold">₹{Number(referral.discountAmount || 0).toLocaleString('en-IN')}</td>
                             <td className="p-3">{referral.usageCount || 0}</td>

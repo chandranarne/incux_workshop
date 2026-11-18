@@ -59,7 +59,7 @@ the admin console under the Payments tab.
 | `/api/genai/registrations/:id/step2` | POST | Public | Advance to the accommodation step |
 | `/api/genai/registrations/:id/step3` | POST | Public | Save accommodation and terms, enforce the payment gate |
 | `/api/genai/registrations/:id/payment` | POST | Public | Compute trusted quote and return signed checkout URL |
-| `/api/referrals` | GET / POST / DELETE | Admin token | Manage referral codes and discounts |
+| `/api/referrals` | GET / POST / DELETE | Admin token | Manage workshop-tagged referral codes and discounts |
 | `/api/payments/initiate` | POST | Public | Legacy entry point, client-supplied amount |
 | `/api/payments/webhook` | POST | HMAC signature | Server-to-server `payment.captured` notification from trust |
 | `/api/payments/confirm` | GET | Public | Redeem `success_token` with trust and mark DB paid |

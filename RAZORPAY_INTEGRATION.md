@@ -353,7 +353,7 @@ All routes are defined in `backend/server.js`.
 | `/api/genai/registrations/:id/step2` | POST | Public | Advance to step 3 |
 | `/api/genai/registrations/:id/step3` | POST | Public | Save accommodation choice and terms; enforces the accommodation gate |
 | `/api/genai/registrations/:id/payment` | POST | Public | Compute the trusted quote and return a signed checkout URL |
-| `/api/referrals` | GET / POST / DELETE | Admin token | List, create and remove referral codes with their discount |
+| `/api/referrals` | GET / POST / DELETE | Admin token | List, create and remove referral codes with their workshop and discount |
 | `/api/payments/initiate` | POST | Public | Legacy entry point; amount comes from the request, unlike the GenAI route |
 | `/api/payments/webhook` | POST | HMAC signature | Trust server-to-server `payment.captured` notification |
 | `/api/payments/confirm` | GET | Public | Redeem `success_token` with trust and apply idempotent update |
@@ -479,14 +479,19 @@ registrations were removed when this workshop was installed.
 | `id` | Primary key |
 | `code` | Unique, uppercased, 3 to 40 letters, numbers or hyphens |
 | `label` | Optional admin note |
+| `workshop_id` | Required workshop id (`id` in `upcoming_workshops`), chosen when the code is created |
 | `discountAmount` | Rupee discount off the ₹6,000 base |
 | `active` | Boolean, only active codes validate |
 | `usageCount` | Incremented when a code is used in step 1 |
 | `createdAt` | Timestamp |
 
-Codes are created in the `/admin` Referral Codes tab and shared through
-`/gen-ai-workshop?ref=CODE`. The platform fee is recalculated after the
-discount, so a ₹100 discount with a 2% fee gives a ₹6,018 total.
+Codes are created in the `/admin` Referral Codes tab. The admin must choose a
+workshop before creating a code, and validation only accepts a code whose
+`workshop_id` matches the workshop being registered for. A code made for
+another workshop is ignored even if someone opens the link on this workshop.
+Codes are shared through `/gen-ai-workshop?ref=CODE`. The platform fee is
+recalculated after the discount, so a ₹100 discount with a 2% fee gives a ₹6,018
+total.
 
 **`markPaymentPaid` behavior**
 
@@ -619,7 +624,8 @@ DO NOT:
 - `GET https://workshops.incuxai.com/api/health` returns HTTP 200.
 - `GET /api/workshops/upcoming` returns only `WS-GENAI-IIT-HYD-NOV28`.
 - `GET /api/genai/config` returns `basePrice: 6000` and `platformFeePercent: 2`.
-- Admin `/api/referrals` lists codes created in the `/admin` Referral Codes tab.
+- Admin `/api/referrals` lists codes created in the `/admin` Referral Codes tab,
+  each tagged with its `workshopId`.
 - A step 3 request with `hostelAccommodation: 'Yes'` and unpaid accommodation
   returns HTTP 400.
 - A trusted payment with a ₹100 discount signs `601800` paise, uses `/pay`,

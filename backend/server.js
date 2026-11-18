@@ -21,7 +21,10 @@ if (fs.existsSync(envPath)) {
       const idx = trimmed.indexOf('=');
       if (idx !== -1) {
         const key = trimmed.slice(0, idx).trim();
-        const val = trimmed.slice(idx + 1).trim();
+        let val = trimmed.slice(idx + 1).trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
         if (!process.env[key]) process.env[key] = val;
       }
     }
@@ -195,12 +198,18 @@ const calculateGenAiQuote = (discountAmount = 0) => {
   };
 };
 
-const findActiveReferral = async (code) => {
+// A code only counts for the workshop it was created against. Public routes
+// pass the server-side workshop id, never one supplied by the browser.
+const findActiveReferral = async (code, workshopId = GENAI_WORKSHOP_ID) => {
   const normalized = normalizeReferralCode(code);
   if (!normalized || !isDatabaseConfigured) return null;
   try {
     return await prisma.referralCode.findFirst({
-      where: { code: normalized, active: true }
+      where: {
+        code: normalized,
+        active: true,
+        ...(workshopId ? { workshopId } : {})
+      }
     });
   } catch (err) {
     console.warn('[Referral lookup error]:', err.message);
@@ -667,12 +676,12 @@ app.get('/api/genai/referrals/:code/validate', async (req, res) => {
     const code = normalizeReferralCode(req.params.code);
     if (!code) return res.status(400).json({ error: 'Referral code is required.' });
 
-    const referral = await findActiveReferral(code);
+    const referral = await findActiveReferral(code, GENAI_WORKSHOP_ID);
     if (!referral) {
       return res.status(404).json({
         success: false,
         valid: false,
-        error: 'This referral code was not found or is no longer active.'
+        error: 'This referral code was not found, is no longer active, or belongs to another workshop.'
       });
     }
 
@@ -682,6 +691,7 @@ app.get('/api/genai/referrals/:code/validate', async (req, res) => {
       referral: {
         code: referral.code,
         label: referral.label,
+        workshopId: referral.workshopId,
         discountAmount: referral.discountAmount
       },
       quote: calculateGenAiQuote(referral.discountAmount)
@@ -727,14 +737,14 @@ app.post('/api/genai/registrations/step1', async (req, res) => {
     let referralWarning = '';
     const submittedReferral = normalizeReferralCode(body.referralCode);
     if (submittedReferral) {
-      referral = await findActiveReferral(submittedReferral);
+      referral = await findActiveReferral(submittedReferral, GENAI_WORKSHOP_ID);
       if (referral) {
         await prisma.referralCode.update({
           where: { id: referral.id },
           data: { usageCount: { increment: 1 } }
         }).catch(() => {});
       } else {
-        referralWarning = 'The referral code was not recognised, so no discount was applied.';
+        referralWarning = 'The referral code was not recognised for this workshop, so no discount was applied.';
       }
     }
 
@@ -961,12 +971,16 @@ app.post('/api/genai/registrations/:id/payment', async (req, res) => {
   }
 });
 
-// Admin referral codes. Codes are created here and shared through the URL,
-// never typed into the public registration form.
+// Admin referral codes. Every code is tagged to a workshop when it is created
+// and is shared through the URL, never typed into the public registration form.
 app.get('/api/referrals', requireAdmin, async (req, res) => {
   try {
     if (!isDatabaseConfigured) return res.json({ success: true, referrals: [] });
-    const referrals = await prisma.referralCode.findMany({ orderBy: { createdAt: 'desc' } });
+    const workshopId = String(req.query?.workshopId || '').trim();
+    const referrals = await prisma.referralCode.findMany({
+      where: workshopId ? { workshopId } : undefined,
+      orderBy: { createdAt: 'desc' }
+    });
     res.json({ success: true, count: referrals.length, referrals });
   } catch (err) {
     res.status(500).json({ error: 'Could not load referral codes.' });
@@ -979,11 +993,21 @@ app.post('/api/referrals', requireAdmin, async (req, res) => {
 
     const code = normalizeReferralCode(req.body?.code);
     const label = String(req.body?.label || '').trim();
+    const workshopId = String(req.body?.workshopId || '').trim();
     const discountAmount = Number(req.body?.discountAmount);
     const active = req.body?.active !== false;
 
     if (!/^[A-Z0-9][A-Z0-9-]{2,39}$/.test(code)) {
       return res.status(400).json({ error: 'Use 3 to 40 letters, numbers or hyphens for the code.' });
+    }
+    if (!workshopId) {
+      return res.status(400).json({ error: 'Select the workshop this referral code belongs to.' });
+    }
+    const workshop = await prisma.upcomingWorkshop
+      .findUnique({ where: { id: workshopId } })
+      .catch(() => null);
+    if (!workshop) {
+      return res.status(400).json({ error: 'That workshop was not found. Refresh the list and try again.' });
     }
     if (!Number.isInteger(discountAmount) || discountAmount < 0 || discountAmount > GENAI_BASE_PRICE) {
       return res.status(400).json({ error: `Discount must be a whole number between 0 and ${GENAI_BASE_PRICE}.` });
@@ -993,11 +1017,11 @@ app.post('/api/referrals', requireAdmin, async (req, res) => {
     if (existing) return res.status(409).json({ error: 'That referral code already exists.' });
 
     const referral = await prisma.referralCode.create({
-      data: { code, label, discountAmount, active }
+      data: { code, label, workshopId, discountAmount, active }
     });
     res.status(201).json({ success: true, referral });
   } catch (err) {
-    res.status(500).json({ error: 'Could not create the referral code.' });
+    res.status(500).json({ error: err.message || 'Could not create the referral code.' });
   }
 });
 
