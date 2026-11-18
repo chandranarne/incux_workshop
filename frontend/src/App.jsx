@@ -19,6 +19,7 @@ import PortalModal from './components/PortalModal';
 import Terms from './components/Pages/Terms';
 import PrivacyPolicy from './components/Pages/PrivacyPolicy';
 import GenAiWorkshopRegistration from './components/GenAiWorkshopRegistration';
+import DynamicWorkshopRegistration from './components/DynamicWorkshopRegistration';
 import AdminPage from './components/AdminPage';
 import PaymentPage from './components/PaymentPage';
 import PaymentSuccess from './components/PaymentSuccess';
@@ -155,6 +156,17 @@ export default function App() {
       return <PaymentCancel />;
     }
     return <PaymentPage />;
+  }
+
+  // Config-driven workshop forms live at /register/<slug>.
+  const registerMatch = window.location.pathname.match(/^\/register\/([^/]+)\/?$/i);
+  if (registerMatch) {
+    return (
+      <DynamicWorkshopRegistration
+        slug={decodeURIComponent(registerMatch[1])}
+        onBackHome={navigateHome}
+      />
+    );
   }
 
   return (

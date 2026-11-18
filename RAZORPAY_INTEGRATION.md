@@ -845,7 +845,9 @@ All required tables and columns already exist.
 | `frontend/src/services/api.js` | GenAI step helpers, referral admin helpers, `initiatePayment`, `confirmPayment`, status helpers |
 | `frontend/src/components/GenAiWorkshopRegistration.jsx` | Four-step registration, accommodation gate and trusted checkout |
 | `frontend/src/components/UpcomingWorkshopsSection.jsx` | Single-workshop text list and registration CTA |
-| `frontend/src/components/PortalModal.jsx` | Admin Payments and Referral Codes tabs |
+| `frontend/src/components/PortalModal.jsx` | Admin Payments, Referral Codes and Form Builder tabs |
+| `frontend/src/components/WorkshopFormBuilder.jsx` | Five-step admin builder for new workshops |
+| `frontend/src/components/DynamicWorkshopRegistration.jsx` | Public stepped form rendered from database config |
 | `frontend/src/components/PaymentSuccess.jsx` | Browser return confirmation and back to registration |
 | `frontend/src/components/PaymentCancel.jsx` | Cancelled or failed help page |
 | `frontend/src/components/Navbar.jsx`, `MenuOverlay.jsx` | Admin console links for desktop and mobile |
@@ -859,3 +861,31 @@ All required tables and columns already exist.
 | Trust repo `server/modules/payments/store.js` | `notifyAppPaid` webhook sender |
 | Trust repo `server/modules/payments/core/token.js` | Authoritative token algorithm |
 | Trust repo `server/cli/payment-apps.js` | App registration CLI |
+
+---
+
+## 19. Config-driven workshop form endpoints
+
+New workshops are stored as data and rendered at `/register/<slug>`. The Nov 28
+to 29 GenAI flow is unchanged and continues to use its own routes.
+
+| Method | Path | Purpose |
+| :--- | :--- | :--- |
+| `GET` | `/api/forms` | Admin list of saved workshop forms |
+| `POST` | `/api/forms` | Admin create from a stored JSON config |
+| `GET` | `/api/forms/:id` | Admin load one form for editing |
+| `PUT` | `/api/forms/:id` | Admin replace a form config |
+| `DELETE` | `/api/forms/:id` | Admin remove a form config |
+| `GET` | `/api/forms/by-slug/:slug` | Public load of a published form |
+| `POST` | `/api/forms/:slug/steps` | Public save one stepped answer set |
+| `GET` | `/api/forms/:slug/registrations/resume?email=` | Public resume by email |
+| `GET` | `/api/forms/registrations/:id` | Public load a saved registration |
+| `POST` | `/api/forms/registrations/:id/payment` | Admin-equivalent trusted checkout for a completed form |
+
+Only payment components marked as charged online are totalled by the server.
+The browser never sends an amount. A Payment step is required and must be the
+last step. The payment step also requires the terms tick box to be accepted on
+the server before a checkout session is created.
+
+The interview skill, config reference and API helper live in
+`.opencode/skills/workshop-intake/`.

@@ -240,3 +240,32 @@ is in `PAYMENT_INTEGRATION_PLAN.md` and the two-site app/secret reference is in
 3. **Accessibility**:
    - Keyboard accessible full-screen menu with Escape listener and scroll locking.
    - Dedicated `prefers-reduced-motion` toggle switch on navbar and OS detection.
+
+---
+
+## Config-driven workshop forms
+
+New workshops no longer need a new React component each time. An organiser can
+be interviewed with the `workshop-intake` skill, or can build the form in the
+admin console under **Form Builder**.
+
+- Admin forms live in `/admin` inside the passcode-gated console.
+- The builder is a five-step wizard: workshop details, steps and fields,
+  documents and accommodation, payment split, then review and publish.
+- Steps and fields can be reordered by dragging them or with the arrow buttons.
+- Preset fields include full name, email, phone, gender, department, year of
+  study, college and college location. Custom fields support text, email,
+  phone, number, date, paragraph, choice list and tick box.
+- Published forms are available at `/register/<slug>`.
+- Form configuration is stored in `workshop_forms`, `form_steps`,
+  `form_fields`, `workshop_documents` and `payment_components`. Participant
+  answers are stored in `registrations.intake_data` in Railway PostgreSQL.
+- Only payment components marked as charged online are added to the checkout
+  total, and the total is always calculated on the server.
+- The existing Nov 28 to 29 GenAI registration at `/gen-ai-workshop` is a
+  separate verified flow and is not affected.
+
+The interview skill lives at `.opencode/skills/workshop-intake/SKILL.md`. Its
+config reference is in `references/config-schema.md`, and the helper that saves
+a config through the admin API is in `scripts/create-workshop-form.mjs`. The
+helper reads `WORKSHOP_API_BASE` and `ADMIN_PASSCODE` from the environment.

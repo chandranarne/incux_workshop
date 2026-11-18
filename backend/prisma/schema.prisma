@@ -102,8 +102,14 @@ model Registration {
   ipAddress            String?  @map("ip_address")
   userAgent            String?  @map("user_agent")
 
-  payments             Payment[]
+  // Config-driven workshop forms (future workshops, the GenAI flow is unchanged)
+  workshopFormId       String?  @map("workshop_form_id")
+  intakeData           Json?    @map("intake_data")
 
+  payments             Payment[]
+  workshopForm         WorkshopForm? @relation(fields: [workshopFormId], references: [id])
+
+  @@index([workshopFormId])
   @@map("registrations")
 }
 
@@ -124,6 +130,100 @@ model ReferralCode {
 
   @@index([workshopId])
   @@map("referral_codes")
+}
+
+// ==============================================================================
+// CONFIG-DRIVEN WORKSHOP FORMS
+// A non-coder can describe a new workshop through the intake skill or the admin
+// builder. The public registration form is rendered from this configuration,
+// so no new React component is needed for each workshop.
+// ==============================================================================
+model WorkshopForm {
+  id                      String   @id @default(cuid()) @map("id")
+  slug                    String   @unique @map("slug")
+  title                   String   @map("title")
+  category                String   @default("") @map("category")
+  dates                   String   @default("") @map("dates")
+  location                String   @default("") @map("location")
+  mode                    String   @default("Offline") @map("mode")
+  description             String   @default("") @map("description")
+  status                  String   @default("Draft") @map("status") // Draft, Published
+  accommodationRequired   Boolean  @default(false) @map("accommodation_required")
+  accommodationPaymentUrl String   @default("") @map("accommodation_payment_url")
+  whatsappUrl             String   @default("") @map("whatsapp_url")
+  accommodationNote       String   @default("") @map("accommodation_note")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  steps        FormStep[]
+  documents    WorkshopDocument[]
+  components   PaymentComponent[]
+  registrations Registration[]
+
+  @@map("workshop_forms")
+}
+
+model FormStep {
+  id          String @id @default(cuid()) @map("id")
+  formId      String @map("form_id")
+  key         String @map("key")
+  title       String @map("title")
+  description String @default("") @map("description")
+  kind        String @default("fields") @map("kind") // fields, documents, accommodation, payment
+  orderIndex  Int    @default(0) @map("order_index")
+
+  form        WorkshopForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  fields      FormField[]
+
+  @@index([formId])
+  @@map("form_steps")
+}
+
+model FormField {
+  id          String  @id @default(cuid()) @map("id")
+  stepId      String  @map("step_id")
+  key         String  @map("key")
+  label       String  @map("label")
+  type        String  @default("text") @map("type") // text, email, phone, number, date, textarea, select, checkbox
+  placeholder String  @default("") @map("placeholder")
+  helpText    String  @default("") @map("help_text")
+  required    Boolean @default(false) @map("required")
+  options     Json?   @map("options")
+  orderIndex  Int     @default(0) @map("order_index")
+
+  step FormStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  @@index([stepId])
+  @@map("form_fields")
+}
+
+model WorkshopDocument {
+  id         String @id @default(cuid()) @map("id")
+  formId     String @map("form_id")
+  title      String @map("title")
+  url        String @map("url")
+  orderIndex Int    @default(0) @map("order_index")
+
+  form WorkshopForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@map("workshop_documents")
+}
+
+model PaymentComponent {
+  id           String  @id @default(cuid()) @map("id")
+  formId       String  @map("form_id")
+  label        String  @map("label")
+  amount       Int     @default(0) @map("amount") // rupees
+  kind         String  @default("other") @map("kind") // base, platform_fee, accommodation, other
+  chargeOnline Boolean @default(true) @map("charge_online")
+  externalUrl  String  @default("") @map("external_url")
+  orderIndex   Int     @default(0) @map("order_index")
+
+  form WorkshopForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@map("payment_components")
 }
 
 // 6. PAYMENTS TABLE (Razorpay payment records)

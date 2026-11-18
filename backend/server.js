@@ -1036,6 +1036,553 @@ app.delete('/api/referrals/:code', requireAdmin, async (req, res) => {
   }
 });
 
+// ==========================================
+// CONFIG-DRIVEN WORKSHOP FORMS (NEW WORKSHOPS)
+// The GenAI flow above is untouched. These routes let an interview or the
+// admin builder store a workshop as data, then render it as a stepped form.
+// ==========================================
+const FORM_FIELD_TYPES = ['text', 'email', 'phone', 'number', 'date', 'textarea', 'select', 'checkbox'];
+const FORM_STEP_KINDS = ['fields', 'documents', 'accommodation', 'payment'];
+
+const slugifyForm = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+
+// Field keys keep underscores so presets such as full_name and year_of_study
+// retain the exact names used by the public form and stored intake data.
+const normaliseFieldKey = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+
+const dynamicRegistrationView = (registration) => {
+  if (!registration) return null;
+  return {
+    id: registration.id,
+    registrationCode: registration.registrationCode,
+    workshopId: registration.workshopId,
+    workshopTitle: registration.workshopTitle,
+    formId: registration.workshopFormId,
+    candidateName: registration.candidateName,
+    candidateEmail: registration.candidateEmail,
+    candidatePhone: registration.candidatePhone,
+    currentStep: registration.currentStep,
+    paymentStatus: registration.paymentStatus,
+    intakeData: registration.intakeData || {}
+  };
+};
+
+const formQuote = (components = []) => {
+  const lines = components.map((component) => ({
+    id: component.id,
+    label: component.label,
+    amount: Math.max(0, Math.round(Number(component.amount) || 0)),
+    kind: component.kind,
+    chargeOnline: Boolean(component.chargeOnline),
+    externalUrl: component.externalUrl || ''
+  }));
+  const total = lines
+    .filter((line) => line.chargeOnline)
+    .reduce((sum, line) => sum + line.amount, 0);
+  return { lines, total, currency: 'INR' };
+};
+
+const formInclude = {
+  steps: { include: { fields: true }, orderBy: { orderIndex: 'asc' } },
+  documents: { orderBy: { orderIndex: 'asc' } },
+  components: { orderBy: { orderIndex: 'asc' } }
+};
+
+const formView = (form) => {
+  if (!form) return null;
+  const quote = formQuote(form.components || []);
+  return {
+    id: form.id,
+    slug: form.slug,
+    title: form.title,
+    category: form.category,
+    dates: form.dates,
+    location: form.location,
+    mode: form.mode,
+    description: form.description,
+    status: form.status,
+    accommodationRequired: Boolean(form.accommodationRequired),
+    accommodationPaymentUrl: form.accommodationPaymentUrl,
+    whatsappUrl: form.whatsappUrl,
+    accommodationNote: form.accommodationNote,
+    steps: (form.steps || []).map((step) => ({
+      id: step.id,
+      key: step.key,
+      title: step.title,
+      description: step.description,
+      kind: step.kind,
+      orderIndex: step.orderIndex,
+      fields: (step.fields || [])
+        .slice()
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .map((field) => ({
+          id: field.id,
+          key: field.key,
+          label: field.label,
+          type: field.type,
+          placeholder: field.placeholder,
+          helpText: field.helpText,
+          required: Boolean(field.required),
+          options: field.options,
+          orderIndex: field.orderIndex
+        }))
+    })),
+    documents: form.documents || [],
+    components: quote.lines,
+    quote
+  };
+};
+
+const normaliseFormPayload = (body) => {
+  const title = String(body?.title || '').trim();
+  const slug = slugifyForm(body?.slug || title);
+  const errors = [];
+  if (!title) errors.push('A workshop title is required.');
+  if (!slug) errors.push('A slug is required.');
+
+  const steps = Array.isArray(body?.steps) ? body.steps : [];
+  if (steps.length === 0) errors.push('Add at least one registration step.');
+
+  const seenStepKeys = new Set();
+  const seenFieldKeys = new Set();
+  const cleanSteps = steps.map((step, stepIndex) => {
+    const stepTitle = String(step?.title || '').trim();
+    const stepKey = slugifyForm(step?.key || stepTitle) || `step-${stepIndex + 1}`;
+    const kind = String(step?.kind || 'fields').trim();
+    if (!stepTitle) errors.push(`Step ${stepIndex + 1} needs a title.`);
+    if (seenStepKeys.has(stepKey)) errors.push(`Duplicate step key: ${stepKey}.`);
+    seenStepKeys.add(stepKey);
+    if (!FORM_STEP_KINDS.includes(kind)) {
+      errors.push(`Step ${stepTitle || stepIndex + 1} has an unknown kind.`);
+    }
+
+    const rawFields = Array.isArray(step?.fields) ? step.fields : [];
+    const fields = rawFields.map((field, fieldIndex) => {
+      const label = String(field?.label || '').trim();
+      const key = normaliseFieldKey(field?.key || label) || `field_${fieldIndex + 1}`;
+      const type = String(field?.type || 'text').trim();
+      if (!label) errors.push(`A field in ${stepTitle || stepKey} needs a label.`);
+      if (seenFieldKeys.has(key)) errors.push(`Duplicate field key: ${key}.`);
+      seenFieldKeys.add(key);
+      if (!FORM_FIELD_TYPES.includes(type)) {
+        errors.push(`Field ${label || key} has an unknown type.`);
+      }
+      const options = Array.isArray(field?.options)
+        ? field.options.map((option) => String(option).trim()).filter(Boolean)
+        : [];
+      if (type === 'select' && options.length === 0) {
+        errors.push(`Select field ${label || key} needs at least one option.`);
+      }
+      return {
+        key,
+        label,
+        type,
+        placeholder: String(field?.placeholder || '').trim(),
+        helpText: String(field?.helpText || '').trim(),
+        required: Boolean(field?.required),
+        options,
+        orderIndex: fieldIndex
+      };
+    });
+
+    return {
+      key: stepKey,
+      title: stepTitle,
+      description: String(step?.description || '').trim(),
+      kind,
+      orderIndex: stepIndex,
+      fields
+    };
+  });
+
+  const documents = (Array.isArray(body?.documents) ? body.documents : []).map((doc, index) => {
+    const title = String(doc?.title || '').trim();
+    const url = String(doc?.url || '').trim();
+    if (title && !/^https?:\/\//i.test(url)) errors.push(`Document ${title} needs an http or https link.`);
+    return { title, url, orderIndex: index };
+  }).filter((doc) => doc.title && doc.url);
+
+  const components = (Array.isArray(body?.components) ? body.components : []).map((component, index) => {
+    const label = String(component?.label || '').trim();
+    const amount = Number(component?.amount);
+    if (label && (!Number.isInteger(amount) || amount < 0)) {
+      errors.push(`Payment component ${label} needs a whole number amount of zero or more.`);
+    }
+    return {
+      label,
+      amount: Number.isInteger(amount) && amount >= 0 ? amount : 0,
+      kind: String(component?.kind || 'other').trim(),
+      chargeOnline: component?.chargeOnline !== false,
+      externalUrl: String(component?.externalUrl || '').trim(),
+      orderIndex: index
+    };
+  }).filter((component) => component.label);
+
+  if (errors.length > 0) return { errors };
+
+  const paymentSteps = cleanSteps.filter((step) => step.kind === 'payment');
+  if (paymentSteps.length === 0) errors.push('Add a Payment step so participants can complete checkout.');
+  if (paymentSteps.length > 1) errors.push('Add only one Payment step.');
+  if (paymentSteps.length === 1 && paymentSteps[0].orderIndex !== cleanSteps.length - 1) {
+    errors.push('The Payment step must be the last step.');
+  }
+  if (body?.accommodationRequired && !cleanSteps.some((step) => step.kind === 'accommodation')) {
+    errors.push('Add an Accommodation step when accommodation is required.');
+  }
+  if (documents.length === 0) errors.push('Add at least one workshop document link.');
+  if (components.length === 0) errors.push('Add at least one payment component.');
+  if (errors.length > 0) return { errors };
+
+  return {
+    errors,
+    data: {
+      slug,
+      title,
+      category: String(body?.category || '').trim(),
+      dates: String(body?.dates || '').trim(),
+      location: String(body?.location || '').trim(),
+      mode: String(body?.mode || 'Offline').trim(),
+      description: String(body?.description || '').trim(),
+      status: body?.status === 'Published' ? 'Published' : 'Draft',
+      accommodationRequired: Boolean(body?.accommodationRequired),
+      accommodationPaymentUrl: String(body?.accommodationPaymentUrl || '').trim(),
+      whatsappUrl: String(body?.whatsappUrl || '').trim(),
+      accommodationNote: String(body?.accommodationNote || '').trim(),
+      steps: cleanSteps,
+      documents,
+      components
+    }
+  };
+};
+
+const createFormNestedData = (data) => ({
+  slug: data.slug,
+  title: data.title,
+  category: data.category,
+  dates: data.dates,
+  location: data.location,
+  mode: data.mode,
+  description: data.description,
+  status: data.status,
+  accommodationRequired: data.accommodationRequired,
+  accommodationPaymentUrl: data.accommodationPaymentUrl,
+  whatsappUrl: data.whatsappUrl,
+  accommodationNote: data.accommodationNote,
+  steps: {
+    create: data.steps.map((step) => ({
+      key: step.key,
+      title: step.title,
+      description: step.description,
+      kind: step.kind,
+      orderIndex: step.orderIndex,
+      fields: {
+        create: step.fields.map((field) => ({
+          key: field.key,
+          label: field.label,
+          type: field.type,
+          placeholder: field.placeholder,
+          helpText: field.helpText,
+          required: field.required,
+          options: field.options,
+          orderIndex: field.orderIndex
+        }))
+      }
+    }))
+  },
+  documents: { create: data.documents },
+  components: { create: data.components }
+});
+
+const loadPublishedForm = async (slug) => {
+  if (!isDatabaseConfigured) return null;
+  return prisma.workshopForm.findFirst({
+    where: { slug: String(slug || '').trim(), status: 'Published' },
+    include: formInclude
+  });
+};
+
+// Admin form management.
+app.get('/api/forms', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.json({ success: true, forms: [] });
+    const forms = await prisma.workshopForm.findMany({ include: formInclude, orderBy: { createdAt: 'desc' } });
+    res.json({ success: true, count: forms.length, forms: forms.map(formView) });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not load workshop forms.' });
+  }
+});
+
+app.get('/api/forms/by-slug/:slug', async (req, res) => {
+  try {
+    const form = await loadPublishedForm(req.params.slug);
+    if (!form) return res.status(404).json({ error: 'That workshop form is not available.' });
+    res.json({ success: true, form: formView(form) });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not load the workshop form.' });
+  }
+});
+
+app.get('/api/forms/:id', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(404).json({ error: 'Workshop form not found.' });
+    const form = await prisma.workshopForm.findUnique({ where: { id: req.params.id }, include: formInclude });
+    if (!form) return res.status(404).json({ error: 'Workshop form not found.' });
+    res.json({ success: true, form: formView(form) });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not load the workshop form.' });
+  }
+});
+
+app.post('/api/forms', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Workshop storage is not available.' });
+    const { errors, data } = normaliseFormPayload(req.body);
+    if (errors.length > 0) return res.status(400).json({ error: errors[0], errors });
+    const exists = await prisma.workshopForm.findUnique({ where: { slug: data.slug } });
+    if (exists) return res.status(409).json({ error: 'That URL slug is already in use.' });
+
+    const form = await prisma.workshopForm.create({
+      data: createFormNestedData(data),
+      include: formInclude
+    });
+    res.status(201).json({ success: true, form: formView(form) });
+  } catch (err) {
+    console.warn('[Form create error]:', err.message);
+    res.status(500).json({ error: 'Could not create the workshop form.' });
+  }
+});
+
+app.put('/api/forms/:id', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Workshop storage is not available.' });
+    const existing = await prisma.workshopForm.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Workshop form not found.' });
+    const { errors, data } = normaliseFormPayload(req.body);
+    if (errors.length > 0) return res.status(400).json({ error: errors[0], errors });
+    const clash = await prisma.workshopForm.findFirst({ where: { slug: data.slug, id: { not: existing.id } } });
+    if (clash) return res.status(409).json({ error: 'That URL slug is already in use.' });
+
+    await prisma.$transaction([
+      prisma.formStep.deleteMany({ where: { formId: existing.id } }),
+      prisma.workshopDocument.deleteMany({ where: { formId: existing.id } }),
+      prisma.paymentComponent.deleteMany({ where: { formId: existing.id } })
+    ]);
+    const form = await prisma.workshopForm.update({
+      where: { id: existing.id },
+      data: createFormNestedData(data),
+      include: formInclude
+    });
+    res.json({ success: true, form: formView(form) });
+  } catch (err) {
+    console.warn('[Form update error]:', err.message);
+    res.status(500).json({ error: 'Could not update the workshop form.' });
+  }
+});
+
+app.delete('/api/forms/:id', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Workshop storage is not available.' });
+    await prisma.workshopForm.delete({ where: { id: req.params.id } });
+    res.json({ success: true, message: 'Workshop form removed.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not remove the workshop form.' });
+  }
+});
+
+// Public stepped registration against a published form.
+app.post('/api/forms/:slug/steps', async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Registration is not available right now.' });
+    const form = await loadPublishedForm(req.params.slug);
+    if (!form) return res.status(404).json({ error: 'That workshop form is not available.' });
+
+    const stepKey = String(req.body?.stepKey || '').trim();
+    const step = form.steps.find((item) => item.key === stepKey);
+    if (!step) return res.status(400).json({ error: 'Unknown registration step.' });
+
+    const values = req.body?.values && typeof req.body.values === 'object' ? req.body.values : {};
+    const errors = {};
+    if (step.kind === 'fields') {
+      step.fields.forEach((field) => {
+        const value = values[field.key];
+        const empty = field.type === 'checkbox' ? value !== true : String(value || '').trim() === '';
+        if (field.required && empty) errors[field.key] = `${field.label} is required.`;
+      });
+    }
+    if (step.kind === 'accommodation' && form.accommodationRequired) {
+      const choice = String(values.__accommodationChoice || '').trim();
+      if (!['Yes', 'No'].includes(choice)) errors.__accommodationChoice = 'Select whether you need accommodation.';
+      if (choice === 'Yes' && values.__accommodationPaid !== true) {
+        errors.__accommodationPaid = 'Confirm that the accommodation payment is complete.';
+      }
+    }
+    if (step.kind === 'payment' && values.__termsAccepted !== true) {
+      errors.__termsAccepted = 'Accept the terms and privacy policy before payment.';
+    }
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ success: false, error: 'Please check the highlighted fields.', errors });
+    }
+
+    const allFields = form.steps.flatMap((item) => item.fields);
+    const nameField = allFields.find((field) => /name/i.test(field.key)) || allFields.find((field) => field.type === 'text');
+    const emailField = allFields.find((field) => field.type === 'email');
+    const phoneField = allFields.find((field) => field.type === 'phone');
+    const name = String(values[nameField?.key] || '').trim() || 'Workshop Candidate';
+    const email = String(values[emailField?.key] || '').trim().toLowerCase();
+    const phone = String(values[phoneField?.key] || '').trim();
+
+    let registration = req.body?.registrationId
+      ? await prisma.registration.findUnique({ where: { id: String(req.body.registrationId) } })
+      : null;
+    if (registration && registration.workshopFormId !== form.id) {
+      return res.status(404).json({ error: 'Registration not found.' });
+    }
+
+    if (!registration && email) {
+      registration = await prisma.registration.findFirst({
+        where: { workshopFormId: form.id, candidateEmail: email }
+      });
+    }
+    if (registration?.paymentStatus === 'paid') {
+      return res.status(409).json({ error: 'This registration has already been confirmed.' });
+    }
+
+    const common = {
+      workshopId: form.slug,
+      workshopTitle: form.title,
+      workshopFormId: form.id,
+      candidateName: registration?.candidateName || name,
+      candidateEmail: registration?.candidateEmail || email || `candidate-${Date.now()}@workshops.incuxai.local`,
+      candidatePhone: registration?.candidatePhone || phone || '',
+      intakeData: { ...(registration?.intakeData || {}), ...values },
+      currentStep: Math.max(registration?.currentStep || 1, step.orderIndex + 1),
+      ipAddress: req.ip || null,
+      userAgent: req.headers['user-agent'] || null
+    };
+
+    if (registration) {
+      registration = await prisma.registration.update({ where: { id: registration.id }, data: common });
+    } else {
+      registration = await prisma.registration.create({
+        data: {
+          ...common,
+          id: `REG-DYN-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          registrationCode: `WF_${slugifyForm(form.slug).toUpperCase().slice(0, 12)}_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}_${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
+          status: 'Confirmed',
+          paymentStatus: 'pending'
+        }
+      });
+    }
+
+    const next = form.steps.find((item) => item.orderIndex === step.orderIndex + 1);
+    res.json({
+      success: true,
+      registration: dynamicRegistrationView(registration),
+      nextStepKey: next?.key || null,
+      totalSteps: form.steps.length,
+      quote: formQuote(form.components)
+    });
+  } catch (err) {
+    console.warn('[Form step error]:', err.message);
+    res.status(500).json({ error: 'Could not save your progress. Please try again.' });
+  }
+});
+
+app.get('/api/forms/:slug/registrations/resume', async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.json({ success: true, registration: null });
+    const form = await loadPublishedForm(req.params.slug);
+    if (!form) return res.status(404).json({ error: 'That workshop form is not available.' });
+    const email = String(req.query.email || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'Email is required.' });
+    const registration = await prisma.registration.findFirst({
+      where: { workshopFormId: form.id, candidateEmail: email }
+    });
+    res.json({ success: true, registration: dynamicRegistrationView(registration) });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not resume the registration.' });
+  }
+});
+
+app.get('/api/forms/registrations/:id', async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.json({ success: true, registration: null });
+    const registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
+    if (!registration?.workshopFormId) return res.status(404).json({ error: 'Registration not found.' });
+    const form = await prisma.workshopForm.findUnique({
+      where: { id: registration.workshopFormId },
+      include: formInclude
+    });
+    res.json({
+      success: true,
+      registration: dynamicRegistrationView(registration),
+      form: form ? formView(form) : null,
+      quote: form ? formQuote(form.components) : null
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not load the registration.' });
+  }
+});
+
+app.post('/api/forms/registrations/:id/payment', async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Payment is not available right now.' });
+    const registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
+    if (!registration?.workshopFormId) return res.status(404).json({ error: 'Registration not found.' });
+    const form = await prisma.workshopForm.findUnique({
+      where: { id: registration.workshopFormId },
+      include: formInclude
+    });
+    if (!form || form.status !== 'Published') return res.status(404).json({ error: 'Workshop form not found.' });
+    const intake = registration.intakeData && typeof registration.intakeData === 'object' ? registration.intakeData : {};
+    if (intake.__termsAccepted !== true) {
+      return res.status(400).json({ error: 'Accept the terms and privacy policy before paying.' });
+    }
+    if ((registration.currentStep || 1) < form.steps.length) {
+      return res.status(400).json({ error: 'Complete all registration steps before paying.' });
+    }
+    if (form.accommodationRequired && intake.__accommodationChoice === 'Yes' && intake.__accommodationPaid !== true) {
+      return res.status(400).json({ error: 'Complete the accommodation payment before paying for the workshop.' });
+    }
+
+    const quote = formQuote(form.components);
+    if (quote.total <= 0) {
+      return res.status(400).json({ error: 'No online payment is configured for this workshop.' });
+    }
+
+    const returnUrl = new URL(PAYMENT_RETURN_URL);
+    returnUrl.searchParams.set('registration', registration.id);
+    returnUrl.searchParams.set('form', form.slug);
+
+    const result = await createTrustPaymentSession({
+      registrationId: registration.id,
+      workshopId: form.slug,
+      amountInPaise: quote.total * 100,
+      workshopTitle: form.title,
+      payerName: registration.candidateName,
+      payerEmail: registration.candidateEmail,
+      payerPhone: registration.candidatePhone,
+      candidateInstitution: String(intake.college || intake.institution || ''),
+      returnUrl: returnUrl.toString(),
+      metadata: { registrationCode: registration.registrationCode || '', formSlug: form.slug }
+    });
+    res.json({ ...result, quote });
+  } catch (err) {
+    console.warn('[Form payment error]:', err.message);
+    res.status(500).json({ error: err.message || 'Could not start the secure checkout.' });
+  }
+});
+
 // Data paths for local JSON fallback
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');

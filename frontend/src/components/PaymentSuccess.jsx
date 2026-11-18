@@ -7,6 +7,7 @@ export default function PaymentSuccess() {
   const [error, setError] = useState('');
   const [details, setDetails] = useState(null);
   const [registrationId, setRegistrationId] = useState('');
+  const [formSlug, setFormSlug] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -14,6 +15,7 @@ export default function PaymentSuccess() {
     const status = params.get('status') || '';
     const reference = params.get('token') || params.get('reference') || '';
     setRegistrationId(params.get('registration') || '');
+    setFormSlug(String(params.get('form') || '').trim());
 
     if (status === 'cancelled' || status === 'failed') {
       setState('failed');
@@ -120,7 +122,9 @@ export default function PaymentSuccess() {
             onClick={() =>
               window.location.assign(
                 registrationId
-                  ? `/gen-ai-workshop?registration=${encodeURIComponent(registrationId)}`
+                  ? formSlug
+                    ? `/register/${encodeURIComponent(formSlug)}?registration=${encodeURIComponent(registrationId)}`
+                    : `/gen-ai-workshop?registration=${encodeURIComponent(registrationId)}`
                   : '/'
               )
             }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import WorkshopFormBuilder from './WorkshopFormBuilder';
 import {
   X,
   PlusCircle,
@@ -348,6 +349,13 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
                 <span>Post Workshop</span>
               </button>
               <button
+                onClick={() => setActiveTab('form-builder')}
+                className={`py-3.5 px-4 text-xs font-mono font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer ${activeTab === 'form-builder' ? 'border-[#FACC15] dark:border-[#FACC15] text-amber-600 dark:text-[#FACC15] font-bold' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-amber-600 dark:hover:text-[#FACC15]'}`}
+              >
+                <BookmarkCheck className="w-4 h-4" />
+                <span>Form Builder</span>
+              </button>
+              <button
                 onClick={() => setActiveTab('manage-workshops')}
                 className={`py-3.5 px-4 text-xs font-mono font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer ${activeTab === 'manage-workshops' ? 'border-[#FACC15] dark:border-[#FACC15] text-amber-600 dark:text-[#FACC15] font-bold' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-amber-600 dark:hover:text-[#FACC15]'}`}
               >
@@ -610,6 +618,13 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
           )}
 
 
+
+          {/* ========================================================= */}
+          {/* ADMIN VIEW: CONFIG-DRIVEN WORKSHOP FORM BUILDER           */}
+          {/* ========================================================= */}
+          {isAdmin && activeTab === 'form-builder' && (
+            <WorkshopFormBuilder notify={notify} />
+          )}
 
           {/* ========================================================= */}
           {/* ADMIN VIEW: POST WORKSHOP                                 */}

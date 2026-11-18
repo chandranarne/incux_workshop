@@ -425,3 +425,69 @@ export const deleteReferralCode = async (code) =>
     method: 'DELETE',
     headers: adminHeaders()
   });
+
+// ==========================================
+// CONFIG-DRIVEN WORKSHOP FORMS
+// ==========================================
+export const fetchWorkshopForms = async () => {
+  const data = await jsonRequest(`${API_BASE}/forms`, { headers: adminHeaders() });
+  return data.forms || [];
+};
+
+export const fetchWorkshopFormById = async (id) => {
+  const data = await jsonRequest(`${API_BASE}/forms/${encodeURIComponent(id)}`, {
+    headers: adminHeaders()
+  });
+  return data.form;
+};
+
+export const createWorkshopForm = async (payload) =>
+  jsonRequest(`${API_BASE}/forms`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...adminHeaders() },
+    body: JSON.stringify(payload)
+  });
+
+export const updateWorkshopForm = async (id, payload) =>
+  jsonRequest(`${API_BASE}/forms/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...adminHeaders() },
+    body: JSON.stringify(payload)
+  });
+
+export const deleteWorkshopForm = async (id) =>
+  jsonRequest(`${API_BASE}/forms/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: adminHeaders()
+  });
+
+export const fetchPublishedWorkshopForm = async (slug) => {
+  const data = await jsonRequest(`${API_BASE}/forms/by-slug/${encodeURIComponent(slug)}`);
+  return data.form;
+};
+
+export const submitFormStep = async (slug, payload) =>
+  jsonRequest(`${API_BASE}/forms/${encodeURIComponent(slug)}/steps`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+export const resumeFormRegistration = async (slug, email) => {
+  const data = await jsonRequest(
+    `${API_BASE}/forms/${encodeURIComponent(slug)}/registrations/resume?email=${encodeURIComponent(email)}`
+  );
+  return data.registration;
+};
+
+export const fetchFormRegistration = async (id) => {
+  const data = await jsonRequest(`${API_BASE}/forms/registrations/${encodeURIComponent(id)}`);
+  return data;
+};
+
+export const initiateFormPayment = async (registrationId) =>
+  jsonRequest(`${API_BASE}/forms/registrations/${encodeURIComponent(registrationId)}/payment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  });
