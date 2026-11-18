@@ -301,28 +301,32 @@ export const fetchAllRegistrations = async () => {
 };
 
 // ==========================================
-// PAYMENTS (Razorpay via IncuXai Education Trust)
+// PAYMENTS (IncuXai Education Trust)
+// Redirects to trust platform for Razorpay checkout.
 // ==========================================
 
-export const createPaymentOrder = async (registrationId, amount) => {
-  const res = await fetch(`${API_BASE}/payments/create-order`, {
+export const initiatePayment = async (registrationId, amount, workshopTitle, payer) => {
+  const res = await fetch(`${API_BASE}/payments/initiate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ registrationId, amount })
+    body: JSON.stringify({
+      registrationId,
+      amount,
+      workshopTitle,
+      payerName: payer?.name || '',
+      payerEmail: payer?.email || '',
+      payerPhone: payer?.phone || ''
+    })
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Failed to create payment order');
+  if (!res.ok) throw new Error(data.error || 'Failed to initiate payment');
   return data;
 };
 
-export const verifyPayment = async (paymentData) => {
-  const res = await fetch(`${API_BASE}/payments/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(paymentData)
-  });
+export const confirmPayment = async (reference) => {
+  const res = await fetch(`${API_BASE}/payments/confirm?reference=${encodeURIComponent(reference)}`);
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Payment verification failed');
+  if (!res.ok) throw new Error(data.error || 'Payment confirmation failed');
   return data;
 };
 

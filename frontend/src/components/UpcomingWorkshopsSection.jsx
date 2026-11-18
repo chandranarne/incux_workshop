@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, ArrowRight, Clock } from 'lucide-react';
 import {
   fetchUpcomingWorkshops,
-  DEFAULT_UPCOMING_WORKSHOPS,
-  createPaymentOrder,
-  registerForWorkshop
+  DEFAULT_UPCOMING_WORKSHOPS
 } from '../services/api';
 import genAiBannerImg from '../assets/generative_ai_workshop_banner.jpg';
 import hybridBannerImg from '../assets/ai_workshop_10d_banner.jpg';

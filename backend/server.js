@@ -144,67 +144,130 @@ app.get('/api/admin/session', requireAdmin, (req, res) => {
 });
 
 // ==========================================
-// PAYMENT GATEWAY (Razorpay via IncuXai Education Trust)
+// PAYMENT GATEWAY (IncuXai Education Trust)
+// Redirects to trust platform for Razorpay checkout.
+// Token signing is HMAC-SHA256 JWT-like, same algorithm as
+// incuxai.com's TrustPaymentToken.php.
 // ==========================================
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
-const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
+const TRUST_PAYMENT_SECRET = process.env.TRUST_PAYMENT_SECRET || '';
+const TRUST_PAYMENT_URL = process.env.TRUST_PAYMENT_URL || 'https://pay.incuxaieducationtrust.org';
+const TRUST_PAYMENT_APP_ID = process.env.TRUST_PAYMENT_APP_ID || 'incuxai';
 const PAYMENT_RETURN_URL = process.env.PAYMENT_RETURN_URL || 'https://workshops.incuxai.com/payment/success';
 const PAYMENT_CANCEL_URL = process.env.PAYMENT_CANCEL_URL || 'https://workshops.incuxai.com/payment/cancel';
 
-const razorpayAuth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
-
-const razorpayRequest = async (method, path, body = null) => {
-  const url = `https://api.razorpay.com/v1${path}`;
-  const headers = {
-    Authorization: `Basic ${razorpayAuth}`,
-    'Content-Type': 'application/json'
-  };
-  const options = { method, headers };
-  if (body) options.body = JSON.stringify(body);
-  const res = await fetch(url, options);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.error?.description || `Razorpay API error: ${res.status}`);
-  }
-  return data;
+/**
+ * Sign a JWT-like HMAC-SHA256 token, compatible with the trust platform's
+ * verifyToken() and incuxai.com's TrustPaymentToken::sign().
+ */
+const signTrustToken = (payload) => {
+  const secret = (TRUST_PAYMENT_SECRET || '').trim();
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
+  return `${header}.${body}.${sig}`;
 };
 
-const verifyRazorpaySignature = (orderId, paymentId, signature) => {
-  const body = orderId + '|' + paymentId;
-  const expected = crypto.createHmac('sha256', RAZORPAY_KEY_SECRET).update(body).digest('hex');
-  return expected === signature;
+/**
+ * Call the trust platform's /api/payments/confirm to redeem a success_token.
+ */
+const trustConfirm = async (reference) => {
+  const res = await fetch(`${TRUST_PAYMENT_URL}/api/payments/confirm`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reference })
+  });
+  if (!res.ok) throw new Error(`Trust confirm failed: HTTP ${res.status}`);
+  return res.json();
 };
 
-// POST /api/payments/create-order - Create Razorpay order for workshop registration
-app.post('/api/payments/create-order', async (req, res) => {
+// POST /api/payments/initiate - Sign a token and return trust gateway URL
+app.post('/api/payments/initiate', async (req, res) => {
   try {
-    const { registrationId, amount, currency = 'INR' } = req.body;
-    if (!registrationId || !amount) {
-      return res.status(400).json({ error: 'registrationId and amount are required.' });
+    const {
+      registrationId,
+      workshopId,
+      amount,
+      currency = 'INR',
+      workshopTitle,
+      payerName,
+      payerEmail,
+      payerPhone,
+      candidateInstitution
+    } = req.body;
+    if (!amount) {
+      return res.status(400).json({ error: 'amount is required.' });
     }
 
     const amountInPaise = Math.round(amount * 100);
 
-    const order = await razorpayRequest('POST', '/orders', {
+    // Create or use existing registration
+    let regId = registrationId;
+    if (!regId && workshopId && payerEmail) {
+      if (isDatabaseConfigured) {
+        try {
+          const existingReg = await prisma.registration.findFirst({
+            where: {
+              candidateEmail: payerEmail.trim().toLowerCase(),
+              workshopId
+            }
+          });
+          if (existingReg) {
+            regId = existingReg.id;
+          } else {
+            const newReg = await prisma.registration.create({
+              data: {
+                id: `REG-${Date.now()}`,
+                workshopId,
+                workshopTitle: workshopTitle || 'Workshop',
+                candidateName: payerName || 'Candidate',
+                candidateEmail: payerEmail.trim().toLowerCase(),
+                candidatePhone: payerPhone || 'Not provided',
+                candidateInstitution: candidateInstitution || 'Independent Candidate',
+                paymentStatus: 'pending'
+              }
+            });
+            regId = newReg.id;
+          }
+        } catch (e) {
+          console.warn('[Prisma registration create error]:', e.message);
+        }
+      }
+    }
+
+    if (!regId) {
+      return res.status(400).json({ error: 'Unable to create registration. Provide registrationId or workshopId + payerEmail.' });
+    }
+
+    const transactionId = `WS-${regId}-${Date.now()}`;
+
+    const token = signTrustToken({
+      transaction_id: transactionId,
       amount: amountInPaise,
       currency,
-      receipt: `reg_${registrationId}`,
-      notes: { registrationId }
+      customer: { name: payerName || '', email: payerEmail || '', phone: payerPhone || '' },
+      metadata: {
+        registrationId: regId,
+        workshopTitle: workshopTitle || '',
+        source: 'workshops_incuxai_com'
+      },
+      callback_url: PAYMENT_RETURN_URL
     });
 
-    // Save payment record (pending)
+    const trustUrl = `${TRUST_PAYMENT_URL}/pay.html?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent(PAYMENT_RETURN_URL)}&app=${TRUST_PAYMENT_APP_ID}`;
+
+    // Save pending payment record
     let payment = null;
     if (isDatabaseConfigured) {
       try {
         payment = await prisma.payment.create({
           data: {
             id: `PAY-${Date.now()}`,
-            registrationId,
-            razorpayOrderId: order.id,
+            registrationId: regId,
+            razorpayOrderId: null,
             amount: amountInPaise,
             currency,
-            status: 'pending'
+            status: 'pending',
+            gatewayResponse: { transactionId, trustUrl, token }
           }
         });
       } catch (e) {
@@ -214,55 +277,69 @@ app.post('/api/payments/create-order', async (req, res) => {
 
     res.json({
       success: true,
-      orderId: order.id,
+      trustUrl,
+      token,
+      appId: TRUST_PAYMENT_APP_ID,
+      registrationId: regId,
+      paymentId: payment?.id,
+      transactionId,
       amount: amountInPaise,
-      currency,
-      key: RAZORPAY_KEY_ID,
-      paymentId: payment?.id
+      currency
     });
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Failed to create payment order.' });
+    res.status(500).json({ error: err.message || 'Failed to initiate payment.' });
   }
 });
 
-// POST /api/payments/verify - Verify Razorpay payment signature
-app.post('/api/payments/verify', async (req, res) => {
+// GET /api/payments/confirm - Verify with trust platform after redirect back
+app.get('/api/payments/confirm', async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, registrationId } = req.body;
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ error: 'Missing payment verification fields.' });
+    const { reference, status } = req.query;
+    if (!reference) {
+      return res.status(400).json({ error: 'reference (success_token) is required.' });
+    }
+    if (status === 'cancelled' || status === 'failed') {
+      return res.json({ success: false, status: 'cancelled', message: 'Payment was not completed.' });
     }
 
-    const isValid = verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
-    if (!isValid) {
-      return res.status(400).json({ error: 'Invalid payment signature.' });
+    let confirmData = null;
+    try {
+      confirmData = await trustConfirm(reference);
+    } catch (err) {
+      return res.status(502).json({ error: err.message || 'Trust platform confirmation failed.' });
     }
 
-    // Fetch payment details from Razorpay
-    const payment = await razorpayRequest('GET', `/payments/${razorpay_payment_id}`);
+    if (confirmData.status !== 'success') {
+      return res.status(400).json({ error: 'Payment not confirmed by trust platform.', detail: confirmData });
+    }
 
-    // Update database
+    // Update local database
     if (isDatabaseConfigured) {
       try {
-        await prisma.payment.updateMany({
-          where: { razorpayOrderId: razorpay_order_id },
+        const payment = await prisma.payment.updateMany({
+          where: { gatewayResponse: { path: ['token'], equals: reference } },
           data: {
-            razorpayPaymentId: razorpay_payment_id,
-            razorpaySignature: razorpay_signature,
+            razorpayPaymentId: confirmData.razorpay_payment_id || null,
+            razorpayOrderId: confirmData.razorpay_order_id || null,
             status: 'paid',
-            gatewayResponse: payment,
+            gatewayResponse: confirmData,
             updatedAt: new Date()
           }
         });
 
-        if (registrationId) {
+        // Find the registration by matching the payment record
+        const payRecord = await prisma.payment.findFirst({
+          where: { gatewayResponse: { path: ['token'], equals: reference } },
+          include: { registration: true }
+        });
+
+        if (payRecord?.registrationId) {
           await prisma.registration.update({
-            where: { id: registrationId },
+            where: { id: payRecord.registrationId },
             data: { paymentStatus: 'paid' }
           });
 
-          // Increment workshop registered count
-          const reg = await prisma.registration.findUnique({ where: { id: registrationId } });
+          const reg = await prisma.registration.findUnique({ where: { id: payRecord.registrationId } });
           if (reg) {
             await prisma.upcomingWorkshop.update({
               where: { id: reg.workshopId },
@@ -271,18 +348,21 @@ app.post('/api/payments/verify', async (req, res) => {
           }
         }
       } catch (e) {
-        console.warn('[Prisma payment verify error]:', e.message);
+        console.warn('[Prisma payment confirm error]:', e.message);
       }
     }
 
     res.json({
       success: true,
-      message: 'Payment verified successfully.',
-      paymentId: razorpay_payment_id,
-      status: 'paid'
+      status: 'paid',
+      transaction_id: confirmData.transaction_id,
+      payment_id: confirmData.razorpay_payment_id,
+      order_id: confirmData.razorpay_order_id,
+      amount: confirmData.amount,
+      currency: confirmData.currency
     });
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Payment verification failed.' });
+    res.status(500).json({ error: err.message || 'Payment confirmation failed.' });
   }
 });
 
@@ -324,53 +404,6 @@ app.get('/api/payments/all', requireAdmin, async (req, res) => {
     res.json({ success: true, count: payments.length, payments });
   } catch (err) {
     res.status(500).json({ error: 'Failed to read payments.' });
-  }
-});
-
-// POST /api/payments/webhook - Razorpay webhook (async status updates)
-app.post('/api/payments/webhook', async (req, res) => {
-  try {
-    const secret = RAZORPAY_WEBHOOK_SECRET;
-    const signature = req.headers['x-razorpay-signature'];
-    if (!secret || !signature) {
-      return res.status(401).json({ error: 'Webhook secret not configured.' });
-    }
-
-    const body = JSON.stringify(req.body);
-    const expected = crypto.createHmac('sha256', secret).update(body).digest('hex');
-    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
-      return res.status(401).json({ error: 'Invalid webhook signature.' });
-    }
-
-    const { event, payload } = req.body;
-    if (event === 'payment.captured' || event === 'payment.failed') {
-      const paymentEntity = payload?.payment?.entity || {};
-      const orderId = paymentEntity.order_id;
-      const status = event === 'payment.captured' ? 'paid' : 'failed';
-
-      if (isDatabaseConfigured && orderId) {
-        try {
-          await prisma.payment.updateMany({
-            where: { razorpayOrderId: orderId },
-            data: { status, gatewayResponse: paymentEntity, updatedAt: new Date() }
-          });
-
-          const payment = await prisma.payment.findFirst({ where: { razorpayOrderId: orderId } });
-          if (payment) {
-            await prisma.registration.update({
-              where: { id: payment.registrationId },
-              data: { paymentStatus: status }
-            });
-          }
-        } catch (e) {
-          console.warn('[Prisma webhook update error]:', e.message);
-        }
-      }
-    }
-
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Webhook processing failed.' });
   }
 });
 
