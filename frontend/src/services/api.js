@@ -282,3 +282,51 @@ export const fetchAllRegistrations = async () => {
     return [];
   }
 };
+
+// ==========================================
+// PAYMENTS (Razorpay via IncuXai Education Trust)
+// ==========================================
+
+export const createPaymentOrder = async (registrationId, amount) => {
+  const res = await fetch(`${API_BASE}/payments/create-order`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ registrationId, amount })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create payment order');
+  return data;
+};
+
+export const verifyPayment = async (paymentData) => {
+  const res = await fetch(`${API_BASE}/payments/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(paymentData)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Payment verification failed');
+  return data;
+};
+
+export const fetchPaymentStatus = async (registrationId) => {
+  try {
+    const res = await fetch(`${API_BASE}/payments/status/${registrationId}`);
+    if (!res.ok) throw new Error('Failed to load payment status');
+    const data = await res.json();
+    return data.payment || { status: 'unknown' };
+  } catch (err) {
+    return { status: 'unknown' };
+  }
+};
+
+export const fetchAllPayments = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/payments/all`, { headers: adminHeaders() });
+    if (!res.ok) throw new Error('Failed to load payments');
+    const data = await res.json();
+    return data.payments || [];
+  } catch (err) {
+    return [];
+  }
+};

@@ -58,8 +58,12 @@ model UpcomingWorkshop {
   speaker               String   @default("IncuxAI Technical Mentor") @map("speaker")
   description           String   @default("") @map("description")
   status                String   @default("Active") @map("status")
+  fee                   Int      @default(0) @map("fee")           // in rupees, 0 = free
+  isPaid                Boolean  @default(false) @map("isPaid")   // whether payment is required
   postedAt              DateTime @default(now()) @map("postedAt")
   convertedFromRequestId String? @map("convertedFromRequestId")
+
+  payments            Payment[]
 
   @@map("public.upcoming_workshops")
 }
@@ -79,8 +83,30 @@ model Registration {
   candidatePhone       String?  @map("candidatePhone")
   registeredAt         DateTime @default(now()) @map("registeredAt")
   status               String   @default("Confirmed") @map("status")
+  paymentStatus        String   @default("pending") @map("paymentStatus") // pending, paid, failed
+
+  payments             Payment[]
 
   @@map("public.registrations")
+}
+
+// 6. PAYMENTS TABLE (Razorpay payment records)
+model Payment {
+  id                String   @id @map("id")
+  registrationId    String   @map("registrationId")
+  razorpayOrderId   String?  @map("razorpayOrderId")
+  razorpayPaymentId String?  @map("razorpayPaymentId")
+  razorpaySignature String?  @map("razorpaySignature")
+  amount            Int      @map("amount")           // in paise (₹6000 = 600000)
+  currency          String   @default("INR") @map("currency")
+  status            String   @default("pending") @map("status") // pending, paid, failed, refunded
+  gatewayResponse   Json?    @map("gatewayResponse")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  registration Registration @relation(fields: [registrationId], references: [id])
+
+  @@map("public.payments")
 }
 
 // 5. INQUIRIES TABLE (Landing page contact & custom corporate/college inquiries)

@@ -20,6 +20,9 @@ import UpcomingWorkshopPopup from './components/UpcomingWorkshopPopup';
 import Terms from './components/Pages/Terms';
 import PrivacyPolicy from './components/Pages/PrivacyPolicy';
 import AdminPage from './components/AdminPage';
+import PaymentPage from './components/PaymentPage';
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentCancel from './components/PaymentCancel';
 
 import { workshopCards, featuredWorkshops } from './data/workshops';
 import { companiesData } from './data/companies';
@@ -105,6 +108,17 @@ export default function App() {
   // index.html for /admin, and the passphrase is verified by the backend.
   if (/^\/admin\/?$/i.test(window.location.pathname)) {
     return <AdminPage />;
+  }
+
+  // Payment pages - real routes for the Razorpay checkout flow
+  if (/^\/payment(\/success|\/cancel)?\/?$/i.test(window.location.pathname)) {
+    if (/^\/payment\/success/i.test(window.location.pathname)) {
+      return <PaymentSuccess />;
+    }
+    if (/^\/payment\/cancel/i.test(window.location.pathname)) {
+      return <PaymentCancel />;
+    }
+    return <PaymentPage />;
   }
 
   return (

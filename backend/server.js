@@ -143,6 +143,237 @@ app.get('/api/admin/session', requireAdmin, (req, res) => {
   res.json({ success: true });
 });
 
+// ==========================================
+// PAYMENT GATEWAY (Razorpay via IncuXai Education Trust)
+// ==========================================
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
+const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
+const PAYMENT_RETURN_URL = process.env.PAYMENT_RETURN_URL || 'https://workshops.incuxai.com/payment/success';
+const PAYMENT_CANCEL_URL = process.env.PAYMENT_CANCEL_URL || 'https://workshops.incuxai.com/payment/cancel';
+
+const razorpayAuth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
+
+const razorpayRequest = async (method, path, body = null) => {
+  const url = `https://api.razorpay.com/v1${path}`;
+  const headers = {
+    Authorization: `Basic ${razorpayAuth}`,
+    'Content-Type': 'application/json'
+  };
+  const options = { method, headers };
+  if (body) options.body = JSON.stringify(body);
+  const res = await fetch(url, options);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error?.description || `Razorpay API error: ${res.status}`);
+  }
+  return data;
+};
+
+const verifyRazorpaySignature = (orderId, paymentId, signature) => {
+  const body = orderId + '|' + paymentId;
+  const expected = crypto.createHmac('sha256', RAZORPAY_KEY_SECRET).update(body).digest('hex');
+  return expected === signature;
+};
+
+// POST /api/payments/create-order - Create Razorpay order for workshop registration
+app.post('/api/payments/create-order', async (req, res) => {
+  try {
+    const { registrationId, amount, currency = 'INR' } = req.body;
+    if (!registrationId || !amount) {
+      return res.status(400).json({ error: 'registrationId and amount are required.' });
+    }
+
+    const amountInPaise = Math.round(amount * 100);
+
+    const order = await razorpayRequest('POST', '/orders', {
+      amount: amountInPaise,
+      currency,
+      receipt: `reg_${registrationId}`,
+      notes: { registrationId }
+    });
+
+    // Save payment record (pending)
+    let payment = null;
+    if (isDatabaseConfigured) {
+      try {
+        payment = await prisma.payment.create({
+          data: {
+            id: `PAY-${Date.now()}`,
+            registrationId,
+            razorpayOrderId: order.id,
+            amount: amountInPaise,
+            currency,
+            status: 'pending'
+          }
+        });
+      } catch (e) {
+        console.warn('[Prisma payment create error]:', e.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      orderId: order.id,
+      amount: amountInPaise,
+      currency,
+      key: RAZORPAY_KEY_ID,
+      paymentId: payment?.id
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to create payment order.' });
+  }
+});
+
+// POST /api/payments/verify - Verify Razorpay payment signature
+app.post('/api/payments/verify', async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, registrationId } = req.body;
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ error: 'Missing payment verification fields.' });
+    }
+
+    const isValid = verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+    if (!isValid) {
+      return res.status(400).json({ error: 'Invalid payment signature.' });
+    }
+
+    // Fetch payment details from Razorpay
+    const payment = await razorpayRequest('GET', `/payments/${razorpay_payment_id}`);
+
+    // Update database
+    if (isDatabaseConfigured) {
+      try {
+        await prisma.payment.updateMany({
+          where: { razorpayOrderId: razorpay_order_id },
+          data: {
+            razorpayPaymentId: razorpay_payment_id,
+            razorpaySignature: razorpay_signature,
+            status: 'paid',
+            gatewayResponse: payment,
+            updatedAt: new Date()
+          }
+        });
+
+        if (registrationId) {
+          await prisma.registration.update({
+            where: { id: registrationId },
+            data: { paymentStatus: 'paid' }
+          });
+
+          // Increment workshop registered count
+          const reg = await prisma.registration.findUnique({ where: { id: registrationId } });
+          if (reg) {
+            await prisma.upcomingWorkshop.update({
+              where: { id: reg.workshopId },
+              data: { registered: { increment: 1 } }
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('[Prisma payment verify error]:', e.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Payment verified successfully.',
+      paymentId: razorpay_payment_id,
+      status: 'paid'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Payment verification failed.' });
+  }
+});
+
+// GET /api/payments/status/:registrationId - Get payment status
+app.get('/api/payments/status/:registrationId', async (req, res) => {
+  try {
+    const { registrationId } = req.params;
+    let payment = null;
+    if (isDatabaseConfigured) {
+      try {
+        payment = await prisma.payment.findFirst({
+          where: { registrationId },
+          orderBy: { createdAt: 'desc' }
+        });
+      } catch (e) {
+        console.warn('[Prisma payment read error]:', e.message);
+      }
+    }
+    res.json({ success: true, payment: payment || { status: 'unknown' } });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read payment status.' });
+  }
+});
+
+// GET /api/payments/all - List all payments (admin)
+app.get('/api/payments/all', requireAdmin, async (req, res) => {
+  try {
+    let payments = [];
+    if (isDatabaseConfigured) {
+      try {
+        payments = await prisma.payment.findMany({
+          include: { registration: true },
+          orderBy: { createdAt: 'desc' }
+        });
+      } catch (e) {
+        console.warn('[Prisma payments read error]:', e.message);
+      }
+    }
+    res.json({ success: true, count: payments.length, payments });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read payments.' });
+  }
+});
+
+// POST /api/payments/webhook - Razorpay webhook (async status updates)
+app.post('/api/payments/webhook', async (req, res) => {
+  try {
+    const secret = RAZORPAY_WEBHOOK_SECRET;
+    const signature = req.headers['x-razorpay-signature'];
+    if (!secret || !signature) {
+      return res.status(401).json({ error: 'Webhook secret not configured.' });
+    }
+
+    const body = JSON.stringify(req.body);
+    const expected = crypto.createHmac('sha256', secret).update(body).digest('hex');
+    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+      return res.status(401).json({ error: 'Invalid webhook signature.' });
+    }
+
+    const { event, payload } = req.body;
+    if (event === 'payment.captured' || event === 'payment.failed') {
+      const paymentEntity = payload?.payment?.entity || {};
+      const orderId = paymentEntity.order_id;
+      const status = event === 'payment.captured' ? 'paid' : 'failed';
+
+      if (isDatabaseConfigured && orderId) {
+        try {
+          await prisma.payment.updateMany({
+            where: { razorpayOrderId: orderId },
+            data: { status, gatewayResponse: paymentEntity, updatedAt: new Date() }
+          });
+
+          const payment = await prisma.payment.findFirst({ where: { razorpayOrderId: orderId } });
+          if (payment) {
+            await prisma.registration.update({
+              where: { id: payment.registrationId },
+              data: { paymentStatus: status }
+            });
+          }
+        } catch (e) {
+          console.warn('[Prisma webhook update error]:', e.message);
+        }
+      }
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Webhook processing failed.' });
+  }
+});
+
 // Data paths for local JSON fallback
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');

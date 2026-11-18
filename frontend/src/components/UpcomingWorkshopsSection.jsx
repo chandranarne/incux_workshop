@@ -16,7 +16,9 @@ const initialWorkshop = {
   speaker: "IncuxAI Senior AI Architects & Google/IIT Research Scholars",
   description: "Two-day hands-on workshop at IIT Campus. Deep-dive into LLM fine-tuning, prompt engineering pipelines, autonomous agent architectures, retrieval-augmented generation (RAG), and enterprise deployment sandboxes.",
   status: "Active",
-  isPrimary: true
+  isPrimary: true,
+  fee: 6000,
+  isPaid: true
 };
 
 export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingPopup }) {
@@ -48,7 +50,11 @@ export default function UpcomingWorkshopsSection({ onOpenPortal, onOpenUpcomingP
   const percentFilled = Math.min(100, Math.round(((ws.registered || 0) / ws.seats) * 100));
 
   const handleAction = () => {
-    onOpenUpcomingPopup();
+    if (ws.isPaid || (ws.fee && ws.fee > 0)) {
+      window.location.assign(`/payment?registrationId=NEW_${Date.now()}&amount=${ws.fee}&workshopTitle=${encodeURIComponent(ws.title)}`);
+    } else {
+      onOpenUpcomingPopup();
+    }
   };
 
   return (
