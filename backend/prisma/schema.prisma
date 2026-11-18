@@ -22,7 +22,7 @@ model User {
   phone     String   @default("") @map("phone")
   createdAt DateTime @default(now()) @map("created_at")
 
-  @@map("public.users")
+  @@map("users")
 }
 
 // 2. CUSTOM WORKSHOP REQUESTS (College / Department requests)
@@ -42,7 +42,7 @@ model CustomRequest {
   submittedAt        DateTime @default(now()) @map("submittedAt")
   approvedAt         DateTime? @map("approvedAt")
 
-  @@map("public.custom_requests")
+  @@map("custom_requests")
 }
 
 // 3. UPCOMING WORKSHOPS (Live published sessions)
@@ -65,7 +65,7 @@ model UpcomingWorkshop {
 
   payments            Payment[]
 
-  @@map("public.upcoming_workshops")
+  @@map("upcoming_workshops")
 }
 
 // 4. REGISTRATIONS TABLE (Candidate enrollments in workshops)
@@ -87,13 +87,14 @@ model Registration {
 
   payments             Payment[]
 
-  @@map("public.registrations")
+  @@map("registrations")
 }
 
 // 6. PAYMENTS TABLE (Razorpay payment records)
 model Payment {
   id                String   @id @map("id")
   registrationId    String   @map("registrationId")
+  upcomingWorkshopId String? @map("upcomingWorkshopId")
   razorpayOrderId   String?  @map("razorpayOrderId")
   razorpayPaymentId String?  @map("razorpayPaymentId")
   razorpaySignature String?  @map("razorpaySignature")
@@ -105,8 +106,9 @@ model Payment {
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   registration Registration @relation(fields: [registrationId], references: [id])
+  upcomingWorkshop UpcomingWorkshop? @relation(fields: [upcomingWorkshopId], references: [id])
 
-  @@map("public.payments")
+  @@map("payments")
 }
 
 // 5. INQUIRIES TABLE (Landing page contact & custom corporate/college inquiries)
@@ -124,5 +126,5 @@ model Inquiry {
   message          String   @default("") @map("message")
   status           String   @default("Received") @map("status")
 
-  @@map("public.inquiries")
+  @@map("inquiries")
 }

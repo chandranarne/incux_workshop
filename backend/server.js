@@ -259,10 +259,24 @@ app.post('/api/payments/initiate', async (req, res) => {
     let payment = null;
     if (isDatabaseConfigured) {
       try {
+        // Only link to upcoming_workshops if the workshop exists (FK safety)
+        let workshopLink = null;
+        if (workshopId) {
+          try {
+            const ws = await prisma.upcomingWorkshop.findUnique({
+              where: { id: workshopId }
+            });
+            if (ws) workshopLink = workshopId;
+          } catch {
+            // Workshop not found; link will remain null
+          }
+        }
+
         payment = await prisma.payment.create({
           data: {
             id: `PAY-${Date.now()}`,
             registrationId: regId,
+            upcomingWorkshopId: workshopLink,
             razorpayOrderId: null,
             amount: amountInPaise,
             currency,

@@ -48,6 +48,8 @@ CREATE TABLE "public.upcoming_workshops" (
     "speaker" TEXT NOT NULL DEFAULT 'IncuxAI Technical Mentor',
     "description" TEXT NOT NULL DEFAULT '',
     "status" TEXT NOT NULL DEFAULT 'Active',
+    "fee" INTEGER NOT NULL DEFAULT 0,
+    "isPaid" BOOLEAN NOT NULL DEFAULT false,
     "postedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "convertedFromRequestId" TEXT,
 
@@ -69,6 +71,7 @@ CREATE TABLE "public.registrations" (
     "candidatePhone" TEXT,
     "registeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" TEXT NOT NULL DEFAULT 'Confirmed',
+    "paymentStatus" TEXT NOT NULL DEFAULT 'pending',
 
     CONSTRAINT "public.registrations_pkey" PRIMARY KEY ("id")
 );
@@ -93,4 +96,27 @@ CREATE TABLE "public.inquiries" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "public.users_email_key" ON "public.users"("email");
+
+-- CreateTable
+CREATE TABLE "public"."payments" (
+    "id" TEXT NOT NULL,
+    "registrationId" TEXT NOT NULL,
+    "upcomingWorkshopId" TEXT,
+    "razorpayOrderId" TEXT,
+    "razorpayPaymentId" TEXT,
+    "razorpaySignature" TEXT,
+    "amount" INTEGER NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'INR',
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "gatewayResponse" JSON,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "public.payments_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "public.payments_registrationId_fkey" FOREIGN KEY ("registrationId") REFERENCES "public"."registrations"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "public.payments_upcomingWorkshopId_fkey" FOREIGN KEY ("upcomingWorkshopId") REFERENCES "public"."upcoming_workshops"("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- CreateIndex
+CREATE INDEX "public.payments_registrationId_idx" ON "public"."payments"("registrationId");
 
