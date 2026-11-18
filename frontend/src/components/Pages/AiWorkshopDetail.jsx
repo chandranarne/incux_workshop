@@ -538,10 +538,7 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-black/10 dark:border-[#262626] flex flex-col sm:flex-row items-center justify-between gap-4">
-              <span className="text-xs font-mono text-neutral-500">
-                Need institutional sponsorship or college reimbursement invoice? We provide official GST receipts.
-              </span>
+            <div className="mt-8 pt-6 border-t border-black/10 dark:border-[#262626] flex items-center justify-end">
 
               <button
                 onClick={handleRegisterClick}
