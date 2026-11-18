@@ -154,6 +154,7 @@ const TRUST_PAYMENT_URL = process.env.TRUST_PAYMENT_URL || 'https://pay.incuxaie
 const TRUST_PAYMENT_APP_ID = process.env.TRUST_PAYMENT_APP_ID || 'incuxai';
 const PAYMENT_RETURN_URL = process.env.PAYMENT_RETURN_URL || 'https://workshops.incuxai.com/payment/success';
 const PAYMENT_CANCEL_URL = process.env.PAYMENT_CANCEL_URL || 'https://workshops.incuxai.com/payment/cancel';
+const PAYMENT_WEBHOOK_URL = process.env.PAYMENT_WEBHOOK_URL || 'https://workshops.incuxai.com/api/payments/webhook';
 
 /**
  * Sign a JWT-like HMAC-SHA256 token, compatible with the trust platform's
@@ -165,6 +166,89 @@ const signTrustToken = (payload) => {
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const sig = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
   return `${header}.${body}.${sig}`;
+};
+
+/** Verify a JWT-like HMAC-SHA256 token issued by the trust platform. */
+const verifyTrustToken = (token) => {
+  try {
+    if (!token) return null;
+    const parts = String(token).split('.');
+    if (parts.length !== 3) return null;
+    const [headerB64, bodyB64, signature] = parts;
+    const expected = crypto
+      .createHmac('sha256', (TRUST_PAYMENT_SECRET || '').trim())
+      .update(`${headerB64}.${bodyB64}`)
+      .digest('base64url');
+    if (signature !== expected) return null;
+    return JSON.parse(Buffer.from(bodyB64, 'base64url').toString('utf8'));
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Apply a captured payment to Railway PostgreSQL.
+ * Idempotent: a second call (redirect confirm after webhook, or a page reload)
+ * never double-increments the workshop registration count.
+ */
+const markPaymentPaid = async ({ transactionId, registrationId, details }) => {
+  if (!isDatabaseConfigured) return { updated: false, reason: 'database unavailable' };
+
+  let payment = null;
+  if (transactionId) {
+    payment = await prisma.payment.findFirst({
+      where: { gatewayResponse: { path: ['transactionId'], equals: transactionId } },
+      include: { registration: true }
+    });
+  }
+  if (!payment && registrationId) {
+    payment = await prisma.payment.findFirst({
+      where: { registrationId },
+      orderBy: { createdAt: 'desc' },
+      include: { registration: true }
+    });
+  }
+  if (!payment) return { updated: false, reason: 'payment record not found' };
+  if (payment.status === 'paid') return { updated: false, alreadyPaid: true, payment };
+
+  const previous =
+    payment.gatewayResponse && typeof payment.gatewayResponse === 'object'
+      ? payment.gatewayResponse
+      : {};
+
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      status: 'paid',
+      razorpayOrderId: details?.razorpay_order_id || payment.razorpayOrderId,
+      razorpayPaymentId: details?.razorpay_payment_id || payment.razorpayPaymentId,
+      gatewayResponse: {
+        ...previous,
+        confirmedAt: new Date().toISOString(),
+        confirmation: details || {}
+      }
+    }
+  });
+
+  const regId = payment.registrationId || details?.metadata?.registrationId || registrationId;
+  if (regId) {
+    await prisma.registration.updateMany({
+      where: { id: regId },
+      data: { paymentStatus: 'paid' }
+    });
+
+    const reg = await prisma.registration.findUnique({ where: { id: regId } }).catch(() => null);
+    if (reg?.workshopId) {
+      // updateMany is a no-op when the workshop row is absent, so a payment for
+      // a default/frontend-only workshop never throws here.
+      await prisma.upcomingWorkshop.updateMany({
+        where: { id: reg.workshopId },
+        data: { registered: { increment: 1 } }
+      });
+    }
+  }
+
+  return { updated: true, payment };
 };
 
 /**
@@ -250,7 +334,7 @@ app.post('/api/payments/initiate', async (req, res) => {
         workshopTitle: workshopTitle || '',
         source: 'workshops_incuxai_com'
       },
-      callback_url: PAYMENT_RETURN_URL
+      callback_url: PAYMENT_WEBHOOK_URL
     });
 
     const trustUrl = `${TRUST_PAYMENT_URL}/pay.html?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent(PAYMENT_RETURN_URL)}&app=${TRUST_PAYMENT_APP_ID}`;
@@ -327,40 +411,18 @@ app.get('/api/payments/confirm', async (req, res) => {
       return res.status(400).json({ error: 'Payment not confirmed by trust platform.', detail: confirmData });
     }
 
-    // Update local database
+    // Update local database. The success_token returned by the trust platform
+    // is NOT the original signed token, so match on the transaction id that was
+    // stored when the payment was initiated (or on the registration id carried
+    // in the confirmed metadata).
+    let applied = { updated: false };
     if (isDatabaseConfigured) {
       try {
-        const payment = await prisma.payment.updateMany({
-          where: { gatewayResponse: { path: ['token'], equals: reference } },
-          data: {
-            razorpayPaymentId: confirmData.razorpay_payment_id || null,
-            razorpayOrderId: confirmData.razorpay_order_id || null,
-            status: 'paid',
-            gatewayResponse: confirmData,
-            updatedAt: new Date()
-          }
+        applied = await markPaymentPaid({
+          transactionId: confirmData.transaction_id,
+          registrationId: confirmData.metadata?.registrationId,
+          details: confirmData
         });
-
-        // Find the registration by matching the payment record
-        const payRecord = await prisma.payment.findFirst({
-          where: { gatewayResponse: { path: ['token'], equals: reference } },
-          include: { registration: true }
-        });
-
-        if (payRecord?.registrationId) {
-          await prisma.registration.update({
-            where: { id: payRecord.registrationId },
-            data: { paymentStatus: 'paid' }
-          });
-
-          const reg = await prisma.registration.findUnique({ where: { id: payRecord.registrationId } });
-          if (reg) {
-            await prisma.upcomingWorkshop.update({
-              where: { id: reg.workshopId },
-              data: { registered: { increment: 1 } }
-            });
-          }
-        }
       } catch (e) {
         console.warn('[Prisma payment confirm error]:', e.message);
       }
@@ -369,6 +431,7 @@ app.get('/api/payments/confirm', async (req, res) => {
     res.json({
       success: true,
       status: 'paid',
+      alreadyPaid: Boolean(applied.alreadyPaid),
       transaction_id: confirmData.transaction_id,
       payment_id: confirmData.razorpay_payment_id,
       order_id: confirmData.razorpay_order_id,
@@ -377,6 +440,64 @@ app.get('/api/payments/confirm', async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Payment confirmation failed.' });
+  }
+});
+
+// POST /api/payments/webhook - Server-to-server notification from the trust
+// platform. Updates Railway PostgreSQL even if the payer never returns to the
+// browser. Signature is a JWT-like HMAC-SHA256 token signed with the shared app
+// secret, matching the trust platform's notifyAppPaid() payload.
+app.post('/api/payments/webhook', async (req, res) => {
+  try {
+    const body = req.body || {};
+    if (body.event !== 'payment.captured') {
+      return res.json({ received: true, ignored: true });
+    }
+
+    const signedPayload = {
+      event: body.event,
+      transaction_id: body.transaction_id,
+      amount: body.amount,
+      razorpay_order_id: body.razorpay_order_id,
+      razorpay_payment_id: body.razorpay_payment_id
+    };
+    const verified = verifyTrustToken(body.signature);
+    const isValid =
+      verified &&
+      verified.event === signedPayload.event &&
+      verified.transaction_id === signedPayload.transaction_id &&
+      verified.amount === signedPayload.amount &&
+      verified.razorpay_order_id === signedPayload.razorpay_order_id &&
+      verified.razorpay_payment_id === signedPayload.razorpay_payment_id;
+
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid webhook signature.' });
+    }
+
+    let applied = { updated: false };
+    if (isDatabaseConfigured) {
+      applied = await markPaymentPaid({
+        transactionId: body.transaction_id,
+        details: {
+          transaction_id: body.transaction_id,
+          razorpay_order_id: body.razorpay_order_id,
+          razorpay_payment_id: body.razorpay_payment_id,
+          amount: body.amount,
+          currency: body.currency,
+          source: 'trust_webhook'
+        }
+      });
+    }
+
+    console.log(
+      `[Payment Webhook] ${body.transaction_id} status=${
+        applied.alreadyPaid ? 'already-paid' : applied.updated ? 'paid' : 'unmatched'
+      }`
+    );
+    res.json({ received: true, updated: Boolean(applied.updated) });
+  } catch (err) {
+    console.warn('[Payment Webhook] Error:', err.message);
+    res.status(500).json({ error: 'Webhook processing failed.' });
   }
 });
 

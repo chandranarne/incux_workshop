@@ -2,7 +2,7 @@
 CREATE SCHEMA IF NOT EXISTS "public";
 
 -- CreateTable
-CREATE TABLE "public.users" (
+CREATE TABLE "public"."users" (
     "id" TEXT NOT NULL,
     "role" TEXT NOT NULL DEFAULT 'candidate',
     "name" TEXT NOT NULL,
@@ -12,11 +12,11 @@ CREATE TABLE "public.users" (
     "phone" TEXT NOT NULL DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "public.users_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "public.custom_requests" (
+CREATE TABLE "public"."custom_requests" (
     "id" TEXT NOT NULL,
     "requestedBy" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -32,11 +32,11 @@ CREATE TABLE "public.custom_requests" (
     "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "approvedAt" TIMESTAMP(3),
 
-    CONSTRAINT "public.custom_requests_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "custom_requests_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "public.upcoming_workshops" (
+CREATE TABLE "public"."upcoming_workshops" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "category" TEXT NOT NULL,
@@ -53,11 +53,11 @@ CREATE TABLE "public.upcoming_workshops" (
     "postedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "convertedFromRequestId" TEXT,
 
-    CONSTRAINT "public.upcoming_workshops_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "upcoming_workshops_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "public.registrations" (
+CREATE TABLE "public"."registrations" (
     "id" TEXT NOT NULL,
     "workshopId" TEXT NOT NULL,
     "workshopTitle" TEXT NOT NULL,
@@ -73,11 +73,11 @@ CREATE TABLE "public.registrations" (
     "status" TEXT NOT NULL DEFAULT 'Confirmed',
     "paymentStatus" TEXT NOT NULL DEFAULT 'pending',
 
-    CONSTRAINT "public.registrations_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "registrations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "public.inquiries" (
+CREATE TABLE "public"."inquiries" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "name" TEXT NOT NULL,
@@ -91,11 +91,8 @@ CREATE TABLE "public.inquiries" (
     "message" TEXT NOT NULL DEFAULT '',
     "status" TEXT NOT NULL DEFAULT 'Received',
 
-    CONSTRAINT "public.inquiries_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "inquiries_pkey" PRIMARY KEY ("id")
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "public.users_email_key" ON "public.users"("email");
 
 -- CreateTable
 CREATE TABLE "public"."payments" (
@@ -112,11 +109,13 @@ CREATE TABLE "public"."payments" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "public.payments_pkey" PRIMARY KEY ("id"),
-    CONSTRAINT "public.payments_registrationId_fkey" FOREIGN KEY ("registrationId") REFERENCES "public"."registrations"("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "public.payments_upcomingWorkshopId_fkey" FOREIGN KEY ("upcomingWorkshopId") REFERENCES "public"."upcoming_workshops"("id") ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT "payments_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "payments_registrationId_fkey" FOREIGN KEY ("registrationId") REFERENCES "public"."registrations"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "payments_upcomingWorkshopId_fkey" FOREIGN KEY ("upcomingWorkshopId") REFERENCES "public"."upcoming_workshops"("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateIndex
-CREATE INDEX "public.payments_registrationId_idx" ON "public"."payments"("registrationId");
+CREATE UNIQUE INDEX "users_email_key" ON "public"."users"("email");
 
+-- CreateIndex
+CREATE INDEX "payments_registrationId_idx" ON "public"."payments"("registrationId");

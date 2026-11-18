@@ -108,6 +108,7 @@ model Payment {
   registration Registration @relation(fields: [registrationId], references: [id])
   upcomingWorkshop UpcomingWorkshop? @relation(fields: [upcomingWorkshopId], references: [id])
 
+  @@index([registrationId])
   @@map("payments")
 }
 

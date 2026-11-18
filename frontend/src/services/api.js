@@ -188,7 +188,8 @@ export const DEFAULT_UPCOMING_WORKSHOPS = [
     seats: 150,
     registered: 34,
     mode: "Combined Virtual & Offline Workshop",
-    price: 6000,
+    fee: 6000,
+    isPaid: true,
     speaker: "IncuxAI Senior Architects, Enterprise Leads & IIT Faculty",
     description: "10-day comprehensive AI workshop bridging virtual live deep-dives and on-campus physical immersion at IIT Campus. Features Generative AI mastery, LinkedIn personal branding, 2-day in-person IIT lab & networking, hands-on AI Bot building mini-project, and concluding with a grand 24h AI Hackathon.",
     status: "Active",
@@ -305,21 +306,33 @@ export const fetchAllRegistrations = async () => {
 // Redirects to trust platform for Razorpay checkout.
 // ==========================================
 
-export const initiatePayment = async (registrationId, amount, workshopTitle, payer) => {
+export const initiatePayment = async (
+  registrationId,
+  workshopId,
+  amount,
+  workshopTitle,
+  payerName,
+  payerEmail,
+  payerPhone,
+  candidateInstitution
+) => {
   const res = await fetch(`${API_BASE}/payments/initiate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      registrationId,
+      registrationId: registrationId || undefined,
+      workshopId: workshopId || undefined,
       amount,
       workshopTitle,
-      payerName: payer?.name || '',
-      payerEmail: payer?.email || '',
-      payerPhone: payer?.phone || ''
+      payerName: payerName || '',
+      payerEmail: payerEmail || '',
+      payerPhone: payerPhone || '',
+      candidateInstitution: candidateInstitution || ''
     })
   });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Failed to initiate payment');
+  if (!data.trustUrl) throw new Error('Payment platform did not return a redirect URL.');
   return data;
 };
 

@@ -3,7 +3,6 @@ import {
   Calendar,
   MapPin,
   Clock,
-  Sparkles,
   ArrowRight,
   ArrowLeft,
   Laptop,
@@ -40,13 +39,13 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
 
           <div className="flex items-center gap-3">
             <span className="hidden sm:inline-block px-3 py-1 rounded-full bg-[#FACC15]/15 text-neutral-900 dark:text-[#FACC15] text-xs font-mono font-bold border border-[#FACC15]/30">
-              10 Days • Nov 24 – Dec 3, 2026
+              10 Days • Nov 24 - Dec 3, 2026
             </span>
             <button
               onClick={handleRegisterClick}
               className="px-4 py-2 rounded-xl bg-[#0A0A0A] dark:bg-[#FACC15] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-black text-xs sm:text-sm tracking-wider shadow-md hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
             >
-              Register Now — ₹6,000
+              Register Now - ₹6,000
             </button>
           </div>
         </div>
@@ -67,7 +66,6 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
           <div className="max-w-4xl">
             {/* Top Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FACC15] text-[#0A0A0A] text-xs font-mono font-black tracking-wider uppercase mb-5 shadow-lg">
-              <Sparkles className="w-4 h-4" />
               <span>10-Day Combined Virtual &amp; Offline Workshop</span>
             </div>
 
@@ -86,7 +84,7 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
             <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 font-mono">
               <div className="p-3.5 sm:p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
                 <span className="text-[10px] sm:text-xs text-neutral-400 block uppercase">DATES</span>
-                <span className="text-sm sm:text-base font-bold text-white block mt-0.5">Nov 24 – Dec 3</span>
+                <span className="text-sm sm:text-base font-bold text-white block mt-0.5">Nov 24 - Dec 3</span>
                 <span className="text-[11px] text-[#FACC15] block mt-0.5">10 Full Days</span>
               </div>
 
@@ -99,7 +97,7 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
               <div className="p-3.5 sm:p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
                 <span className="text-[10px] sm:text-xs text-neutral-400 block uppercase">OFFLINE VENUE</span>
                 <span className="text-sm sm:text-base font-bold text-white block mt-0.5">IIT Campus</span>
-                <span className="text-[11px] text-[#FACC15] block mt-0.5">Nov 27 – 28 Only</span>
+                <span className="text-[11px] text-[#FACC15] block mt-0.5">Nov 27 - 28 Only</span>
               </div>
 
               <div className="p-3.5 sm:p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
@@ -141,7 +139,7 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
                 <span>Format Architecture: Two Offline Days &amp; Eight Virtual Days</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-headline font-bold text-[#0A0A0A] dark:text-[#F5F5F5]">
-                Only 2 Days are Offline at IIT Campus — All Other Days are Virtual Cloud Labs
+                Only 2 Days are Offline at IIT Campus - All Other Days are Virtual Cloud Labs
               </h2>
               <p className="text-sm text-neutral-600 dark:text-neutral-400 font-body leading-relaxed max-w-3xl">
                 To maximize accessibility for students across India, only <strong>November 27 and 28</strong> require in-person attendance at the IIT Campus for deep hardware lab work and <strong>active networking with peers, mentors, and industry professionals</strong>. The remaining 8 days are conducted online via live interactive video, Discord study lounges, and cloud GPUs.
@@ -157,7 +155,7 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
 
               <div className="px-4 py-3 rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] text-center">
                 <span className="text-[10px] font-mono text-neutral-500 block uppercase">VIRTUAL SESSIONS</span>
-                <span className="text-sm font-bold text-[#0A0A0A] dark:text-[#F5F5F5] block mt-0.5">Nov 24–26 &amp; Nov 29–Dec 3</span>
+                <span className="text-sm font-bold text-[#0A0A0A] dark:text-[#F5F5F5] block mt-0.5">Nov 24-26 &amp; Nov 29-Dec 3</span>
                 <span className="text-[10px] text-neutral-400 block mt-0.5">Interactive Online Cloud Labs</span>
               </div>
             </div>
@@ -175,7 +173,7 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
             Detailed 10-Day Step-by-Step Schedule
           </h2>
           <p className="mt-3 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 font-body max-w-3xl">
-            Every day is structured with purpose — blending high-bandwidth lectures, live terminal coding, peer networking, asynchronous build sprints, and competitive problem-solving.
+            Every day is structured with purpose - blending high-bandwidth lectures, live terminal coding, peer networking, asynchronous build sprints, and competitive problem-solving.
           </p>
         </div>
 
@@ -312,7 +310,7 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
             </div>
           </div>
 
-          {/* STEP 4: Days 4 & 5 (Nov 27 - 28) — OFFLINE AT IIT */}
+          {/* STEP 4: Days 4 & 5 (Nov 27 - 28) - OFFLINE AT IIT */}
           <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-yellow-500/10 via-amber-500/5 to-transparent dark:from-yellow-400/10 dark:via-[#141414] dark:to-[#141414] border-2 border-[#EAB308] dark:border-[#FACC15] shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 px-4 py-1.5 bg-[#EAB308] dark:bg-[#FACC15] text-[#0A0A0A] font-mono text-[11px] font-black tracking-wider uppercase rounded-bl-2xl">
               EXCLUSIVE OFFLINE IMMERSION
@@ -321,7 +319,7 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-3 py-1 rounded-full bg-[#0A0A0A] text-[#FACC15] dark:bg-[#FACC15] dark:text-[#0A0A0A] text-xs font-mono font-black tracking-wider">
-                  DAYS 04 &amp; 05 • NOVEMBER 27 – 28, 2026
+                  DAYS 04 &amp; 05 • NOVEMBER 27 - 28, 2026
                 </span>
                 <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold flex items-center gap-1.5">
                   <Building2 className="w-3.5 h-3.5" />
@@ -374,7 +372,7 @@ export default function AiWorkshopDetail({ onBackHome, onOpenPortal }) {
               <div className="space-y-3 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="px-3 py-1 rounded-full bg-[#0A0A0A] text-[#FACC15] dark:bg-[#FACC15] dark:text-[#0A0A0A] text-xs font-mono font-black tracking-wider">
-                    DAYS 06 TO 09 • NOVEMBER 29 – DECEMBER 2, 2026
+                    DAYS 06 TO 09 • NOVEMBER 29 - DECEMBER 2, 2026
                   </span>
                   <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-mono font-bold flex items-center gap-1.5">
                     <Laptop className="w-3.5 h-3.5" />

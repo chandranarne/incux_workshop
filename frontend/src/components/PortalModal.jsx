@@ -17,6 +17,7 @@ import {
   BookmarkCheck,
   Building,
   AlertCircle,
+  CreditCard,
   LogOut
 } from 'lucide-react';
 import {
@@ -25,7 +26,8 @@ import {
   deleteWorkshop,
   registerForWorkshop,
   fetchAllRegistrations,
-  fetchCandidateRegistrations
+  fetchCandidateRegistrations,
+  fetchAllPayments
 } from '../services/api';
 
 const CANDIDATE_KEY = 'incuxai_candidate_profile';
@@ -68,6 +70,7 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
   const [workshops, setWorkshops] = useState([]);
   const [myRegistrations, setMyRegistrations] = useState([]);
   const [allRegistrations, setAllRegistrations] = useState([]);
+  const [allPayments, setAllPayments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState({ type: '', text: '' });
 
@@ -101,9 +104,13 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
       setWorkshops(wsList);
 
       if (isAdmin) {
-        const regs = await fetchAllRegistrations();
+        const [regs, payments] = await Promise.all([
+          fetchAllRegistrations(),
+          fetchAllPayments()
+        ]);
         setAllRegistrations(regs);
         setMyRegistrations(regs);
+        setAllPayments(payments);
       } else if (candidate.email) {
         const regs = await fetchCandidateRegistrations(candidate.email);
         setMyRegistrations(regs);
@@ -287,6 +294,13 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
               >
                 <Users className="w-4 h-4" />
                 <span>Candidate Registrations ({allRegistrations.length})</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('payments')}
+                className={`py-3.5 px-4 text-xs font-mono font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer ${activeTab === 'payments' ? 'border-[#FACC15] dark:border-[#FACC15] text-amber-600 dark:text-[#FACC15] font-bold' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-amber-600 dark:hover:text-[#FACC15]'}`}
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Payments ({allPayments.length})</span>
               </button>
             </>
           ) : (
@@ -783,6 +797,75 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
                           <td className="p-3">{reg.candidateInstitution}</td>
                           <td className="p-3 font-medium">{reg.workshopTitle}</td>
                           <td className="p-3 text-neutral-500 dark:text-neutral-400">{new Date(reg.registeredAt).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* ADMIN VIEW: PAYMENTS FROM RAILWAY POSTGRESQL              */}
+          {/* ========================================================= */}
+          {isAdmin && activeTab === 'payments' && (
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-headline font-bold text-2xl text-neutral-950 dark:text-[#F5F5F5]">
+                  Payments ({allPayments.length})
+                </h4>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                  Live payment status from the workshops database.
+                </p>
+              </div>
+
+              {allPayments.length === 0 ? (
+                <div className="p-8 text-center rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626]">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">No payments recorded yet.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-2xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#141414] shadow-sm">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead className="bg-[#FDFCFA] dark:bg-[#0A0A0A] text-amber-600 dark:text-[#FACC15] border-b border-black/10 dark:border-[#262626]">
+                      <tr>
+                        <th className="p-3">Payment ID</th>
+                        <th className="p-3">Registration</th>
+                        <th className="p-3">Candidate</th>
+                        <th className="p-3">Amount</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3">Transaction</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/10 dark:divide-[#262626] text-neutral-950 dark:text-[#F5F5F5]">
+                      {allPayments.map((payment) => (
+                        <tr key={payment.id} className="hover:bg-[#FDFCFA]/50 dark:hover:bg-[#0A0A0A]/60">
+                          <td className="p-3 font-bold text-amber-600 dark:text-[#FACC15]">{payment.id}</td>
+                          <td className="p-3 text-neutral-500 dark:text-neutral-400">
+                            {payment.registration?.candidateName
+                              ? payment.registration.candidateName
+                              : payment.registrationId}
+                          </td>
+                          <td className="p-3 text-neutral-500 dark:text-neutral-400">
+                            {payment.registration?.candidateEmail || 'Not provided'}
+                          </td>
+                          <td className="p-3 font-semibold">
+                            ₹{((payment.amount || 0) / 100).toLocaleString('en-IN')}
+                          </td>
+                          <td className="p-3">
+                            <span
+                              className={`px-2 py-1 rounded-full font-bold ${
+                                payment.status === 'paid'
+                                  ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400'
+                                  : 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-[#FACC15]'
+                              }`}
+                            >
+                              {payment.status}
+                            </span>
+                          </td>
+                          <td className="p-3 text-neutral-500 dark:text-neutral-400 max-w-[180px] truncate" title={payment.gatewayResponse?.transactionId || ''}>
+                            {payment.gatewayResponse?.transactionId || 'Not provided'}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

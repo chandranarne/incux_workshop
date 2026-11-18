@@ -129,8 +129,10 @@ npm run dev
 Backend and frontend are deployed individually on Railway.
 
 ### Backend (Railway)
-1. Create a PostgreSQL database on Railway → copy `DATABASE_URL`
-2. Set `DATABASE_URL` in Railway Variables for the backend service
+1. Create a PostgreSQL database on Railway and copy `DATABASE_URL`
+2. Set the backend variables in Railway: `DATABASE_URL`, `ADMIN_PASSCODE`,
+   `TRUST_PAYMENT_SECRET`, `TRUST_PAYMENT_URL`, `TRUST_PAYMENT_APP_ID`,
+   `PAYMENT_RETURN_URL`, `PAYMENT_WEBHOOK_URL` (see the payments section below)
 3. Connect the `backend/` folder as a Railway service
 4. `backend/railway.json` runs: `npm run prisma:generate && (npx prisma migrate deploy || npx prisma db push --skip-generate) && npm start`
 5. Healthcheck: `/api/health`
@@ -166,7 +168,33 @@ Admin backend routes are all protected by that token: `POST /api/workshops`,
 `DELETE /api/workshops/:id`, `POST /api/collaboration-requests/:id/approve`,
 `GET /api/registrations`, `GET /api/inquiries`, and `GET /api/collaboration-requests`.
 Without a token they answer `401`. Passphrase attempts are rate limited to
-8 per 15 minutes per IP.
+8 per 15 minutes per IP. The Payments tab lists every payment and its Railway
+PostgreSQL status.
+
+### Payments
+
+The paid workshop redirects to the IncuXai Education Trust platform for Razorpay
+checkout. Status is stored in Railway PostgreSQL and read by the admin console.
+
+Backend variables:
+
+| Variable | Example |
+| :--- | :--- |
+| `TRUST_PAYMENT_SECRET` | Secret from `payment-apps.js` on the trust platform |
+| `TRUST_PAYMENT_URL` | `https://pay.incuxaieducationtrust.org` |
+| `TRUST_PAYMENT_APP_ID` | `incuxai` |
+| `PAYMENT_RETURN_URL` | `https://workshops.incuxai.com/payment/success` |
+| `PAYMENT_WEBHOOK_URL` | `https://workshops.incuxai.com/api/payments/webhook` |
+
+Register the app on the trust platform so it can sign callbacks and issue success
+tokens:
+
+```bash
+node src/cli/payment-apps.js add incuxai "IncuXai.com" --callback https://workshops.incuxai.com/api/payments/webhook
+```
+
+The full flow, routes and database notes are documented in
+`PAYMENT_INTEGRATION_PLAN.md`.
 
 ---
 
