@@ -57,6 +57,47 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Data paths for local JSON storage fallback
+const DATA_DIR = path.join(__dirname, 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const UPCOMING_WORKSHOPS_FILE = path.join(DATA_DIR, 'upcoming_workshops.json');
+const CUSTOM_REQUESTS_FILE = path.join(DATA_DIR, 'custom_requests.json');
+const REGISTRATIONS_FILE = path.join(DATA_DIR, 'registrations.json');
+const INQUIRIES_FILE = path.join(DATA_DIR, 'inquiries.json');
+
+// Ensure required local store files exist
+const initFiles = [
+  { path: USERS_FILE, default: [] },
+  { path: UPCOMING_WORKSHOPS_FILE, default: [] },
+  { path: CUSTOM_REQUESTS_FILE, default: [] },
+  { path: REGISTRATIONS_FILE, default: [] },
+  { path: INQUIRIES_FILE, default: [] }
+];
+
+initFiles.forEach(f => {
+  if (!fs.existsSync(f.path)) {
+    fs.writeFileSync(f.path, JSON.stringify(f.default, null, 2), 'utf-8');
+  }
+});
+
+// Helper to safely read JSON
+const readJson = (filename) => {
+  const filePath = path.join(DATA_DIR, filename);
+  if (!fs.existsSync(filePath)) return [];
+  const data = fs.readFileSync(filePath, 'utf-8');
+  try {
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+};
+
+// Helper to write JSON
+const writeJson = (filename, data) => {
+  const filePath = path.join(DATA_DIR, filename);
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+};
+
 // ==========================================
 // ADMIN SESSION (passphrase, no user accounts)
 // ==========================================
@@ -703,10 +744,6 @@ app.get('/api/genai/referrals/:code/validate', async (req, res) => {
 
 app.post('/api/genai/registrations/step1', async (req, res) => {
   try {
-    if (!isDatabaseConfigured) {
-      return res.status(503).json({ error: 'Registration is not available right now.' });
-    }
-
     const body = req.body || {};
     const clean = {
       fullName: String(body.fullName || '').trim(),
@@ -719,11 +756,12 @@ app.post('/api/genai/registrations/step1', async (req, res) => {
       collegeLocation: String(body.collegeLocation || '').trim()
     };
 
+    const sanitizedPhone = clean.phone.replace(/[\s+-]/g, '').slice(-10);
     const errors = {};
     if (clean.fullName.length < 2) errors.fullName = 'Enter your full name.';
     if (!GENAI_GENDERS.includes(clean.gender)) errors.gender = 'Select your gender.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean.email)) errors.email = 'Enter a valid email address.';
-    if (!/^[6-9][0-9]{9}$/.test(clean.phone)) errors.phone = 'Enter a valid 10-digit Indian mobile number.';
+    if (!/^[0-9]{10}$/.test(sanitizedPhone)) errors.phone = 'Enter a valid 10-digit mobile number.';
     if (!clean.department) errors.department = 'Enter your department.';
     if (!GENAI_YEARS.includes(clean.yearOfStudy)) errors.yearOfStudy = 'Select your year of study.';
     if (!clean.college) errors.college = 'Enter your college name.';
@@ -739,18 +777,26 @@ app.post('/api/genai/registrations/step1', async (req, res) => {
     if (submittedReferral) {
       referral = await findActiveReferral(submittedReferral, GENAI_WORKSHOP_ID);
       if (referral) {
-        await prisma.referralCode.update({
-          where: { id: referral.id },
-          data: { usageCount: { increment: 1 } }
-        }).catch(() => {});
+        if (isDatabaseConfigured) {
+          await prisma.referralCode.update({
+            where: { id: referral.id },
+            data: { usageCount: { increment: 1 } }
+          }).catch(() => {});
+        }
       } else {
         referralWarning = 'The referral code was not recognised for this workshop, so no discount was applied.';
       }
     }
 
-    const workshop = await prisma.upcomingWorkshop.findUnique({
-      where: { id: GENAI_WORKSHOP_ID }
-    }).catch(() => null);
+    let workshop = null;
+    if (isDatabaseConfigured) {
+      workshop = await prisma.upcomingWorkshop.findUnique({
+        where: { id: GENAI_WORKSHOP_ID }
+      }).catch(() => null);
+    } else {
+      const localWorkshops = readJson('upcoming_workshops.json');
+      workshop = localWorkshops.find(w => w.id === GENAI_WORKSHOP_ID);
+    }
 
     const commonData = {
       workshopId: GENAI_WORKSHOP_ID,
@@ -762,7 +808,7 @@ app.post('/api/genai/registrations/step1', async (req, res) => {
       candidateName: clean.fullName,
       candidateEmail: clean.email,
       candidateInstitution: clean.college,
-      candidatePhone: clean.phone,
+      candidatePhone: sanitizedPhone,
       gender: clean.gender,
       department: clean.department,
       yearOfStudy: clean.yearOfStudy,
@@ -774,55 +820,117 @@ app.post('/api/genai/registrations/step1', async (req, res) => {
       userAgent: req.headers['user-agent'] || null
     };
 
-    const existing = await prisma.registration.findFirst({
-      where: { workshopId: GENAI_WORKSHOP_ID, candidateEmail: clean.email }
-    });
+    if (isDatabaseConfigured) {
+      const existing = await prisma.registration.findFirst({
+        where: { workshopId: GENAI_WORKSHOP_ID, candidateEmail: clean.email }
+      });
 
-    if (existing) {
+      if (existing) {
+        if (existing.paymentStatus === 'paid') {
+          return res.status(409).json({
+            success: false,
+            error: 'This email already has a confirmed payment for the workshop.'
+          });
+        }
+        const updated = await prisma.registration.update({
+          where: { id: existing.id },
+          data: {
+            ...commonData,
+            currentStep: Math.max(existing.currentStep || 1, 2)
+          }
+        });
+        return res.json({
+          success: true,
+          resume: true,
+          registration: genAiRegistrationView(updated),
+          referralWarning,
+          quote: calculateGenAiQuote(updated.discountAmount)
+        });
+      }
+
+      const registrationCode = `GAIC6K_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}_${crypto
+        .randomBytes(4)
+        .toString('hex')
+        .toUpperCase()}`;
+
+      const registration = await prisma.registration.create({
+        data: {
+          ...commonData,
+          id: `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          registrationCode,
+          status: 'Confirmed',
+          paymentStatus: 'pending',
+          currentStep: 2
+        }
+      });
+
+      return res.status(201).json({
+        success: true,
+        resume: false,
+        registration: genAiRegistrationView(registration),
+        referralWarning,
+        quote: calculateGenAiQuote(registration.discountAmount)
+      });
+    }
+
+    // Local JSON Store Fallback (persists directly in database/registrations.json)
+    const registrations = readJson('registrations.json');
+    const existingIndex = registrations.findIndex(
+      (r) => r.workshopId === GENAI_WORKSHOP_ID && (r.candidateEmail || '').toLowerCase() === clean.email
+    );
+
+    let savedReg;
+    let isResume = false;
+
+    if (existingIndex !== -1) {
+      const existing = registrations[existingIndex];
       if (existing.paymentStatus === 'paid') {
         return res.status(409).json({
           success: false,
           error: 'This email already has a confirmed payment for the workshop.'
         });
       }
-      const updated = await prisma.registration.update({
-        where: { id: existing.id },
-        data: {
-          ...commonData,
-          currentStep: Math.max(existing.currentStep || 1, 1)
-        }
-      });
-      return res.json({
-        success: true,
-        resume: true,
-        registration: genAiRegistrationView(updated),
-        referralWarning,
-        quote: calculateGenAiQuote(updated.discountAmount)
-      });
-    }
-
-    const registrationCode = `GAIC6K_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}_${crypto
-      .randomBytes(4)
-      .toString('hex')
-      .toUpperCase()}`;
-
-    const registration = await prisma.registration.create({
-      data: {
+      savedReg = {
+        ...existing,
+        ...commonData,
+        currentStep: Math.max(existing.currentStep || 1, 2),
+        updatedAt: new Date().toISOString()
+      };
+      registrations[existingIndex] = savedReg;
+      isResume = true;
+    } else {
+      const registrationCode = `GAIC6K_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}_${crypto
+        .randomBytes(4)
+        .toString('hex')
+        .toUpperCase()}`;
+      savedReg = {
         ...commonData,
         id: `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         registrationCode,
         status: 'Confirmed',
         paymentStatus: 'pending',
-        currentStep: 1
-      }
-    });
+        currentStep: 2,
+        registeredAt: new Date().toISOString()
+      };
+      registrations.unshift(savedReg);
+    }
 
-    res.status(201).json({
+    writeJson('registrations.json', registrations);
+
+    // Update registered count in local workshops data
+    const localWorkshops = readJson('upcoming_workshops.json');
+    const targetWs = localWorkshops.find(w => w.id === GENAI_WORKSHOP_ID);
+    if (targetWs && !isResume) {
+      targetWs.registered = (targetWs.registered || 0) + 1;
+      writeJson('upcoming_workshops.json', localWorkshops);
+    }
+
+    res.status(isResume ? 200 : 201).json({
       success: true,
-      resume: false,
-      registration: genAiRegistrationView(registration),
+      resume: isResume,
+      registration: genAiRegistrationView(savedReg),
       referralWarning,
-      quote: calculateGenAiQuote(registration.discountAmount)
+      quote: calculateGenAiQuote(savedReg.discountAmount)
     });
   } catch (err) {
     console.warn('[GenAI step1 error]:', err.message);
@@ -832,13 +940,20 @@ app.post('/api/genai/registrations/step1', async (req, res) => {
 
 app.get('/api/genai/registrations/resume', async (req, res) => {
   try {
-    if (!isDatabaseConfigured) return res.json({ success: true, registration: null });
     const email = String(req.query.email || '').trim().toLowerCase();
     if (!email) return res.status(400).json({ error: 'Email is required.' });
 
-    const registration = await prisma.registration.findFirst({
-      where: { workshopId: GENAI_WORKSHOP_ID, candidateEmail: email }
-    });
+    let registration = null;
+    if (isDatabaseConfigured) {
+      registration = await prisma.registration.findFirst({
+        where: { workshopId: GENAI_WORKSHOP_ID, candidateEmail: email }
+      });
+    } else {
+      const registrations = readJson('registrations.json');
+      registration = registrations.find(
+        (r) => r.workshopId === GENAI_WORKSHOP_ID && (r.candidateEmail || '').toLowerCase() === email
+      );
+    }
     res.json({
       success: true,
       registration: registration ? genAiRegistrationView(registration) : null,
@@ -851,10 +966,15 @@ app.get('/api/genai/registrations/resume', async (req, res) => {
 
 app.get('/api/genai/registrations/:id', async (req, res) => {
   try {
-    if (!isDatabaseConfigured) return res.json({ success: true, registration: null });
-    const registration = await prisma.registration.findUnique({
-      where: { id: req.params.id }
-    });
+    let registration = null;
+    if (isDatabaseConfigured) {
+      registration = await prisma.registration.findUnique({
+        where: { id: req.params.id }
+      });
+    } else {
+      const registrations = readJson('registrations.json');
+      registration = registrations.find((r) => r.id === req.params.id);
+    }
     if (!registration || registration.workshopId !== GENAI_WORKSHOP_ID) {
       return res.status(404).json({ error: 'Registration not found.' });
     }
@@ -870,16 +990,26 @@ app.get('/api/genai/registrations/:id', async (req, res) => {
 
 app.post('/api/genai/registrations/:id/step2', async (req, res) => {
   try {
-    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Registration is not available right now.' });
-    const registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
-    if (!registration || registration.workshopId !== GENAI_WORKSHOP_ID) {
-      return res.status(404).json({ error: 'Registration not found.' });
+    let updated = null;
+    if (isDatabaseConfigured) {
+      const registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
+      if (!registration || registration.workshopId !== GENAI_WORKSHOP_ID) {
+        return res.status(404).json({ error: 'Registration not found.' });
+      }
+      updated = await prisma.registration.update({
+        where: { id: registration.id },
+        data: { currentStep: Math.max(registration.currentStep || 1, 3) }
+      });
+    } else {
+      const registrations = readJson('registrations.json');
+      const idx = registrations.findIndex((r) => r.id === req.params.id);
+      if (idx === -1 || registrations[idx].workshopId !== GENAI_WORKSHOP_ID) {
+        return res.status(404).json({ error: 'Registration not found.' });
+      }
+      registrations[idx].currentStep = Math.max(registrations[idx].currentStep || 1, 3);
+      writeJson('registrations.json', registrations);
+      updated = registrations[idx];
     }
-
-    const updated = await prisma.registration.update({
-      where: { id: registration.id },
-      data: { currentStep: Math.max(registration.currentStep || 1, 2) }
-    });
     res.json({ success: true, registration: genAiRegistrationView(updated) });
   } catch (err) {
     res.status(500).json({ error: 'Could not save your progress.' });
@@ -888,8 +1018,6 @@ app.post('/api/genai/registrations/:id/step2', async (req, res) => {
 
 app.post('/api/genai/registrations/:id/step3', async (req, res) => {
   try {
-    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Registration is not available right now.' });
-
     const choice = String(req.body?.hostelAccommodation || '').trim();
     const termsAccepted = Boolean(req.body?.termsAccepted);
     const accommodationPaid = Boolean(req.body?.accommodationPaid);
@@ -906,20 +1034,34 @@ app.post('/api/genai/registrations/:id/step3', async (req, res) => {
       });
     }
 
-    const registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
-    if (!registration || registration.workshopId !== GENAI_WORKSHOP_ID) {
-      return res.status(404).json({ error: 'Registration not found.' });
-    }
-
-    const updated = await prisma.registration.update({
-      where: { id: registration.id },
-      data: {
-        hostelAccommodation: choice,
-        accommodationPaid: choice === 'Yes',
-        termsAccepted: true,
-        currentStep: Math.max(registration.currentStep || 1, 4)
+    let updated = null;
+    if (isDatabaseConfigured) {
+      const registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
+      if (!registration || registration.workshopId !== GENAI_WORKSHOP_ID) {
+        return res.status(404).json({ error: 'Registration not found.' });
       }
-    });
+      updated = await prisma.registration.update({
+        where: { id: registration.id },
+        data: {
+          hostelAccommodation: choice,
+          accommodationPaid: choice === 'Yes',
+          termsAccepted: true,
+          currentStep: 4
+        }
+      });
+    } else {
+      const registrations = readJson('registrations.json');
+      const idx = registrations.findIndex((r) => r.id === req.params.id);
+      if (idx === -1 || registrations[idx].workshopId !== GENAI_WORKSHOP_ID) {
+        return res.status(404).json({ error: 'Registration not found.' });
+      }
+      registrations[idx].hostelAccommodation = choice;
+      registrations[idx].accommodationPaid = choice === 'Yes';
+      registrations[idx].termsAccepted = true;
+      registrations[idx].currentStep = 4;
+      writeJson('registrations.json', registrations);
+      updated = registrations[idx];
+    }
     res.json({ success: true, registration: genAiRegistrationView(updated) });
   } catch (err) {
     res.status(500).json({ error: 'Could not save accommodation details.' });
@@ -928,9 +1070,13 @@ app.post('/api/genai/registrations/:id/step3', async (req, res) => {
 
 app.post('/api/genai/registrations/:id/payment', async (req, res) => {
   try {
-    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Payment is not available right now.' });
-
-    const registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
+    let registration = null;
+    if (isDatabaseConfigured) {
+      registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
+    } else {
+      const registrations = readJson('registrations.json');
+      registration = registrations.find((r) => r.id === req.params.id);
+    }
     if (!registration || registration.workshopId !== GENAI_WORKSHOP_ID) {
       return res.status(404).json({ error: 'Registration not found.' });
     }
@@ -942,29 +1088,45 @@ app.post('/api/genai/registrations/:id/payment', async (req, res) => {
     }
 
     const quote = calculateGenAiQuote(registration.discountAmount);
-    const returnUrl = new URL(PAYMENT_RETURN_URL);
-    returnUrl.searchParams.set('registration', registration.id);
+    
+    if (TRUST_PAYMENT_URL) {
+      const returnUrl = new URL(PAYMENT_RETURN_URL);
+      returnUrl.searchParams.set('registration', registration.id);
 
-    const result = await createTrustPaymentSession({
-      registrationId: registration.id,
-      workshopId: GENAI_WORKSHOP_ID,
-      amountInPaise: quote.total * 100,
-      currency: quote.currency,
-      workshopTitle: registration.workshopTitle || GENAI_WORKSHOP_TITLE,
-      payerName: registration.candidateName,
-      payerEmail: registration.candidateEmail,
-      payerPhone: registration.candidatePhone,
-      candidateInstitution: registration.college,
-      returnUrl: returnUrl.toString(),
-      metadata: {
-        registrationCode: registration.registrationCode || '',
-        referralCode: registration.referralCode || '',
-        discount: quote.discount,
-        platformFee: quote.platformFee
+      const result = await createTrustPaymentSession({
+        registrationId: registration.id,
+        workshopId: GENAI_WORKSHOP_ID,
+        amountInPaise: quote.total * 100,
+        currency: quote.currency,
+        workshopTitle: registration.workshopTitle || GENAI_WORKSHOP_TITLE,
+        payerName: registration.candidateName,
+        payerEmail: registration.candidateEmail,
+        payerPhone: registration.candidatePhone,
+        candidateInstitution: registration.college,
+        returnUrl: returnUrl.toString(),
+        metadata: {
+          registrationCode: registration.registrationCode || '',
+          referralCode: registration.referralCode || '',
+          discount: quote.discount,
+          platformFee: quote.platformFee
+        }
+      });
+
+      return res.json({ ...result, quote });
+    }
+
+    // Direct fallback checkout page
+    const localPaymentUrl = `/payment?registrationId=${encodeURIComponent(registration.id)}&amount=${quote.total}&candidate=${encodeURIComponent(registration.candidateName)}&email=${encodeURIComponent(registration.candidateEmail)}`;
+    return res.json({
+      success: true,
+      trustUrl: localPaymentUrl,
+      quote,
+      session: {
+        id: `SESSION-${Date.now()}`,
+        amount: quote.total,
+        status: 'pending'
       }
     });
-
-    res.json({ ...result, quote });
   } catch (err) {
     console.warn('[GenAI payment error]:', err.message);
     res.status(500).json({ error: err.message || 'Could not start the secure checkout.' });
@@ -1582,42 +1744,6 @@ app.post('/api/forms/registrations/:id/payment', async (req, res) => {
     res.status(500).json({ error: err.message || 'Could not start the secure checkout.' });
   }
 });
-
-// Data paths for local JSON fallback
-const DATA_DIR = path.join(__dirname, 'data');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const UPCOMING_WORKSHOPS_FILE = path.join(DATA_DIR, 'upcoming_workshops.json');
-const CUSTOM_REQUESTS_FILE = path.join(DATA_DIR, 'custom_requests.json');
-const REGISTRATIONS_FILE = path.join(DATA_DIR, 'registrations.json');
-const INQUIRIES_FILE = path.join(DATA_DIR, 'inquiries.json');
-
-// Ensure required files exist
-const initFiles = [
-  { path: USERS_FILE, default: [] },
-  { path: UPCOMING_WORKSHOPS_FILE, default: [] },
-  { path: CUSTOM_REQUESTS_FILE, default: [] },
-  { path: REGISTRATIONS_FILE, default: [] },
-  { path: INQUIRIES_FILE, default: [] }
-];
-
-initFiles.forEach(f => {
-  if (!fs.existsSync(f.path)) {
-    fs.writeFileSync(f.path, JSON.stringify(f.default, null, 2), 'utf-8');
-  }
-});
-
-// Helper to safely read JSON
-const readJson = (filename) => {
-  const filePath = path.join(DATA_DIR, filename);
-  const data = fs.readFileSync(filePath, 'utf-8');
-  return JSON.parse(data);
-};
-
-// Helper to write JSON
-const writeJson = (filename, data) => {
-  const filePath = path.join(DATA_DIR, filename);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-};
 
 // ==========================================
 // 1. HEALTH & METRICS ROUTES

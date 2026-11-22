@@ -17,3 +17,4 @@ photos/
 .env
 .env.*
 !.env.example
+

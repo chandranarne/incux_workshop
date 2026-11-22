@@ -67,6 +67,7 @@ export default function GenAiWorkshopRegistration({ onBackHome }) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [notice, setNotice] = useState('');
   const [resumeOpen, setResumeOpen] = useState(false);
   const [resumeEmail, setResumeEmail] = useState('');
@@ -84,7 +85,7 @@ export default function GenAiWorkshopRegistration({ onBackHome }) {
       college: reg.college || '',
       collegeLocation: reg.collegeLocation || ''
     });
-    setStep(Math.min(Math.max(Number(reg.currentStep) || 1, 1), 4));
+    setStep(Math.min(Math.max(Number(reg.currentStep) || 2, 1), 4));
     setAccommodationChoice(reg.hostelAccommodation || '');
     setAccommodationPaid(
       reg.hostelAccommodation === 'Yes' ? (reg.accommodationPaid ? 'Yes' : 'No') : ''
@@ -174,6 +175,8 @@ export default function GenAiWorkshopRegistration({ onBackHome }) {
   const updateField = (event) => {
     const { name, value } = event.target;
     setDetails((previous) => ({ ...previous, [name]: value }));
+    setFieldErrors((previous) => ({ ...previous, [name]: '' }));
+    if (error) setError('');
   };
 
   const validateStep1 = () => {
@@ -181,7 +184,8 @@ export default function GenAiWorkshopRegistration({ onBackHome }) {
     if (details.fullName.trim().length < 2) errors.fullName = 'Enter your full name.';
     if (!['Male', 'Female', 'Other'].includes(details.gender)) errors.gender = 'Select your gender.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.email.trim())) errors.email = 'Enter a valid email address.';
-    if (!/^[6-9][0-9]{9}$/.test(details.phone.trim())) errors.phone = 'Enter a valid 10-digit Indian mobile number.';
+    const rawPhone = details.phone.replace(/[\s+-]/g, '').slice(-10);
+    if (!/^[0-9]{10}$/.test(rawPhone)) errors.phone = 'Enter a valid 10-digit mobile number.';
     if (!details.department.trim()) errors.department = 'Enter your department.';
     if (!['1', '2', '3', '4', 'Graduated'].includes(details.yearOfStudy)) {
       errors.yearOfStudy = 'Select your year of study.';
@@ -197,17 +201,22 @@ export default function GenAiWorkshopRegistration({ onBackHome }) {
     setNotice('');
     const errors = validateStep1();
     if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       setError('Please check the highlighted fields and try again.');
       return;
     }
+    setFieldErrors({});
 
     setBusy(true);
     try {
+      const cleanPhone = details.phone.replace(/[\s+-]/g, '').slice(-10);
       const result = await submitGenAiStep1({
         ...details,
+        phone: cleanPhone,
         referralCode: referralCodeFromUrl
       });
       applyRegistration(result.registration);
+      setStep(2);
       if (result.referralWarning) setReferralWarning(result.referralWarning);
       if (result.resume) setNotice('We found an existing registration and resumed it for you.');
       window.history.replaceState(
@@ -215,6 +224,7 @@ export default function GenAiWorkshopRegistration({ onBackHome }) {
         '',
         `/gen-ai-workshop?registration=${encodeURIComponent(result.registration.id)}`
       );
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError(err.message || 'Could not save your details.');
     } finally {
@@ -273,12 +283,15 @@ export default function GenAiWorkshopRegistration({ onBackHome }) {
 
   const handleStep3 = async () => {
     setError('');
+    setFieldErrors({});
     if (!accommodationChoice) {
       setError('Select whether you need hostel accommodation to continue.');
+      setFieldErrors({ accommodation: 'Please choose an accommodation option.' });
       return;
     }
     if (!termsAccepted) {
-      setError('You must accept the event information to continue.');
+      setError('You must accept the event information to continue. Please check the confirmation box below.');
+      setFieldErrors({ terms: 'Please check this box to confirm and continue.' });
       return;
     }
     if (accommodationChoice === 'Yes' && accommodationPaid !== 'Yes') {
@@ -488,37 +501,110 @@ export default function GenAiWorkshopRegistration({ onBackHome }) {
                   <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div>
                       <label className={labelClass} htmlFor="fullName">Full Name *</label>
-                      <input id="fullName" name="fullName" className={inputClass} value={details.fullName} onChange={updateField} placeholder="Enter your full name" maxLength={150} autoComplete="name" />
+                      <input
+                        id="fullName"
+                        name="fullName"
+                        className={`${inputClass} ${fieldErrors.fullName ? '!border-rose-500 !focus:border-rose-500' : ''}`}
+                        value={details.fullName}
+                        onChange={updateField}
+                        placeholder="Enter your full name"
+                        maxLength={150}
+                        autoComplete="name"
+                      />
+                      {fieldErrors.fullName && (
+                        <p className="mt-1 text-xs text-rose-500 font-mono">{fieldErrors.fullName}</p>
+                      )}
                     </div>
                     <div>
                       <label className={labelClass} htmlFor="gender">Gender *</label>
-                      <select id="gender" name="gender" className={inputClass} value={details.gender} onChange={updateField}>
+                      <select
+                        id="gender"
+                        name="gender"
+                        className={`${inputClass} ${fieldErrors.gender ? '!border-rose-500 !focus:border-rose-500' : ''}`}
+                        value={details.gender}
+                        onChange={updateField}
+                      >
                         <option value="">Select Gender</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Other">Other / Prefer not to say</option>
                       </select>
+                      {fieldErrors.gender && (
+                        <p className="mt-1 text-xs text-rose-500 font-mono">{fieldErrors.gender}</p>
+                      )}
                     </div>
                     <div>
                       <label className={labelClass} htmlFor="email">Email *</label>
-                      <input id="email" name="email" type="email" className={inputClass} value={details.email} onChange={updateField} placeholder="you@example.com" maxLength={150} autoComplete="email" />
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        className={`${inputClass} ${fieldErrors.email ? '!border-rose-500 !focus:border-rose-500' : ''}`}
+                        value={details.email}
+                        onChange={updateField}
+                        placeholder="you@example.com"
+                        maxLength={150}
+                        autoComplete="email"
+                      />
+                      {fieldErrors.email && (
+                        <p className="mt-1 text-xs text-rose-500 font-mono">{fieldErrors.email}</p>
+                      )}
                     </div>
                     <div>
                       <label className={labelClass} htmlFor="phone">Phone Number *</label>
                       <div className="flex">
-                        <span className="inline-flex items-center px-3 rounded-l-xl bg-neutral-100 dark:bg-[#1F1F1F] border border-r-0 border-black/15 dark:border-[#333333] text-sm font-mono text-neutral-600 dark:text-neutral-300">
+                        <span
+                          className={`inline-flex items-center px-3 rounded-l-xl bg-neutral-100 dark:bg-[#1F1F1F] border border-r-0 ${
+                            fieldErrors.phone
+                              ? '!border-rose-500 text-rose-500'
+                              : 'border-black/15 dark:border-[#333333] text-neutral-600 dark:text-neutral-300'
+                          } text-sm font-mono`}
+                        >
                           +91
                         </span>
-                        <input id="phone" name="phone" type="tel" inputMode="numeric" className={`${inputClass} rounded-l-none`} value={details.phone} onChange={updateField} placeholder="10-digit number" maxLength={10} autoComplete="tel" />
+                        <input
+                          id="phone"
+                          name="phone"
+                          type="tel"
+                          inputMode="numeric"
+                          className={`${inputClass} rounded-l-none ${
+                            fieldErrors.phone ? '!border-rose-500 !focus:border-rose-500' : ''
+                          }`}
+                          value={details.phone}
+                          onChange={updateField}
+                          placeholder="10-digit number"
+                          maxLength={10}
+                          autoComplete="tel"
+                        />
                       </div>
+                      {fieldErrors.phone && (
+                        <p className="mt-1 text-xs text-rose-500 font-mono">{fieldErrors.phone}</p>
+                      )}
                     </div>
                     <div>
                       <label className={labelClass} htmlFor="department">Department *</label>
-                      <input id="department" name="department" className={inputClass} value={details.department} onChange={updateField} placeholder="CSE, ECE, Mechanical" maxLength={150} />
+                      <input
+                        id="department"
+                        name="department"
+                        className={`${inputClass} ${fieldErrors.department ? '!border-rose-500 !focus:border-rose-500' : ''}`}
+                        value={details.department}
+                        onChange={updateField}
+                        placeholder="CSE, ECE, Mechanical"
+                        maxLength={150}
+                      />
+                      {fieldErrors.department && (
+                        <p className="mt-1 text-xs text-rose-500 font-mono">{fieldErrors.department}</p>
+                      )}
                     </div>
                     <div>
                       <label className={labelClass} htmlFor="yearOfStudy">Year of Study *</label>
-                      <select id="yearOfStudy" name="yearOfStudy" className={inputClass} value={details.yearOfStudy} onChange={updateField}>
+                      <select
+                        id="yearOfStudy"
+                        name="yearOfStudy"
+                        className={`${inputClass} ${fieldErrors.yearOfStudy ? '!border-rose-500 !focus:border-rose-500' : ''}`}
+                        value={details.yearOfStudy}
+                        onChange={updateField}
+                      >
                         <option value="">Select Year</option>
                         <option value="1">1st Year</option>
                         <option value="2">2nd Year</option>
@@ -526,14 +612,39 @@ export default function GenAiWorkshopRegistration({ onBackHome }) {
                         <option value="4">4th Year</option>
                         <option value="Graduated">Graduated</option>
                       </select>
+                      {fieldErrors.yearOfStudy && (
+                        <p className="mt-1 text-xs text-rose-500 font-mono">{fieldErrors.yearOfStudy}</p>
+                      )}
                     </div>
                     <div>
                       <label className={labelClass} htmlFor="college">College Name *</label>
-                      <input id="college" name="college" className={inputClass} value={details.college} onChange={updateField} placeholder="Your college or institution" maxLength={255} />
+                      <input
+                        id="college"
+                        name="college"
+                        className={`${inputClass} ${fieldErrors.college ? '!border-rose-500 !focus:border-rose-500' : ''}`}
+                        value={details.college}
+                        onChange={updateField}
+                        placeholder="Your college or institution"
+                        maxLength={255}
+                      />
+                      {fieldErrors.college && (
+                        <p className="mt-1 text-xs text-rose-500 font-mono">{fieldErrors.college}</p>
+                      )}
                     </div>
                     <div>
                       <label className={labelClass} htmlFor="collegeLocation">College Location *</label>
-                      <input id="collegeLocation" name="collegeLocation" className={inputClass} value={details.collegeLocation} onChange={updateField} placeholder="City, State" maxLength={255} />
+                      <input
+                        id="collegeLocation"
+                        name="collegeLocation"
+                        className={`${inputClass} ${fieldErrors.collegeLocation ? '!border-rose-500 !focus:border-rose-500' : ''}`}
+                        value={details.collegeLocation}
+                        onChange={updateField}
+                        placeholder="City, State"
+                        maxLength={255}
+                      />
+                      {fieldErrors.collegeLocation && (
+                        <p className="mt-1 text-xs text-rose-500 font-mono">{fieldErrors.collegeLocation}</p>
+                      )}
                     </div>
                   </div>
 
@@ -761,7 +872,13 @@ export default function GenAiWorkshopRegistration({ onBackHome }) {
                     </div>
                   )}
 
-                  <div className="mt-6 p-5 rounded-2xl border border-black/10 dark:border-[#262626] bg-neutral-50 dark:bg-[#1A1A1A]">
+                  <div
+                    className={`mt-6 p-5 rounded-2xl border transition-colors ${
+                      fieldErrors.terms
+                        ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 ring-1 ring-rose-500'
+                        : 'border-black/10 dark:border-[#262626] bg-neutral-50 dark:bg-[#1A1A1A]'
+                    }`}
+                  >
                     <h3 className="font-mono font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-[#FACC15]">
                       Terms & Conditions
                     </h3>
@@ -773,13 +890,25 @@ export default function GenAiWorkshopRegistration({ onBackHome }) {
                       <input
                         type="checkbox"
                         checked={termsAccepted}
-                        onChange={(event) => setTermsAccepted(event.target.checked)}
+                        onChange={(event) => {
+                          setTermsAccepted(event.target.checked);
+                          if (event.target.checked) {
+                            setFieldErrors((prev) => ({ ...prev, terms: '' }));
+                            setError('');
+                          }
+                        }}
                         className="mt-0.5 w-4 h-4 accent-[#FACC15]"
                       />
-                      <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                         I confirm that I have read and accepted the event information and terms. *
                       </span>
                     </label>
+                    {fieldErrors.terms && (
+                      <p className="mt-2.5 text-xs font-mono font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        {fieldErrors.terms}
+                      </p>
+                    )}
                   </div>
 
                   <div className="mt-7 flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
