@@ -82,6 +82,14 @@ export default function Navbar({ onOpenMenu }) {
 
           {/* Actions: Theme Toggle always, Menu button below laptop only */}
           <div className="flex items-center gap-1.5 sm:gap-3">
+            {/* Admin console, inline on laptop and larger */}
+            <a
+              href="/admin"
+              className="hidden lg:inline-flex px-3 py-2 rounded-full border border-[#FACC15]/40 bg-[#FACC15]/10 text-[#0A0A0A] dark:text-[#FACC15] font-mono font-bold text-xs hover:bg-[#FACC15]/20 transition-colors"
+            >
+              Admin
+            </a>
+
             {/* Theme Mode Toggle */}
             <button
               onClick={toggleTheme}

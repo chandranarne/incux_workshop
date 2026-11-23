@@ -21,7 +21,10 @@ if (fs.existsSync(envPath)) {
       const idx = trimmed.indexOf('=');
       if (idx !== -1) {
         const key = trimmed.slice(0, idx).trim();
-        const val = trimmed.slice(idx + 1).trim();
+        let val = trimmed.slice(idx + 1).trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
         if (!process.env[key]) process.env[key] = val;
       }
     }
@@ -53,6 +56,47 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Data paths for local JSON storage fallback
+const DATA_DIR = path.join(__dirname, 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const UPCOMING_WORKSHOPS_FILE = path.join(DATA_DIR, 'upcoming_workshops.json');
+const CUSTOM_REQUESTS_FILE = path.join(DATA_DIR, 'custom_requests.json');
+const REGISTRATIONS_FILE = path.join(DATA_DIR, 'registrations.json');
+const INQUIRIES_FILE = path.join(DATA_DIR, 'inquiries.json');
+
+// Ensure required local store files exist
+const initFiles = [
+  { path: USERS_FILE, default: [] },
+  { path: UPCOMING_WORKSHOPS_FILE, default: [] },
+  { path: CUSTOM_REQUESTS_FILE, default: [] },
+  { path: REGISTRATIONS_FILE, default: [] },
+  { path: INQUIRIES_FILE, default: [] }
+];
+
+initFiles.forEach(f => {
+  if (!fs.existsSync(f.path)) {
+    fs.writeFileSync(f.path, JSON.stringify(f.default, null, 2), 'utf-8');
+  }
+});
+
+// Helper to safely read JSON
+const readJson = (filename) => {
+  const filePath = path.join(DATA_DIR, filename);
+  if (!fs.existsSync(filePath)) return [];
+  const data = fs.readFileSync(filePath, 'utf-8');
+  try {
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+};
+
+// Helper to write JSON
+const writeJson = (filename, data) => {
+  const filePath = path.join(DATA_DIR, filename);
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+};
 
 // ==========================================
 // ADMIN SESSION (passphrase, no user accounts)
@@ -143,41 +187,1563 @@ app.get('/api/admin/session', requireAdmin, (req, res) => {
   res.json({ success: true });
 });
 
-// Data paths for local JSON fallback
-const DATA_DIR = path.join(__dirname, 'data');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const UPCOMING_WORKSHOPS_FILE = path.join(DATA_DIR, 'upcoming_workshops.json');
-const CUSTOM_REQUESTS_FILE = path.join(DATA_DIR, 'custom_requests.json');
-const REGISTRATIONS_FILE = path.join(DATA_DIR, 'registrations.json');
-const INQUIRIES_FILE = path.join(DATA_DIR, 'inquiries.json');
+// ==========================================
+// PAYMENT GATEWAY (IncuXai Education Trust)
+// Redirects to trust platform for Razorpay checkout.
+// Token signing is HMAC-SHA256 JWT-like, same algorithm as
+// incuxai.com's TrustPaymentToken.php.
+// ==========================================
+const TRUST_PAYMENT_SECRET = process.env.TRUST_PAYMENT_SECRET || '';
+const TRUST_PAYMENT_URL = process.env.TRUST_PAYMENT_URL || 'https://www.incuxaieducationtrust.org';
+const TRUST_PAYMENT_APP_ID = process.env.TRUST_PAYMENT_APP_ID || 'workshops';
+const PAYMENT_RETURN_URL = process.env.PAYMENT_RETURN_URL || 'https://workshops.incuxai.com/payment/success';
+const PAYMENT_CANCEL_URL = process.env.PAYMENT_CANCEL_URL || 'https://workshops.incuxai.com/payment/cancel';
+const PAYMENT_WEBHOOK_URL = process.env.PAYMENT_WEBHOOK_URL || 'https://workshops.incuxai.com/api/payments/webhook';
 
-// Ensure required files exist
-const initFiles = [
-  { path: USERS_FILE, default: [] },
-  { path: UPCOMING_WORKSHOPS_FILE, default: [] },
-  { path: CUSTOM_REQUESTS_FILE, default: [] },
-  { path: REGISTRATIONS_FILE, default: [] },
-  { path: INQUIRIES_FILE, default: [] }
-];
+// ==========================================
+// GEN AI WORKSHOP, NOVEMBER 28-29
+// Single source of truth for the step-wise registration flow.
+// ==========================================
+const GENAI_WORKSHOP_ID = process.env.GENAI_WORKSHOP_ID || 'WS-GENAI-IIT-HYD-NOV28';
+const GENAI_WORKSHOP_TITLE = 'Generative AI Workshop';
+const GENAI_BASE_PRICE = Number(process.env.GENAI_BASE_PRICE || 6000);
+const GENAI_PLATFORM_FEE_PERCENT = Number(process.env.GENAI_PLATFORM_FEE_PERCENT || 2);
+const ACCOMMODATION_PAYMENT_URL =
+  process.env.ACCOMMODATION_PAYMENT_URL || 'https://pages.razorpay.com/pl_TsSavHEBuYVOq4/view';
+const ACCOMMODATION_WHATSAPP_URL =
+  process.env.ACCOMMODATION_WHATSAPP_URL ||
+  'https://chat.whatsapp.com/LLw0x8t4OEqGkXPDBGtDdh?s=sh&p=a&iam=2';
 
-initFiles.forEach(f => {
-  if (!fs.existsSync(f.path)) {
-    fs.writeFileSync(f.path, JSON.stringify(f.default, null, 2), 'utf-8');
+const GENAI_GENDERS = ['Male', 'Female', 'Other'];
+const GENAI_YEARS = ['1', '2', '3', '4', 'Graduated'];
+
+const normalizeReferralCode = (value) =>
+  String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, '');
+
+const calculateGenAiQuote = (discountAmount = 0) => {
+  const base = Math.max(0, Math.round(GENAI_BASE_PRICE || 0));
+  const discount = Math.min(base, Math.max(0, Math.round(Number(discountAmount) || 0)));
+  const discountedBase = base - discount;
+  const platformFee = Math.round((discountedBase * GENAI_PLATFORM_FEE_PERCENT) / 100);
+  return {
+    base,
+    discount,
+    discountedBase,
+    platformFee,
+    platformFeePercent: GENAI_PLATFORM_FEE_PERCENT,
+    total: discountedBase + platformFee,
+    currency: 'INR'
+  };
+};
+
+// A code only counts for the workshop it was created against. Public routes
+// pass the server-side workshop id, never one supplied by the browser.
+const findActiveReferral = async (code, workshopId = GENAI_WORKSHOP_ID) => {
+  const normalized = normalizeReferralCode(code);
+  if (!normalized || !isDatabaseConfigured) return null;
+  try {
+    return await prisma.referralCode.findFirst({
+      where: {
+        code: normalized,
+        active: true,
+        ...(workshopId ? { workshopId } : {})
+      }
+    });
+  } catch (err) {
+    console.warn('[Referral lookup error]:', err.message);
+    return null;
+  }
+};
+
+const genAiRegistrationView = (registration) => {
+  if (!registration) return null;
+  return {
+    id: registration.id,
+    registrationCode: registration.registrationCode,
+    fullName: registration.candidateName,
+    gender: registration.gender,
+    email: registration.candidateEmail,
+    phone: registration.candidatePhone,
+    department: registration.department,
+    yearOfStudy: registration.yearOfStudy,
+    college: registration.college,
+    collegeLocation: registration.collegeLocation,
+    hostelAccommodation: registration.hostelAccommodation,
+    accommodationPaid: registration.accommodationPaid,
+    termsAccepted: registration.termsAccepted,
+    referralCode: registration.referralCode,
+    discountAmount: registration.discountAmount,
+    paymentStatus: registration.paymentStatus,
+    currentStep: registration.currentStep
+  };
+};
+
+/**
+ * Sign a JWT-like HMAC-SHA256 token, compatible with the trust platform's
+ * verifyToken() and incuxai.com's TrustPaymentToken::sign().
+ */
+const signTrustToken = (payload) => {
+  const secret = (TRUST_PAYMENT_SECRET || '').trim();
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
+  return `${header}.${body}.${sig}`;
+};
+
+/** Verify a JWT-like HMAC-SHA256 token issued by the trust platform. */
+const verifyTrustToken = (token) => {
+  try {
+    if (!token) return null;
+    const parts = String(token).split('.');
+    if (parts.length !== 3) return null;
+    const [headerB64, bodyB64, signature] = parts;
+    const expected = crypto
+      .createHmac('sha256', (TRUST_PAYMENT_SECRET || '').trim())
+      .update(`${headerB64}.${bodyB64}`)
+      .digest('base64url');
+    if (signature !== expected) return null;
+    return JSON.parse(Buffer.from(bodyB64, 'base64url').toString('utf8'));
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Apply a captured payment to Railway PostgreSQL.
+ * Idempotent: a second call (redirect confirm after webhook, or a page reload)
+ * never double-increments the workshop registration count.
+ */
+const markPaymentPaid = async ({ transactionId, registrationId, details }) => {
+  if (!isDatabaseConfigured) return { updated: false, reason: 'database unavailable' };
+
+  let payment = null;
+  if (transactionId) {
+    payment = await prisma.payment.findFirst({
+      where: { gatewayResponse: { path: ['transactionId'], equals: transactionId } },
+      include: { registration: true }
+    });
+  }
+  if (!payment && registrationId) {
+    payment = await prisma.payment.findFirst({
+      where: { registrationId },
+      orderBy: { createdAt: 'desc' },
+      include: { registration: true }
+    });
+  }
+  if (!payment) return { updated: false, reason: 'payment record not found' };
+  if (payment.status === 'paid') return { updated: false, alreadyPaid: true, payment };
+
+  const previous =
+    payment.gatewayResponse && typeof payment.gatewayResponse === 'object'
+      ? payment.gatewayResponse
+      : {};
+
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      status: 'paid',
+      razorpayOrderId: details?.razorpay_order_id || payment.razorpayOrderId,
+      razorpayPaymentId: details?.razorpay_payment_id || payment.razorpayPaymentId,
+      gatewayResponse: {
+        ...previous,
+        confirmedAt: new Date().toISOString(),
+        confirmation: details || {}
+      }
+    }
+  });
+
+  const regId = payment.registrationId || details?.metadata?.registrationId || registrationId;
+  if (regId) {
+    await prisma.registration.updateMany({
+      where: { id: regId },
+      data: { paymentStatus: 'paid' }
+    });
+
+    const reg = await prisma.registration.findUnique({ where: { id: regId } }).catch(() => null);
+    if (reg?.workshopId) {
+      // updateMany is a no-op when the workshop row is absent, so a payment for
+      // a default/frontend-only workshop never throws here.
+      await prisma.upcomingWorkshop.updateMany({
+        where: { id: reg.workshopId },
+        data: { registered: { increment: 1 } }
+      });
+    }
+  }
+
+  return { updated: true, payment };
+};
+
+/**
+ * Call the trust platform's /api/payments/confirm to redeem a success_token.
+ */
+const trustConfirm = async (reference) => {
+  const res = await fetch(`${TRUST_PAYMENT_URL}/api/payments/confirm`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reference })
+  });
+  if (!res.ok) throw new Error(`Trust confirm failed: HTTP ${res.status}`);
+  return res.json();
+};
+
+/**
+ * Create a signed trust checkout session and store the pending payment.
+ * All callers pass a trusted amount, so the browser can never set the price.
+ */
+const createTrustPaymentSession = async ({
+  registrationId,
+  workshopId,
+  amountInPaise,
+  currency = 'INR',
+  workshopTitle,
+  payerName,
+  payerEmail,
+  payerPhone,
+  candidateInstitution,
+  returnUrl = PAYMENT_RETURN_URL,
+  metadata = {}
+}) => {
+  if (!registrationId) throw new Error('registrationId is required.');
+  if (!amountInPaise || amountInPaise <= 0) throw new Error('A positive amount is required.');
+
+  const transactionId = `WS-${registrationId}-${Date.now()}`;
+  const token = signTrustToken({
+    transaction_id: transactionId,
+    amount: amountInPaise,
+    currency,
+    customer: { name: payerName || '', email: payerEmail || '', phone: payerPhone || '' },
+    metadata: {
+      registrationId,
+      workshopId: workshopId || '',
+      workshopTitle: workshopTitle || '',
+      source: 'workshops_incuxai_com',
+      ...metadata
+    },
+    callback_url: PAYMENT_WEBHOOK_URL
+  });
+
+  const trustUrl = `${TRUST_PAYMENT_URL}/pay?token=${encodeURIComponent(token)}&app=${encodeURIComponent(TRUST_PAYMENT_APP_ID)}&redirect=${encodeURIComponent(returnUrl)}`;
+
+  let payment = null;
+  if (isDatabaseConfigured) {
+    try {
+      let workshopLink = null;
+      if (workshopId) {
+        try {
+          const ws = await prisma.upcomingWorkshop.findUnique({ where: { id: workshopId } });
+          if (ws) workshopLink = workshopId;
+        } catch {
+          // Workshop not found. The payment still records the workshop id in metadata.
+        }
+      }
+
+      payment = await prisma.payment.create({
+        data: {
+          id: `PAY-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          registrationId,
+          upcomingWorkshopId: workshopLink,
+          razorpayOrderId: null,
+          amount: amountInPaise,
+          currency,
+          status: 'pending',
+          gatewayResponse: { transactionId, trustUrl, token }
+        }
+      });
+    } catch (e) {
+      console.warn('[Prisma payment create error]:', e.message);
+    }
+  }
+
+  return {
+    success: true,
+    trustUrl,
+    token,
+    appId: TRUST_PAYMENT_APP_ID,
+    registrationId,
+    paymentId: payment?.id,
+    transactionId,
+    amount: amountInPaise,
+    currency
+  };
+};
+
+// POST /api/payments/initiate - Legacy payment entry point.
+// The GenAI registration flow uses the trusted route below instead.
+app.post('/api/payments/initiate', async (req, res) => {
+  try {
+    const {
+      registrationId,
+      workshopId,
+      amount,
+      currency = 'INR',
+      workshopTitle,
+      payerName,
+      payerEmail,
+      payerPhone,
+      candidateInstitution
+    } = req.body;
+    if (!amount) {
+      return res.status(400).json({ error: 'amount is required.' });
+    }
+
+    let regId = registrationId;
+    if (!regId && workshopId && payerEmail) {
+      if (isDatabaseConfigured) {
+        try {
+          const existingReg = await prisma.registration.findFirst({
+            where: { candidateEmail: payerEmail.trim().toLowerCase(), workshopId }
+          });
+          if (existingReg) {
+            regId = existingReg.id;
+          } else {
+            const newReg = await prisma.registration.create({
+              data: {
+                id: `REG-${Date.now()}`,
+                workshopId,
+                workshopTitle: workshopTitle || 'Workshop',
+                candidateName: payerName || 'Candidate',
+                candidateEmail: payerEmail.trim().toLowerCase(),
+                candidatePhone: payerPhone || 'Not provided',
+                candidateInstitution: candidateInstitution || 'Independent Candidate',
+                paymentStatus: 'pending'
+              }
+            });
+            regId = newReg.id;
+          }
+        } catch (e) {
+          console.warn('[Prisma registration create error]:', e.message);
+        }
+      }
+    }
+
+    if (!regId) {
+      return res.status(400).json({ error: 'Unable to create registration. Provide registrationId or workshopId + payerEmail.' });
+    }
+
+    const result = await createTrustPaymentSession({
+      registrationId: regId,
+      workshopId,
+      amountInPaise: Math.round(Number(amount) * 100),
+      currency,
+      workshopTitle,
+      payerName,
+      payerEmail,
+      payerPhone,
+      candidateInstitution
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to initiate payment.' });
   }
 });
 
-// Helper to safely read JSON
-const readJson = (filename) => {
-  const filePath = path.join(DATA_DIR, filename);
-  const data = fs.readFileSync(filePath, 'utf-8');
-  return JSON.parse(data);
+// GET /api/payments/confirm - Verify with trust platform after redirect back
+app.get('/api/payments/confirm', async (req, res) => {
+  try {
+    const { reference, status } = req.query;
+    if (!reference) {
+      return res.status(400).json({ error: 'reference (success_token) is required.' });
+    }
+    if (status === 'cancelled' || status === 'failed') {
+      return res.json({ success: false, status: 'cancelled', message: 'Payment was not completed.' });
+    }
+
+    let confirmData = null;
+    try {
+      confirmData = await trustConfirm(reference);
+    } catch (err) {
+      return res.status(502).json({ error: err.message || 'Trust platform confirmation failed.' });
+    }
+
+    if (confirmData.status !== 'success') {
+      return res.status(400).json({ error: 'Payment not confirmed by trust platform.', detail: confirmData });
+    }
+
+    // Update local database. The success_token returned by the trust platform
+    // is NOT the original signed token, so match on the transaction id that was
+    // stored when the payment was initiated (or on the registration id carried
+    // in the confirmed metadata).
+    let applied = { updated: false };
+    if (isDatabaseConfigured) {
+      try {
+        applied = await markPaymentPaid({
+          transactionId: confirmData.transaction_id,
+          registrationId: confirmData.metadata?.registrationId,
+          details: confirmData
+        });
+      } catch (e) {
+        console.warn('[Prisma payment confirm error]:', e.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      status: 'paid',
+      alreadyPaid: Boolean(applied.alreadyPaid),
+      transaction_id: confirmData.transaction_id,
+      payment_id: confirmData.razorpay_payment_id,
+      order_id: confirmData.razorpay_order_id,
+      amount: confirmData.amount,
+      currency: confirmData.currency
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Payment confirmation failed.' });
+  }
+});
+
+// POST /api/payments/webhook - Server-to-server notification from the trust
+// platform. Updates Railway PostgreSQL even if the payer never returns to the
+// browser. Signature is a JWT-like HMAC-SHA256 token signed with the shared app
+// secret, matching the trust platform's notifyAppPaid() payload.
+app.post('/api/payments/webhook', async (req, res) => {
+  try {
+    const body = req.body || {};
+    if (body.event !== 'payment.captured') {
+      return res.json({ received: true, ignored: true });
+    }
+
+    const signedPayload = {
+      event: body.event,
+      transaction_id: body.transaction_id,
+      amount: body.amount,
+      razorpay_order_id: body.razorpay_order_id,
+      razorpay_payment_id: body.razorpay_payment_id
+    };
+    const verified = verifyTrustToken(body.signature);
+    const isValid =
+      verified &&
+      verified.event === signedPayload.event &&
+      verified.transaction_id === signedPayload.transaction_id &&
+      verified.amount === signedPayload.amount &&
+      verified.razorpay_order_id === signedPayload.razorpay_order_id &&
+      verified.razorpay_payment_id === signedPayload.razorpay_payment_id;
+
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid webhook signature.' });
+    }
+
+    let applied = { updated: false };
+    if (isDatabaseConfigured) {
+      applied = await markPaymentPaid({
+        transactionId: body.transaction_id,
+        details: {
+          transaction_id: body.transaction_id,
+          razorpay_order_id: body.razorpay_order_id,
+          razorpay_payment_id: body.razorpay_payment_id,
+          amount: body.amount,
+          currency: body.currency,
+          source: 'trust_webhook'
+        }
+      });
+    }
+
+    console.log(
+      `[Payment Webhook] ${body.transaction_id} status=${
+        applied.alreadyPaid ? 'already-paid' : applied.updated ? 'paid' : 'unmatched'
+      }`
+    );
+    res.json({ received: true, updated: Boolean(applied.updated) });
+  } catch (err) {
+    console.warn('[Payment Webhook] Error:', err.message);
+    res.status(500).json({ error: 'Webhook processing failed.' });
+  }
+});
+
+// GET /api/payments/status/:registrationId - Get payment status
+app.get('/api/payments/status/:registrationId', async (req, res) => {
+  try {
+    const { registrationId } = req.params;
+    let payment = null;
+    if (isDatabaseConfigured) {
+      try {
+        payment = await prisma.payment.findFirst({
+          where: { registrationId },
+          orderBy: { createdAt: 'desc' }
+        });
+      } catch (e) {
+        console.warn('[Prisma payment read error]:', e.message);
+      }
+    }
+    res.json({ success: true, payment: payment || { status: 'unknown' } });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read payment status.' });
+  }
+});
+
+// GET /api/payments/all - List all payments (admin)
+app.get('/api/payments/all', requireAdmin, async (req, res) => {
+  try {
+    let payments = [];
+    if (isDatabaseConfigured) {
+      try {
+        payments = await prisma.payment.findMany({
+          include: { registration: true },
+          orderBy: { createdAt: 'desc' }
+        });
+      } catch (e) {
+        console.warn('[Prisma payments read error]:', e.message);
+      }
+    }
+    res.json({ success: true, count: payments.length, payments });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read payments.' });
+  }
+});
+
+// ==========================================
+// GEN AI WORKSHOP, NOVEMBER 28-29 (STEP-WISE FLOW)
+// ==========================================
+app.get('/api/genai/config', (req, res) => {
+  res.json({
+    success: true,
+    workshopId: GENAI_WORKSHOP_ID,
+    title: GENAI_WORKSHOP_TITLE,
+    dates: 'November 28-29, 2026',
+    location: 'IIT Hyderabad',
+    organiser: 'Elan & nVision',
+    basePrice: GENAI_BASE_PRICE,
+    platformFeePercent: GENAI_PLATFORM_FEE_PERCENT,
+    accommodationPaymentUrl: ACCOMMODATION_PAYMENT_URL,
+    accommodationWhatsAppUrl: ACCOMMODATION_WHATSAPP_URL,
+    quote: calculateGenAiQuote(0)
+  });
+});
+
+app.get('/api/genai/referrals/:code/validate', async (req, res) => {
+  try {
+    const code = normalizeReferralCode(req.params.code);
+    if (!code) return res.status(400).json({ error: 'Referral code is required.' });
+
+    const referral = await findActiveReferral(code, GENAI_WORKSHOP_ID);
+    if (!referral) {
+      return res.status(404).json({
+        success: false,
+        valid: false,
+        error: 'This referral code was not found, is no longer active, or belongs to another workshop.'
+      });
+    }
+
+    res.json({
+      success: true,
+      valid: true,
+      referral: {
+        code: referral.code,
+        label: referral.label,
+        workshopId: referral.workshopId,
+        discountAmount: referral.discountAmount
+      },
+      quote: calculateGenAiQuote(referral.discountAmount)
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not validate the referral code.' });
+  }
+});
+
+app.post('/api/genai/registrations/step1', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const clean = {
+      fullName: String(body.fullName || '').trim(),
+      gender: String(body.gender || '').trim(),
+      email: String(body.email || '').trim().toLowerCase(),
+      phone: String(body.phone || '').trim(),
+      department: String(body.department || '').trim(),
+      yearOfStudy: String(body.yearOfStudy || '').trim(),
+      college: String(body.college || '').trim(),
+      collegeLocation: String(body.collegeLocation || '').trim()
+    };
+
+    const sanitizedPhone = clean.phone.replace(/[\s+-]/g, '').slice(-10);
+    const errors = {};
+    if (clean.fullName.length < 2) errors.fullName = 'Enter your full name.';
+    if (!GENAI_GENDERS.includes(clean.gender)) errors.gender = 'Select your gender.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean.email)) errors.email = 'Enter a valid email address.';
+    if (!/^[0-9]{10}$/.test(sanitizedPhone)) errors.phone = 'Enter a valid 10-digit mobile number.';
+    if (!clean.department) errors.department = 'Enter your department.';
+    if (!GENAI_YEARS.includes(clean.yearOfStudy)) errors.yearOfStudy = 'Select your year of study.';
+    if (!clean.college) errors.college = 'Enter your college name.';
+    if (!clean.collegeLocation) errors.collegeLocation = 'Enter your college location.';
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ success: false, error: 'Please check the highlighted fields.', errors });
+    }
+
+    let referral = null;
+    let referralWarning = '';
+    const submittedReferral = normalizeReferralCode(body.referralCode);
+    if (submittedReferral) {
+      referral = await findActiveReferral(submittedReferral, GENAI_WORKSHOP_ID);
+      if (referral) {
+        if (isDatabaseConfigured) {
+          await prisma.referralCode.update({
+            where: { id: referral.id },
+            data: { usageCount: { increment: 1 } }
+          }).catch(() => {});
+        }
+      } else {
+        referralWarning = 'The referral code was not recognised for this workshop, so no discount was applied.';
+      }
+    }
+
+    let workshop = null;
+    if (isDatabaseConfigured) {
+      workshop = await prisma.upcomingWorkshop.findUnique({
+        where: { id: GENAI_WORKSHOP_ID }
+      }).catch(() => null);
+    } else {
+      const localWorkshops = readJson('upcoming_workshops.json');
+      workshop = localWorkshops.find(w => w.id === GENAI_WORKSHOP_ID);
+    }
+
+    const commonData = {
+      workshopId: GENAI_WORKSHOP_ID,
+      workshopTitle: workshop?.title || GENAI_WORKSHOP_TITLE,
+      workshopCategory: workshop?.category || 'Generative AI',
+      workshopDates: workshop?.dates || 'November 28-29, 2026',
+      workshopLocation: workshop?.location || 'IIT Hyderabad',
+      workshopMode: workshop?.mode || 'Offline Campus Immersion',
+      candidateName: clean.fullName,
+      candidateEmail: clean.email,
+      candidateInstitution: clean.college,
+      candidatePhone: sanitizedPhone,
+      gender: clean.gender,
+      department: clean.department,
+      yearOfStudy: clean.yearOfStudy,
+      college: clean.college,
+      collegeLocation: clean.collegeLocation,
+      referralCode: referral?.code || submittedReferral || null,
+      discountAmount: referral ? Math.min(GENAI_BASE_PRICE, referral.discountAmount) : 0,
+      ipAddress: req.ip || null,
+      userAgent: req.headers['user-agent'] || null
+    };
+
+    if (isDatabaseConfigured) {
+      const existing = await prisma.registration.findFirst({
+        where: { workshopId: GENAI_WORKSHOP_ID, candidateEmail: clean.email }
+      });
+
+      if (existing) {
+        if (existing.paymentStatus === 'paid') {
+          return res.status(409).json({
+            success: false,
+            error: 'This email already has a confirmed payment for the workshop.'
+          });
+        }
+        const updated = await prisma.registration.update({
+          where: { id: existing.id },
+          data: {
+            ...commonData,
+            currentStep: Math.max(existing.currentStep || 1, 2)
+          }
+        });
+        return res.json({
+          success: true,
+          resume: true,
+          registration: genAiRegistrationView(updated),
+          referralWarning,
+          quote: calculateGenAiQuote(updated.discountAmount)
+        });
+      }
+
+      const registrationCode = `GAIC6K_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}_${crypto
+        .randomBytes(4)
+        .toString('hex')
+        .toUpperCase()}`;
+
+      const registration = await prisma.registration.create({
+        data: {
+          ...commonData,
+          id: `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          registrationCode,
+          status: 'Confirmed',
+          paymentStatus: 'pending',
+          currentStep: 2
+        }
+      });
+
+      return res.status(201).json({
+        success: true,
+        resume: false,
+        registration: genAiRegistrationView(registration),
+        referralWarning,
+        quote: calculateGenAiQuote(registration.discountAmount)
+      });
+    }
+
+    // Local JSON Store Fallback (persists directly in database/registrations.json)
+    const registrations = readJson('registrations.json');
+    const existingIndex = registrations.findIndex(
+      (r) => r.workshopId === GENAI_WORKSHOP_ID && (r.candidateEmail || '').toLowerCase() === clean.email
+    );
+
+    let savedReg;
+    let isResume = false;
+
+    if (existingIndex !== -1) {
+      const existing = registrations[existingIndex];
+      if (existing.paymentStatus === 'paid') {
+        return res.status(409).json({
+          success: false,
+          error: 'This email already has a confirmed payment for the workshop.'
+        });
+      }
+      savedReg = {
+        ...existing,
+        ...commonData,
+        currentStep: Math.max(existing.currentStep || 1, 2),
+        updatedAt: new Date().toISOString()
+      };
+      registrations[existingIndex] = savedReg;
+      isResume = true;
+    } else {
+      const registrationCode = `GAIC6K_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}_${crypto
+        .randomBytes(4)
+        .toString('hex')
+        .toUpperCase()}`;
+      savedReg = {
+        ...commonData,
+        id: `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        registrationCode,
+        status: 'Confirmed',
+        paymentStatus: 'pending',
+        currentStep: 2,
+        registeredAt: new Date().toISOString()
+      };
+      registrations.unshift(savedReg);
+    }
+
+    writeJson('registrations.json', registrations);
+
+    // Update registered count in local workshops data
+    const localWorkshops = readJson('upcoming_workshops.json');
+    const targetWs = localWorkshops.find(w => w.id === GENAI_WORKSHOP_ID);
+    if (targetWs && !isResume) {
+      targetWs.registered = (targetWs.registered || 0) + 1;
+      writeJson('upcoming_workshops.json', localWorkshops);
+    }
+
+    res.status(isResume ? 200 : 201).json({
+      success: true,
+      resume: isResume,
+      registration: genAiRegistrationView(savedReg),
+      referralWarning,
+      quote: calculateGenAiQuote(savedReg.discountAmount)
+    });
+  } catch (err) {
+    console.warn('[GenAI step1 error]:', err.message);
+    res.status(500).json({ error: 'Could not save your details. Please try again.' });
+  }
+});
+
+app.get('/api/genai/registrations/resume', async (req, res) => {
+  try {
+    const email = String(req.query.email || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'Email is required.' });
+
+    let registration = null;
+    if (isDatabaseConfigured) {
+      registration = await prisma.registration.findFirst({
+        where: { workshopId: GENAI_WORKSHOP_ID, candidateEmail: email }
+      });
+    } else {
+      const registrations = readJson('registrations.json');
+      registration = registrations.find(
+        (r) => r.workshopId === GENAI_WORKSHOP_ID && (r.candidateEmail || '').toLowerCase() === email
+      );
+    }
+    res.json({
+      success: true,
+      registration: registration ? genAiRegistrationView(registration) : null,
+      quote: registration ? calculateGenAiQuote(registration.discountAmount) : calculateGenAiQuote(0)
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not resume the registration.' });
+  }
+});
+
+app.get('/api/genai/registrations/:id', async (req, res) => {
+  try {
+    let registration = null;
+    if (isDatabaseConfigured) {
+      registration = await prisma.registration.findUnique({
+        where: { id: req.params.id }
+      });
+    } else {
+      const registrations = readJson('registrations.json');
+      registration = registrations.find((r) => r.id === req.params.id);
+    }
+    if (!registration || registration.workshopId !== GENAI_WORKSHOP_ID) {
+      return res.status(404).json({ error: 'Registration not found.' });
+    }
+    res.json({
+      success: true,
+      registration: genAiRegistrationView(registration),
+      quote: calculateGenAiQuote(registration.discountAmount)
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not load the registration.' });
+  }
+});
+
+app.post('/api/genai/registrations/:id/step2', async (req, res) => {
+  try {
+    let updated = null;
+    if (isDatabaseConfigured) {
+      const registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
+      if (!registration || registration.workshopId !== GENAI_WORKSHOP_ID) {
+        return res.status(404).json({ error: 'Registration not found.' });
+      }
+      updated = await prisma.registration.update({
+        where: { id: registration.id },
+        data: { currentStep: Math.max(registration.currentStep || 1, 3) }
+      });
+    } else {
+      const registrations = readJson('registrations.json');
+      const idx = registrations.findIndex((r) => r.id === req.params.id);
+      if (idx === -1 || registrations[idx].workshopId !== GENAI_WORKSHOP_ID) {
+        return res.status(404).json({ error: 'Registration not found.' });
+      }
+      registrations[idx].currentStep = Math.max(registrations[idx].currentStep || 1, 3);
+      writeJson('registrations.json', registrations);
+      updated = registrations[idx];
+    }
+    res.json({ success: true, registration: genAiRegistrationView(updated) });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not save your progress.' });
+  }
+});
+
+app.post('/api/genai/registrations/:id/step3', async (req, res) => {
+  try {
+    const choice = String(req.body?.hostelAccommodation || '').trim();
+    const termsAccepted = Boolean(req.body?.termsAccepted);
+    const accommodationPaid = Boolean(req.body?.accommodationPaid);
+
+    if (!['Yes', 'No'].includes(choice)) {
+      return res.status(400).json({ error: 'Select whether you need hostel accommodation.' });
+    }
+    if (!termsAccepted) {
+      return res.status(400).json({ error: 'You must accept the event information to continue.' });
+    }
+    if (choice === 'Yes' && !accommodationPaid) {
+      return res.status(400).json({
+        error: 'Accommodation payment must be completed before you can continue to the workshop payment.'
+      });
+    }
+
+    let updated = null;
+    if (isDatabaseConfigured) {
+      const registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
+      if (!registration || registration.workshopId !== GENAI_WORKSHOP_ID) {
+        return res.status(404).json({ error: 'Registration not found.' });
+      }
+      updated = await prisma.registration.update({
+        where: { id: registration.id },
+        data: {
+          hostelAccommodation: choice,
+          accommodationPaid: choice === 'Yes',
+          termsAccepted: true,
+          currentStep: 4
+        }
+      });
+    } else {
+      const registrations = readJson('registrations.json');
+      const idx = registrations.findIndex((r) => r.id === req.params.id);
+      if (idx === -1 || registrations[idx].workshopId !== GENAI_WORKSHOP_ID) {
+        return res.status(404).json({ error: 'Registration not found.' });
+      }
+      registrations[idx].hostelAccommodation = choice;
+      registrations[idx].accommodationPaid = choice === 'Yes';
+      registrations[idx].termsAccepted = true;
+      registrations[idx].currentStep = 4;
+      writeJson('registrations.json', registrations);
+      updated = registrations[idx];
+    }
+    res.json({ success: true, registration: genAiRegistrationView(updated) });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not save accommodation details.' });
+  }
+});
+
+app.post('/api/genai/registrations/:id/payment', async (req, res) => {
+  try {
+    let registration = null;
+    if (isDatabaseConfigured) {
+      registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
+    } else {
+      const registrations = readJson('registrations.json');
+      registration = registrations.find((r) => r.id === req.params.id);
+    }
+    if (!registration || registration.workshopId !== GENAI_WORKSHOP_ID) {
+      return res.status(404).json({ error: 'Registration not found.' });
+    }
+    if ((registration.currentStep || 1) < 4) {
+      return res.status(400).json({ error: 'Complete all registration steps before paying.' });
+    }
+    if (registration.hostelAccommodation === 'Yes' && !registration.accommodationPaid) {
+      return res.status(400).json({ error: 'Complete the accommodation payment before paying for the workshop.' });
+    }
+
+    const quote = calculateGenAiQuote(registration.discountAmount);
+    
+    if (TRUST_PAYMENT_URL) {
+      const returnUrl = new URL(PAYMENT_RETURN_URL);
+      returnUrl.searchParams.set('registration', registration.id);
+
+      const result = await createTrustPaymentSession({
+        registrationId: registration.id,
+        workshopId: GENAI_WORKSHOP_ID,
+        amountInPaise: quote.total * 100,
+        currency: quote.currency,
+        workshopTitle: registration.workshopTitle || GENAI_WORKSHOP_TITLE,
+        payerName: registration.candidateName,
+        payerEmail: registration.candidateEmail,
+        payerPhone: registration.candidatePhone,
+        candidateInstitution: registration.college,
+        returnUrl: returnUrl.toString(),
+        metadata: {
+          registrationCode: registration.registrationCode || '',
+          referralCode: registration.referralCode || '',
+          discount: quote.discount,
+          platformFee: quote.platformFee
+        }
+      });
+
+      return res.json({ ...result, quote });
+    }
+
+    // Direct fallback checkout page
+    const localPaymentUrl = `/payment?registrationId=${encodeURIComponent(registration.id)}&amount=${quote.total}&candidate=${encodeURIComponent(registration.candidateName)}&email=${encodeURIComponent(registration.candidateEmail)}`;
+    return res.json({
+      success: true,
+      trustUrl: localPaymentUrl,
+      quote,
+      session: {
+        id: `SESSION-${Date.now()}`,
+        amount: quote.total,
+        status: 'pending'
+      }
+    });
+  } catch (err) {
+    console.warn('[GenAI payment error]:', err.message);
+    res.status(500).json({ error: err.message || 'Could not start the secure checkout.' });
+  }
+});
+
+// Admin referral codes. Every code is tagged to a workshop when it is created
+// and is shared through the URL, never typed into the public registration form.
+app.get('/api/referrals', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.json({ success: true, referrals: [] });
+    const workshopId = String(req.query?.workshopId || '').trim();
+    const referrals = await prisma.referralCode.findMany({
+      where: workshopId ? { workshopId } : undefined,
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json({ success: true, count: referrals.length, referrals });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not load referral codes.' });
+  }
+});
+
+app.post('/api/referrals', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Referral storage is not available.' });
+
+    const code = normalizeReferralCode(req.body?.code);
+    const label = String(req.body?.label || '').trim();
+    const workshopId = String(req.body?.workshopId || '').trim();
+    const discountAmount = Number(req.body?.discountAmount);
+    const active = req.body?.active !== false;
+
+    if (!/^[A-Z0-9][A-Z0-9-]{2,39}$/.test(code)) {
+      return res.status(400).json({ error: 'Use 3 to 40 letters, numbers or hyphens for the code.' });
+    }
+    if (!workshopId) {
+      return res.status(400).json({ error: 'Select the workshop this referral code belongs to.' });
+    }
+    const workshop = await prisma.upcomingWorkshop
+      .findUnique({ where: { id: workshopId } })
+      .catch(() => null);
+    if (!workshop) {
+      return res.status(400).json({ error: 'That workshop was not found. Refresh the list and try again.' });
+    }
+    if (!Number.isInteger(discountAmount) || discountAmount < 0 || discountAmount > GENAI_BASE_PRICE) {
+      return res.status(400).json({ error: `Discount must be a whole number between 0 and ${GENAI_BASE_PRICE}.` });
+    }
+
+    const existing = await prisma.referralCode.findUnique({ where: { code } });
+    if (existing) return res.status(409).json({ error: 'That referral code already exists.' });
+
+    const referral = await prisma.referralCode.create({
+      data: { code, label, workshopId, discountAmount, active }
+    });
+    res.status(201).json({ success: true, referral });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Could not create the referral code.' });
+  }
+});
+
+app.delete('/api/referrals/:code', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Referral storage is not available.' });
+    const code = normalizeReferralCode(req.params.code);
+    await prisma.referralCode.deleteMany({ where: { code } });
+    res.json({ success: true, message: 'Referral code removed.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not remove the referral code.' });
+  }
+});
+
+// ==========================================
+// CONFIG-DRIVEN WORKSHOP FORMS (NEW WORKSHOPS)
+// The GenAI flow above is untouched. These routes let an interview or the
+// admin builder store a workshop as data, then render it as a stepped form.
+// ==========================================
+const FORM_FIELD_TYPES = ['text', 'email', 'phone', 'number', 'date', 'textarea', 'select', 'checkbox'];
+const FORM_STEP_KINDS = ['fields', 'documents', 'accommodation', 'payment'];
+
+const slugifyForm = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+
+// Field keys keep underscores so presets such as full_name and year_of_study
+// retain the exact names used by the public form and stored intake data.
+const normaliseFieldKey = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+
+const dynamicRegistrationView = (registration) => {
+  if (!registration) return null;
+  return {
+    id: registration.id,
+    registrationCode: registration.registrationCode,
+    workshopId: registration.workshopId,
+    workshopTitle: registration.workshopTitle,
+    formId: registration.workshopFormId,
+    candidateName: registration.candidateName,
+    candidateEmail: registration.candidateEmail,
+    candidatePhone: registration.candidatePhone,
+    currentStep: registration.currentStep,
+    paymentStatus: registration.paymentStatus,
+    intakeData: registration.intakeData || {}
+  };
 };
 
-// Helper to write JSON
-const writeJson = (filename, data) => {
-  const filePath = path.join(DATA_DIR, filename);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+const formQuote = (components = []) => {
+  const lines = components.map((component) => ({
+    id: component.id,
+    label: component.label,
+    amount: Math.max(0, Math.round(Number(component.amount) || 0)),
+    kind: component.kind,
+    chargeOnline: Boolean(component.chargeOnline),
+    externalUrl: component.externalUrl || ''
+  }));
+  const total = lines
+    .filter((line) => line.chargeOnline)
+    .reduce((sum, line) => sum + line.amount, 0);
+  return { lines, total, currency: 'INR' };
 };
+
+const formInclude = {
+  steps: { include: { fields: true }, orderBy: { orderIndex: 'asc' } },
+  documents: { orderBy: { orderIndex: 'asc' } },
+  components: { orderBy: { orderIndex: 'asc' } }
+};
+
+const formView = (form) => {
+  if (!form) return null;
+  const quote = formQuote(form.components || []);
+  return {
+    id: form.id,
+    slug: form.slug,
+    title: form.title,
+    category: form.category,
+    dates: form.dates,
+    location: form.location,
+    mode: form.mode,
+    description: form.description,
+    status: form.status,
+    accommodationRequired: Boolean(form.accommodationRequired),
+    accommodationPaymentUrl: form.accommodationPaymentUrl,
+    whatsappUrl: form.whatsappUrl,
+    accommodationNote: form.accommodationNote,
+    steps: (form.steps || []).map((step) => ({
+      id: step.id,
+      key: step.key,
+      title: step.title,
+      description: step.description,
+      kind: step.kind,
+      orderIndex: step.orderIndex,
+      fields: (step.fields || [])
+        .slice()
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .map((field) => ({
+          id: field.id,
+          key: field.key,
+          label: field.label,
+          type: field.type,
+          placeholder: field.placeholder,
+          helpText: field.helpText,
+          required: Boolean(field.required),
+          options: field.options,
+          orderIndex: field.orderIndex
+        }))
+    })),
+    documents: form.documents || [],
+    components: quote.lines,
+    quote
+  };
+};
+
+const normaliseFormPayload = (body) => {
+  const title = String(body?.title || '').trim();
+  const slug = slugifyForm(body?.slug || title);
+  const errors = [];
+  if (!title) errors.push('A workshop title is required.');
+  if (!slug) errors.push('A slug is required.');
+
+  const steps = Array.isArray(body?.steps) ? body.steps : [];
+  if (steps.length === 0) errors.push('Add at least one registration step.');
+
+  const seenStepKeys = new Set();
+  const seenFieldKeys = new Set();
+  const cleanSteps = steps.map((step, stepIndex) => {
+    const stepTitle = String(step?.title || '').trim();
+    const stepKey = slugifyForm(step?.key || stepTitle) || `step-${stepIndex + 1}`;
+    const kind = String(step?.kind || 'fields').trim();
+    if (!stepTitle) errors.push(`Step ${stepIndex + 1} needs a title.`);
+    if (seenStepKeys.has(stepKey)) errors.push(`Duplicate step key: ${stepKey}.`);
+    seenStepKeys.add(stepKey);
+    if (!FORM_STEP_KINDS.includes(kind)) {
+      errors.push(`Step ${stepTitle || stepIndex + 1} has an unknown kind.`);
+    }
+
+    const rawFields = Array.isArray(step?.fields) ? step.fields : [];
+    const fields = rawFields.map((field, fieldIndex) => {
+      const label = String(field?.label || '').trim();
+      const key = normaliseFieldKey(field?.key || label) || `field_${fieldIndex + 1}`;
+      const type = String(field?.type || 'text').trim();
+      if (!label) errors.push(`A field in ${stepTitle || stepKey} needs a label.`);
+      if (seenFieldKeys.has(key)) errors.push(`Duplicate field key: ${key}.`);
+      seenFieldKeys.add(key);
+      if (!FORM_FIELD_TYPES.includes(type)) {
+        errors.push(`Field ${label || key} has an unknown type.`);
+      }
+      const options = Array.isArray(field?.options)
+        ? field.options.map((option) => String(option).trim()).filter(Boolean)
+        : [];
+      if (type === 'select' && options.length === 0) {
+        errors.push(`Select field ${label || key} needs at least one option.`);
+      }
+      return {
+        key,
+        label,
+        type,
+        placeholder: String(field?.placeholder || '').trim(),
+        helpText: String(field?.helpText || '').trim(),
+        required: Boolean(field?.required),
+        options,
+        orderIndex: fieldIndex
+      };
+    });
+
+    return {
+      key: stepKey,
+      title: stepTitle,
+      description: String(step?.description || '').trim(),
+      kind,
+      orderIndex: stepIndex,
+      fields
+    };
+  });
+
+  const documents = (Array.isArray(body?.documents) ? body.documents : []).map((doc, index) => {
+    const title = String(doc?.title || '').trim();
+    const url = String(doc?.url || '').trim();
+    if (title && !/^https?:\/\//i.test(url)) errors.push(`Document ${title} needs an http or https link.`);
+    return { title, url, orderIndex: index };
+  }).filter((doc) => doc.title && doc.url);
+
+  const components = (Array.isArray(body?.components) ? body.components : []).map((component, index) => {
+    const label = String(component?.label || '').trim();
+    const amount = Number(component?.amount);
+    if (label && (!Number.isInteger(amount) || amount < 0)) {
+      errors.push(`Payment component ${label} needs a whole number amount of zero or more.`);
+    }
+    return {
+      label,
+      amount: Number.isInteger(amount) && amount >= 0 ? amount : 0,
+      kind: String(component?.kind || 'other').trim(),
+      chargeOnline: component?.chargeOnline !== false,
+      externalUrl: String(component?.externalUrl || '').trim(),
+      orderIndex: index
+    };
+  }).filter((component) => component.label);
+
+  if (errors.length > 0) return { errors };
+
+  const paymentSteps = cleanSteps.filter((step) => step.kind === 'payment');
+  if (paymentSteps.length === 0) errors.push('Add a Payment step so participants can complete checkout.');
+  if (paymentSteps.length > 1) errors.push('Add only one Payment step.');
+  if (paymentSteps.length === 1 && paymentSteps[0].orderIndex !== cleanSteps.length - 1) {
+    errors.push('The Payment step must be the last step.');
+  }
+  if (body?.accommodationRequired && !cleanSteps.some((step) => step.kind === 'accommodation')) {
+    errors.push('Add an Accommodation step when accommodation is required.');
+  }
+  if (documents.length === 0) errors.push('Add at least one workshop document link.');
+  if (components.length === 0) errors.push('Add at least one payment component.');
+  if (errors.length > 0) return { errors };
+
+  return {
+    errors,
+    data: {
+      slug,
+      title,
+      category: String(body?.category || '').trim(),
+      dates: String(body?.dates || '').trim(),
+      location: String(body?.location || '').trim(),
+      mode: String(body?.mode || 'Offline').trim(),
+      description: String(body?.description || '').trim(),
+      status: body?.status === 'Published' ? 'Published' : 'Draft',
+      accommodationRequired: Boolean(body?.accommodationRequired),
+      accommodationPaymentUrl: String(body?.accommodationPaymentUrl || '').trim(),
+      whatsappUrl: String(body?.whatsappUrl || '').trim(),
+      accommodationNote: String(body?.accommodationNote || '').trim(),
+      steps: cleanSteps,
+      documents,
+      components
+    }
+  };
+};
+
+const createFormNestedData = (data) => ({
+  slug: data.slug,
+  title: data.title,
+  category: data.category,
+  dates: data.dates,
+  location: data.location,
+  mode: data.mode,
+  description: data.description,
+  status: data.status,
+  accommodationRequired: data.accommodationRequired,
+  accommodationPaymentUrl: data.accommodationPaymentUrl,
+  whatsappUrl: data.whatsappUrl,
+  accommodationNote: data.accommodationNote,
+  steps: {
+    create: data.steps.map((step) => ({
+      key: step.key,
+      title: step.title,
+      description: step.description,
+      kind: step.kind,
+      orderIndex: step.orderIndex,
+      fields: {
+        create: step.fields.map((field) => ({
+          key: field.key,
+          label: field.label,
+          type: field.type,
+          placeholder: field.placeholder,
+          helpText: field.helpText,
+          required: field.required,
+          options: field.options,
+          orderIndex: field.orderIndex
+        }))
+      }
+    }))
+  },
+  documents: { create: data.documents },
+  components: { create: data.components }
+});
+
+const loadPublishedForm = async (slug) => {
+  if (!isDatabaseConfigured) return null;
+  return prisma.workshopForm.findFirst({
+    where: { slug: String(slug || '').trim(), status: 'Published' },
+    include: formInclude
+  });
+};
+
+// Admin form management.
+app.get('/api/forms', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.json({ success: true, forms: [] });
+    const forms = await prisma.workshopForm.findMany({ include: formInclude, orderBy: { createdAt: 'desc' } });
+    res.json({ success: true, count: forms.length, forms: forms.map(formView) });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not load workshop forms.' });
+  }
+});
+
+app.get('/api/forms/by-slug/:slug', async (req, res) => {
+  try {
+    const form = await loadPublishedForm(req.params.slug);
+    if (!form) return res.status(404).json({ error: 'That workshop form is not available.' });
+    res.json({ success: true, form: formView(form) });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not load the workshop form.' });
+  }
+});
+
+app.get('/api/forms/:id', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(404).json({ error: 'Workshop form not found.' });
+    const form = await prisma.workshopForm.findUnique({ where: { id: req.params.id }, include: formInclude });
+    if (!form) return res.status(404).json({ error: 'Workshop form not found.' });
+    res.json({ success: true, form: formView(form) });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not load the workshop form.' });
+  }
+});
+
+app.post('/api/forms', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Workshop storage is not available.' });
+    const { errors, data } = normaliseFormPayload(req.body);
+    if (errors.length > 0) return res.status(400).json({ error: errors[0], errors });
+    const exists = await prisma.workshopForm.findUnique({ where: { slug: data.slug } });
+    if (exists) return res.status(409).json({ error: 'That URL slug is already in use.' });
+
+    const form = await prisma.workshopForm.create({
+      data: createFormNestedData(data),
+      include: formInclude
+    });
+    res.status(201).json({ success: true, form: formView(form) });
+  } catch (err) {
+    console.warn('[Form create error]:', err.message);
+    res.status(500).json({ error: 'Could not create the workshop form.' });
+  }
+});
+
+app.put('/api/forms/:id', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Workshop storage is not available.' });
+    const existing = await prisma.workshopForm.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Workshop form not found.' });
+    const { errors, data } = normaliseFormPayload(req.body);
+    if (errors.length > 0) return res.status(400).json({ error: errors[0], errors });
+    const clash = await prisma.workshopForm.findFirst({ where: { slug: data.slug, id: { not: existing.id } } });
+    if (clash) return res.status(409).json({ error: 'That URL slug is already in use.' });
+
+    await prisma.$transaction([
+      prisma.formStep.deleteMany({ where: { formId: existing.id } }),
+      prisma.workshopDocument.deleteMany({ where: { formId: existing.id } }),
+      prisma.paymentComponent.deleteMany({ where: { formId: existing.id } })
+    ]);
+    const form = await prisma.workshopForm.update({
+      where: { id: existing.id },
+      data: createFormNestedData(data),
+      include: formInclude
+    });
+    res.json({ success: true, form: formView(form) });
+  } catch (err) {
+    console.warn('[Form update error]:', err.message);
+    res.status(500).json({ error: 'Could not update the workshop form.' });
+  }
+});
+
+app.delete('/api/forms/:id', requireAdmin, async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Workshop storage is not available.' });
+    await prisma.workshopForm.delete({ where: { id: req.params.id } });
+    res.json({ success: true, message: 'Workshop form removed.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not remove the workshop form.' });
+  }
+});
+
+// Public stepped registration against a published form.
+app.post('/api/forms/:slug/steps', async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Registration is not available right now.' });
+    const form = await loadPublishedForm(req.params.slug);
+    if (!form) return res.status(404).json({ error: 'That workshop form is not available.' });
+
+    const stepKey = String(req.body?.stepKey || '').trim();
+    const step = form.steps.find((item) => item.key === stepKey);
+    if (!step) return res.status(400).json({ error: 'Unknown registration step.' });
+
+    const values = req.body?.values && typeof req.body.values === 'object' ? req.body.values : {};
+    const errors = {};
+    if (step.kind === 'fields') {
+      step.fields.forEach((field) => {
+        const value = values[field.key];
+        const empty = field.type === 'checkbox' ? value !== true : String(value || '').trim() === '';
+        if (field.required && empty) errors[field.key] = `${field.label} is required.`;
+      });
+    }
+    if (step.kind === 'accommodation' && form.accommodationRequired) {
+      const choice = String(values.__accommodationChoice || '').trim();
+      if (!['Yes', 'No'].includes(choice)) errors.__accommodationChoice = 'Select whether you need accommodation.';
+      if (choice === 'Yes' && values.__accommodationPaid !== true) {
+        errors.__accommodationPaid = 'Confirm that the accommodation payment is complete.';
+      }
+    }
+    if (step.kind === 'payment' && values.__termsAccepted !== true) {
+      errors.__termsAccepted = 'Accept the terms and privacy policy before payment.';
+    }
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ success: false, error: 'Please check the highlighted fields.', errors });
+    }
+
+    const allFields = form.steps.flatMap((item) => item.fields);
+    const nameField = allFields.find((field) => /name/i.test(field.key)) || allFields.find((field) => field.type === 'text');
+    const emailField = allFields.find((field) => field.type === 'email');
+    const phoneField = allFields.find((field) => field.type === 'phone');
+    const name = String(values[nameField?.key] || '').trim() || 'Workshop Candidate';
+    const email = String(values[emailField?.key] || '').trim().toLowerCase();
+    const phone = String(values[phoneField?.key] || '').trim();
+
+    let registration = req.body?.registrationId
+      ? await prisma.registration.findUnique({ where: { id: String(req.body.registrationId) } })
+      : null;
+    if (registration && registration.workshopFormId !== form.id) {
+      return res.status(404).json({ error: 'Registration not found.' });
+    }
+
+    if (!registration && email) {
+      registration = await prisma.registration.findFirst({
+        where: { workshopFormId: form.id, candidateEmail: email }
+      });
+    }
+    if (registration?.paymentStatus === 'paid') {
+      return res.status(409).json({ error: 'This registration has already been confirmed.' });
+    }
+
+    const common = {
+      workshopId: form.slug,
+      workshopTitle: form.title,
+      workshopFormId: form.id,
+      candidateName: registration?.candidateName || name,
+      candidateEmail: registration?.candidateEmail || email || `candidate-${Date.now()}@workshops.incuxai.local`,
+      candidatePhone: registration?.candidatePhone || phone || '',
+      intakeData: { ...(registration?.intakeData || {}), ...values },
+      currentStep: Math.max(registration?.currentStep || 1, step.orderIndex + 1),
+      ipAddress: req.ip || null,
+      userAgent: req.headers['user-agent'] || null
+    };
+
+    if (registration) {
+      registration = await prisma.registration.update({ where: { id: registration.id }, data: common });
+    } else {
+      registration = await prisma.registration.create({
+        data: {
+          ...common,
+          id: `REG-DYN-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          registrationCode: `WF_${slugifyForm(form.slug).toUpperCase().slice(0, 12)}_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}_${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
+          status: 'Confirmed',
+          paymentStatus: 'pending'
+        }
+      });
+    }
+
+    const next = form.steps.find((item) => item.orderIndex === step.orderIndex + 1);
+    res.json({
+      success: true,
+      registration: dynamicRegistrationView(registration),
+      nextStepKey: next?.key || null,
+      totalSteps: form.steps.length,
+      quote: formQuote(form.components)
+    });
+  } catch (err) {
+    console.warn('[Form step error]:', err.message);
+    res.status(500).json({ error: 'Could not save your progress. Please try again.' });
+  }
+});
+
+app.get('/api/forms/:slug/registrations/resume', async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.json({ success: true, registration: null });
+    const form = await loadPublishedForm(req.params.slug);
+    if (!form) return res.status(404).json({ error: 'That workshop form is not available.' });
+    const email = String(req.query.email || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'Email is required.' });
+    const registration = await prisma.registration.findFirst({
+      where: { workshopFormId: form.id, candidateEmail: email }
+    });
+    res.json({ success: true, registration: dynamicRegistrationView(registration) });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not resume the registration.' });
+  }
+});
+
+app.get('/api/forms/registrations/:id', async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.json({ success: true, registration: null });
+    const registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
+    if (!registration?.workshopFormId) return res.status(404).json({ error: 'Registration not found.' });
+    const form = await prisma.workshopForm.findUnique({
+      where: { id: registration.workshopFormId },
+      include: formInclude
+    });
+    res.json({
+      success: true,
+      registration: dynamicRegistrationView(registration),
+      form: form ? formView(form) : null,
+      quote: form ? formQuote(form.components) : null
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not load the registration.' });
+  }
+});
+
+app.post('/api/forms/registrations/:id/payment', async (req, res) => {
+  try {
+    if (!isDatabaseConfigured) return res.status(503).json({ error: 'Payment is not available right now.' });
+    const registration = await prisma.registration.findUnique({ where: { id: req.params.id } });
+    if (!registration?.workshopFormId) return res.status(404).json({ error: 'Registration not found.' });
+    const form = await prisma.workshopForm.findUnique({
+      where: { id: registration.workshopFormId },
+      include: formInclude
+    });
+    if (!form || form.status !== 'Published') return res.status(404).json({ error: 'Workshop form not found.' });
+    const intake = registration.intakeData && typeof registration.intakeData === 'object' ? registration.intakeData : {};
+    if (intake.__termsAccepted !== true) {
+      return res.status(400).json({ error: 'Accept the terms and privacy policy before paying.' });
+    }
+    if ((registration.currentStep || 1) < form.steps.length) {
+      return res.status(400).json({ error: 'Complete all registration steps before paying.' });
+    }
+    if (form.accommodationRequired && intake.__accommodationChoice === 'Yes' && intake.__accommodationPaid !== true) {
+      return res.status(400).json({ error: 'Complete the accommodation payment before paying for the workshop.' });
+    }
+
+    const quote = formQuote(form.components);
+    if (quote.total <= 0) {
+      return res.status(400).json({ error: 'No online payment is configured for this workshop.' });
+    }
+
+    const returnUrl = new URL(PAYMENT_RETURN_URL);
+    returnUrl.searchParams.set('registration', registration.id);
+    returnUrl.searchParams.set('form', form.slug);
+
+    const result = await createTrustPaymentSession({
+      registrationId: registration.id,
+      workshopId: form.slug,
+      amountInPaise: quote.total * 100,
+      workshopTitle: form.title,
+      payerName: registration.candidateName,
+      payerEmail: registration.candidateEmail,
+      payerPhone: registration.candidatePhone,
+      candidateInstitution: String(intake.college || intake.institution || ''),
+      returnUrl: returnUrl.toString(),
+      metadata: { registrationCode: registration.registrationCode || '', formSlug: form.slug }
+    });
+    res.json({ ...result, quote });
+  } catch (err) {
+    console.warn('[Form payment error]:', err.message);
+    res.status(500).json({ error: err.message || 'Could not start the secure checkout.' });
+  }
+});
 
 // ==========================================
 // GOOGLE SHEETS LIVE SYNC SERVICE

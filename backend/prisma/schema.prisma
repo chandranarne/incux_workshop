@@ -22,7 +22,7 @@ model User {
   phone     String   @default("") @map("phone")
   createdAt DateTime @default(now()) @map("created_at")
 
-  @@map("public.users")
+  @@map("users")
 }
 
 // 2. CUSTOM WORKSHOP REQUESTS (College / Department requests)
@@ -42,7 +42,7 @@ model CustomRequest {
   submittedAt        DateTime @default(now()) @map("submittedAt")
   approvedAt         DateTime? @map("approvedAt")
 
-  @@map("public.custom_requests")
+  @@map("custom_requests")
 }
 
 // 3. UPCOMING WORKSHOPS (Live published sessions)
@@ -58,10 +58,15 @@ model UpcomingWorkshop {
   speaker               String   @default("IncuxAI Technical Mentor") @map("speaker")
   description           String   @default("") @map("description")
   status                String   @default("Active") @map("status")
+  fee                   Int      @default(0) @map("fee")           // in rupees, 0 = free
+  isPaid                Boolean  @default(false) @map("isPaid")   // whether payment is required
   postedAt              DateTime @default(now()) @map("postedAt")
   convertedFromRequestId String? @map("convertedFromRequestId")
 
-  @@map("public.upcoming_workshops")
+  payments            Payment[]
+  referralCodes       ReferralCode[]
+
+  @@map("upcoming_workshops")
 }
 
 // 4. REGISTRATIONS TABLE (Candidate enrollments in workshops)
@@ -79,8 +84,168 @@ model Registration {
   candidatePhone       String?  @map("candidatePhone")
   registeredAt         DateTime @default(now()) @map("registeredAt")
   status               String   @default("Confirmed") @map("status")
+  paymentStatus        String   @default("pending") @map("paymentStatus") // pending, paid, failed
 
-  @@map("public.registrations")
+  // Gen AI Workshop (Nov 28-29) step-wise registration fields
+  gender               String?  @map("gender")
+  department           String?  @map("department")
+  yearOfStudy          String?  @map("year_of_study")
+  college              String?  @map("college")
+  collegeLocation      String?  @map("college_location")
+  registrationCode     String?  @unique @map("registration_code")
+  hostelAccommodation  String?  @map("hostel_accommodation")
+  accommodationPaid    Boolean  @default(false) @map("accommodation_paid")
+  termsAccepted        Boolean  @default(false) @map("terms_accepted")
+  referralCode         String?  @map("referral_code")
+  discountAmount       Int      @default(0) @map("discount_amount") // rupees
+  currentStep          Int      @default(1) @map("current_step")
+  ipAddress            String?  @map("ip_address")
+  userAgent            String?  @map("user_agent")
+
+  // Config-driven workshop forms (future workshops, the GenAI flow is unchanged)
+  workshopFormId       String?  @map("workshop_form_id")
+  intakeData           Json?    @map("intake_data")
+
+  payments             Payment[]
+  workshopForm         WorkshopForm? @relation(fields: [workshopFormId], references: [id])
+
+  @@index([workshopFormId])
+  @@map("registrations")
+}
+
+// Referral / discount codes created in the admin console. Every code belongs to
+// one workshop, is carried in the public shareable URL (?ref=CODE) and is never
+// typed into the form. Validation only accepts a code tagged to that workshop.
+model ReferralCode {
+  id             String   @id @default(cuid()) @map("id")
+  code           String   @unique @map("code")
+  label          String   @default("") @map("label")
+  workshopId     String   @map("workshop_id")
+  discountAmount Int      @map("discount_amount") // rupees off the workshop base
+  active         Boolean  @default(true) @map("active")
+  usageCount     Int      @default(0) @map("usage_count")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  workshop       UpcomingWorkshop @relation(fields: [workshopId], references: [id])
+
+  @@index([workshopId])
+  @@map("referral_codes")
+}
+
+// ==============================================================================
+// CONFIG-DRIVEN WORKSHOP FORMS
+// A non-coder can describe a new workshop through the intake skill or the admin
+// builder. The public registration form is rendered from this configuration,
+// so no new React component is needed for each workshop.
+// ==============================================================================
+model WorkshopForm {
+  id                      String   @id @default(cuid()) @map("id")
+  slug                    String   @unique @map("slug")
+  title                   String   @map("title")
+  category                String   @default("") @map("category")
+  dates                   String   @default("") @map("dates")
+  location                String   @default("") @map("location")
+  mode                    String   @default("Offline") @map("mode")
+  description             String   @default("") @map("description")
+  status                  String   @default("Draft") @map("status") // Draft, Published
+  accommodationRequired   Boolean  @default(false) @map("accommodation_required")
+  accommodationPaymentUrl String   @default("") @map("accommodation_payment_url")
+  whatsappUrl             String   @default("") @map("whatsapp_url")
+  accommodationNote       String   @default("") @map("accommodation_note")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  steps        FormStep[]
+  documents    WorkshopDocument[]
+  components   PaymentComponent[]
+  registrations Registration[]
+
+  @@map("workshop_forms")
+}
+
+model FormStep {
+  id          String @id @default(cuid()) @map("id")
+  formId      String @map("form_id")
+  key         String @map("key")
+  title       String @map("title")
+  description String @default("") @map("description")
+  kind        String @default("fields") @map("kind") // fields, documents, accommodation, payment
+  orderIndex  Int    @default(0) @map("order_index")
+
+  form        WorkshopForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  fields      FormField[]
+
+  @@index([formId])
+  @@map("form_steps")
+}
+
+model FormField {
+  id          String  @id @default(cuid()) @map("id")
+  stepId      String  @map("step_id")
+  key         String  @map("key")
+  label       String  @map("label")
+  type        String  @default("text") @map("type") // text, email, phone, number, date, textarea, select, checkbox
+  placeholder String  @default("") @map("placeholder")
+  helpText    String  @default("") @map("help_text")
+  required    Boolean @default(false) @map("required")
+  options     Json?   @map("options")
+  orderIndex  Int     @default(0) @map("order_index")
+
+  step FormStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  @@index([stepId])
+  @@map("form_fields")
+}
+
+model WorkshopDocument {
+  id         String @id @default(cuid()) @map("id")
+  formId     String @map("form_id")
+  title      String @map("title")
+  url        String @map("url")
+  orderIndex Int    @default(0) @map("order_index")
+
+  form WorkshopForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@map("workshop_documents")
+}
+
+model PaymentComponent {
+  id           String  @id @default(cuid()) @map("id")
+  formId       String  @map("form_id")
+  label        String  @map("label")
+  amount       Int     @default(0) @map("amount") // rupees
+  kind         String  @default("other") @map("kind") // base, platform_fee, accommodation, other
+  chargeOnline Boolean @default(true) @map("charge_online")
+  externalUrl  String  @default("") @map("external_url")
+  orderIndex   Int     @default(0) @map("order_index")
+
+  form WorkshopForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@map("payment_components")
+}
+
+// 6. PAYMENTS TABLE (Razorpay payment records)
+model Payment {
+  id                String   @id @map("id")
+  registrationId    String   @map("registrationId")
+  upcomingWorkshopId String? @map("upcomingWorkshopId")
+  razorpayOrderId   String?  @map("razorpayOrderId")
+  razorpayPaymentId String?  @map("razorpayPaymentId")
+  razorpaySignature String?  @map("razorpaySignature")
+  amount            Int      @map("amount")           // in paise (₹6000 = 600000)
+  currency          String   @default("INR") @map("currency")
+  status            String   @default("pending") @map("status") // pending, paid, failed, refunded
+  gatewayResponse   Json?    @map("gatewayResponse")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  registration Registration @relation(fields: [registrationId], references: [id])
+  upcomingWorkshop UpcomingWorkshop? @relation(fields: [upcomingWorkshopId], references: [id])
+
+  @@index([registrationId])
+  @@map("payments")
 }
 
 // 5. INQUIRIES TABLE (Landing page contact & custom corporate/college inquiries)
@@ -98,5 +263,5 @@ model Inquiry {
   message          String   @default("") @map("message")
   status           String   @default("Received") @map("status")
 
-  @@map("public.inquiries")
+  @@map("inquiries")
 }

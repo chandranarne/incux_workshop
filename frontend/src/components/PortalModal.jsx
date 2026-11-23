@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import WorkshopFormBuilder from './WorkshopFormBuilder';
 import {
   X,
   PlusCircle,
@@ -27,7 +28,8 @@ import {
   Check,
   Search,
   Copy,
-  CheckCircle
+  CheckCircle,
+  Tag
 } from 'lucide-react';
 import {
   fetchUpcomingWorkshops,
@@ -39,7 +41,11 @@ import {
   fetchGoogleSheetsConfig,
   saveGoogleSheetsConfig,
   syncAllToGoogleSheets,
-  updateRegistrationPayment
+  updateRegistrationPayment,
+  fetchAllPayments,
+  fetchReferralCodes,
+  createReferralCode,
+  deleteReferralCode
 } from '../services/api';
 
 const downloadCsv = (data, filename) => {
@@ -105,6 +111,14 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
   const [workshops, setWorkshops] = useState([]);
   const [myRegistrations, setMyRegistrations] = useState([]);
   const [allRegistrations, setAllRegistrations] = useState([]);
+  const [allPayments, setAllPayments] = useState([]);
+  const [referralCodes, setReferralCodes] = useState([]);
+  const [newReferral, setNewReferral] = useState({
+    code: '',
+    label: '',
+    workshopId: '',
+    discountAmount: ''
+  });
   const [loading, setLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState({ type: '', text: '' });
 
@@ -142,20 +156,32 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
   }, [isOpen, initialWorkshopId]);
   const [details, setDetails] = useState(EMPTY_CANDIDATE);
 
+  const workshopLabel = (workshopId) =>
+    workshops.find((workshop) => workshop.id === workshopId)?.title || workshopId || 'Not set';
+
   // Load portal data
   const loadData = async () => {
     setLoading(true);
     try {
       const wsList = await fetchUpcomingWorkshops();
       setWorkshops(wsList);
+      if (isAdmin && wsList.length > 0) {
+        setNewReferral((previous) =>
+          previous.workshopId ? previous : { ...previous, workshopId: wsList[0].id }
+        );
+      }
 
       if (isAdmin) {
-        const [regs, sheets] = await Promise.all([
+        const [regs, sheets, payments, referrals] = await Promise.all([
           fetchAllRegistrations(),
-          fetchGoogleSheetsConfig()
+          fetchGoogleSheetsConfig(),
+          fetchAllPayments(),
+          fetchReferralCodes()
         ]);
         setAllRegistrations(regs);
         setMyRegistrations(regs);
+        setAllPayments(payments || []);
+        setReferralCodes(referrals || []);
         if (sheets) {
           setSheetsConfig(sheets);
           setWebhookInput(sheets.webhookUrl || '');
@@ -371,6 +397,50 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
     notify('success', 'Payments completed Excel/CSV sheet downloaded!');
   };
 
+  // --- Admin Action: Create and share workshop-scoped referral codes ---
+  const handleCreateReferral = async (event) => {
+    event.preventDefault();
+    try {
+      await createReferralCode({
+        code: newReferral.code,
+        label: newReferral.label,
+        workshopId: newReferral.workshopId,
+        discountAmount: Number(newReferral.discountAmount)
+      });
+      setNewReferral((previous) => ({
+        code: '',
+        label: '',
+        workshopId: previous.workshopId,
+        discountAmount: ''
+      }));
+      notify('success', 'Referral code created for the selected workshop. Copy its shareable link below.');
+      loadData();
+    } catch (err) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleDeleteReferral = async (code) => {
+    if (!window.confirm(`Remove referral code ${code}?`)) return;
+    try {
+      await deleteReferralCode(code);
+      notify('success', 'Referral code removed.');
+      loadData();
+    } catch (err) {
+      notify('error', err.message);
+    }
+  };
+
+  const handleCopyReferral = async (code) => {
+    const link = `${window.location.origin}/gen-ai-workshop?ref=${encodeURIComponent(code)}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      notify('success', 'Shareable referral link copied.');
+    } catch {
+      window.prompt('Copy this referral link', link);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 w-screen h-screen min-h-screen flex flex-col bg-[#FDFCFA] dark:bg-[#0A0A0A] text-neutral-950 dark:text-[#F5F5F5] animate-in fade-in duration-200 overflow-hidden">
       <div className="relative w-full h-full flex flex-col overflow-hidden">
@@ -436,6 +506,13 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
                 <span>Post Workshop</span>
               </button>
               <button
+                onClick={() => setActiveTab('form-builder')}
+                className={`py-3.5 px-4 text-xs font-mono font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer ${activeTab === 'form-builder' ? 'border-[#FACC15] dark:border-[#FACC15] text-amber-600 dark:text-[#FACC15] font-bold' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-amber-600 dark:hover:text-[#FACC15]'}`}
+              >
+                <BookmarkCheck className="w-4 h-4" />
+                <span>Form Builder</span>
+              </button>
+              <button
                 onClick={() => setActiveTab('manage-workshops')}
                 className={`py-3.5 px-4 text-xs font-mono font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer ${activeTab === 'manage-workshops' ? 'border-[#FACC15] dark:border-[#FACC15] text-amber-600 dark:text-[#FACC15] font-bold' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-amber-600 dark:hover:text-[#FACC15]'}`}
               >
@@ -448,6 +525,20 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
               >
                 <Users className="w-4 h-4" />
                 <span>Candidate Registrations ({allRegistrations.length})</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('payments')}
+                className={`py-3.5 px-4 text-xs font-mono font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer ${activeTab === 'payments' ? 'border-[#FACC15] dark:border-[#FACC15] text-amber-600 dark:text-[#FACC15] font-bold' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-amber-600 dark:hover:text-[#FACC15]'}`}
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Payments ({allPayments.length})</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('referrals')}
+                className={`py-3.5 px-4 text-xs font-mono font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer ${activeTab === 'referrals' ? 'border-[#FACC15] dark:border-[#FACC15] text-amber-600 dark:text-[#FACC15] font-bold' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-amber-600 dark:hover:text-[#FACC15]'}`}
+              >
+                <Tag className="w-4 h-4" />
+                <span>Referral Codes ({referralCodes.length})</span>
               </button>
             </>
           ) : (
@@ -684,6 +775,13 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
           )}
 
 
+
+          {/* ========================================================= */}
+          {/* ADMIN VIEW: CONFIG-DRIVEN WORKSHOP FORM BUILDER           */}
+          {/* ========================================================= */}
+          {isAdmin && activeTab === 'form-builder' && (
+            <WorkshopFormBuilder notify={notify} />
+          )}
 
           {/* ========================================================= */}
           {/* ADMIN VIEW: POST WORKSHOP                                 */}
@@ -1286,6 +1384,228 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
                       </div>
                     </form>
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* ADMIN VIEW: PAYMENTS FROM RAILWAY POSTGRESQL              */}
+          {/* ========================================================= */}
+          {isAdmin && activeTab === 'payments' && (
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-headline font-bold text-2xl text-neutral-950 dark:text-[#F5F5F5]">
+                  Payments ({allPayments.length})
+                </h4>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                  Live payment status from the workshops database.
+                </p>
+              </div>
+
+              {allPayments.length === 0 ? (
+                <div className="p-8 text-center rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626]">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">No payments recorded yet.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-2xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#141414] shadow-sm">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead className="bg-[#FDFCFA] dark:bg-[#0A0A0A] text-amber-600 dark:text-[#FACC15] border-b border-black/10 dark:border-[#262626]">
+                      <tr>
+                        <th className="p-3">Payment ID</th>
+                        <th className="p-3">Registration</th>
+                        <th className="p-3">Candidate</th>
+                        <th className="p-3">Amount</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3">Transaction</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/10 dark:divide-[#262626] text-neutral-950 dark:text-[#F5F5F5]">
+                      {allPayments.map((payment) => (
+                        <tr key={payment.id} className="hover:bg-[#FDFCFA]/50 dark:hover:bg-[#0A0A0A]/60">
+                          <td className="p-3 font-bold text-amber-600 dark:text-[#FACC15]">{payment.id}</td>
+                          <td className="p-3 text-neutral-500 dark:text-neutral-400">
+                            {payment.registration?.candidateName
+                              ? payment.registration.candidateName
+                              : payment.registrationId}
+                          </td>
+                          <td className="p-3 text-neutral-500 dark:text-neutral-400">
+                            {payment.registration?.candidateEmail || 'Not provided'}
+                          </td>
+                          <td className="p-3 font-semibold">
+                            ₹{((payment.amount || 0) / 100).toLocaleString('en-IN')}
+                          </td>
+                          <td className="p-3">
+                            <span
+                              className={`px-2 py-1 rounded-full font-bold ${
+                                payment.status === 'paid'
+                                  ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400'
+                                  : 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-[#FACC15]'
+                              }`}
+                            >
+                              {payment.status}
+                            </span>
+                          </td>
+                          <td className="p-3 text-neutral-500 dark:text-neutral-400 max-w-[180px] truncate" title={payment.gatewayResponse?.transactionId || ''}>
+                            {payment.gatewayResponse?.transactionId || 'Not provided'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* ADMIN VIEW: REFERRAL CODES FOR THE GEN AI WORKSHOP        */}
+          {/* ========================================================= */}
+          {isAdmin && activeTab === 'referrals' && (
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h4 className="font-headline font-bold text-2xl text-neutral-950 dark:text-[#F5F5F5]">
+                  Referral Codes
+                </h4>
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                  Choose a workshop, create a code and assign a discount. A code only works for its own workshop. Share the generated link, there is no coupon field on the form.
+                </p>
+              </div>
+
+              <form
+                onSubmit={handleCreateReferral}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_140px_auto] gap-3 items-end p-5 rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626]"
+              >
+                <div>
+                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
+                    Workshop
+                  </label>
+                  <select
+                    value={newReferral.workshopId}
+                    onChange={(event) =>
+                      setNewReferral((previous) => ({ ...previous, workshopId: event.target.value }))
+                    }
+                    required
+                    className="w-full px-3 py-2.5 rounded-xl bg-neutral-50 dark:bg-[#1A1A1A] border border-black/15 dark:border-[#333333] text-sm outline-none focus:border-[#FACC15]"
+                  >
+                    <option value="" disabled>Select a workshop</option>
+                    {workshops.map((workshop) => (
+                      <option key={workshop.id} value={workshop.id}>
+                        {workshop.title} ({workshop.dates})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
+                    Code
+                  </label>
+                  <input
+                    value={newReferral.code}
+                    onChange={(event) =>
+                      setNewReferral((previous) => ({ ...previous, code: event.target.value.toUpperCase() }))
+                    }
+                    placeholder="IITHYD500"
+                    required
+                    className="w-full px-3 py-2.5 rounded-xl bg-neutral-50 dark:bg-[#1A1A1A] border border-black/15 dark:border-[#333333] text-sm outline-none focus:border-[#FACC15]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
+                    Label, optional
+                  </label>
+                  <input
+                    value={newReferral.label}
+                    onChange={(event) =>
+                      setNewReferral((previous) => ({ ...previous, label: event.target.value }))
+                    }
+                    placeholder="IIT Hyderabad outreach"
+                    className="w-full px-3 py-2.5 rounded-xl bg-neutral-50 dark:bg-[#1A1A1A] border border-black/15 dark:border-[#333333] text-sm outline-none focus:border-[#FACC15]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
+                    Discount, rupees
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="6000"
+                    value={newReferral.discountAmount}
+                    onChange={(event) =>
+                      setNewReferral((previous) => ({ ...previous, discountAmount: event.target.value }))
+                    }
+                    placeholder="500"
+                    required
+                    className="w-full px-3 py-2.5 rounded-xl bg-neutral-50 dark:bg-[#1A1A1A] border border-black/15 dark:border-[#333333] text-sm outline-none focus:border-[#FACC15]"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-[#FACC15] hover:bg-[#EAB308] text-[#0A0A0A] font-mono font-bold text-xs cursor-pointer"
+                >
+                  Create
+                </button>
+              </form>
+
+              {referralCodes.length === 0 ? (
+                <div className="p-8 text-center rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626]">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">No referral codes created yet.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-2xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#141414] shadow-sm">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead className="bg-[#FDFCFA] dark:bg-[#0A0A0A] text-amber-600 dark:text-[#FACC15] border-b border-black/10 dark:border-[#262626]">
+                      <tr>
+                        <th className="p-3">Code</th>
+                        <th className="p-3">Workshop</th>
+                        <th className="p-3">Label</th>
+                        <th className="p-3">Discount</th>
+                        <th className="p-3">Uses</th>
+                        <th className="p-3">Shareable Link</th>
+                        <th className="p-3">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/10 dark:divide-[#262626] text-neutral-950 dark:text-[#F5F5F5]">
+                      {referralCodes.map((referral) => {
+                        const link = `${window.location.origin}/gen-ai-workshop?ref=${encodeURIComponent(referral.code)}`;
+                        return (
+                          <tr key={referral.id} className="hover:bg-[#FDFCFA]/50 dark:hover:bg-[#0A0A0A]/60">
+                            <td className="p-3 font-bold text-amber-600 dark:text-[#FACC15]">{referral.code}</td>
+                            <td className="p-3 text-neutral-500 dark:text-neutral-400" title={referral.workshopId || ''}>
+                              {workshopLabel(referral.workshopId)}
+                            </td>
+                            <td className="p-3 text-neutral-500 dark:text-neutral-400">{referral.label || 'Not provided'}</td>
+                            <td className="p-3 font-semibold">₹{Number(referral.discountAmount || 0).toLocaleString('en-IN')}</td>
+                            <td className="p-3">{referral.usageCount || 0}</td>
+                            <td className="p-3 max-w-[260px] truncate" title={link}>
+                              {link}
+                            </td>
+                            <td className="p-3">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyReferral(referral.code)}
+                                  className="p-2 rounded-lg text-amber-600 dark:text-[#FACC15] hover:bg-[#FACC15]/10 cursor-pointer"
+                                  title="Copy shareable link"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteReferral(referral.code)}
+                                  className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                                  title="Remove referral code"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>

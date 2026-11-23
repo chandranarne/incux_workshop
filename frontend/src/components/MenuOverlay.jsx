@@ -177,6 +177,19 @@ export default function MenuOverlay({ isOpen, onClose, onOpenPortal }) {
                   </span>
                 </button>
               </motion.li>
+
+              <motion.li variants={navItemVariants}>
+                <a
+                  href="/admin"
+                  onClick={onClose}
+                  className="w-full text-left py-2 text-xl sm:text-2xl font-headline font-bold text-[#0A0A0A] dark:text-[#FACC15] flex items-center justify-between"
+                >
+                  <span>Admin Console</span>
+                  <span className="text-xs font-mono px-3 py-1 rounded-full bg-[#FACC15]/15 border border-[#FACC15]/40 text-[#0A0A0A] dark:text-[#FACC15] font-bold">
+                    Referrals
+                  </span>
+                </a>
+              </motion.li>
             </motion.ul>
           </nav>
 

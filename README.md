@@ -129,17 +129,19 @@ npm run dev
 Backend and frontend are deployed individually on Railway.
 
 ### Backend (Railway)
-1. Create a PostgreSQL database on Railway → copy `DATABASE_URL`
-2. Set `DATABASE_URL` in Railway Variables for the backend service
+1. Create a PostgreSQL database on Railway and copy `DATABASE_URL`
+2. Set the backend variables in Railway: `DATABASE_URL`, `ADMIN_PASSCODE`,
+   `TRUST_PAYMENT_SECRET`, `TRUST_PAYMENT_URL`, `TRUST_PAYMENT_APP_ID`,
+   `PAYMENT_RETURN_URL`, `PAYMENT_WEBHOOK_URL` (see the payments section below)
 3. Connect the `backend/` folder as a Railway service
-4. `backend/railway.json` runs: `npm run prisma:generate && (npx prisma migrate deploy || npx prisma db push --skip-generate) && npm start`
+4. `backend/railway.json` runs `npm start`. The Prisma client is generated in the build phase by `backend/nixpacks.toml`. Do not add `migrate deploy` or `db push` to the start command; the production database already has the required tables and those commands fail on its existing schema.
 5. Healthcheck: `/api/health`
 
 ### Frontend (Railway)
 1. Connect the `frontend/` folder as a separate Railway service
 2. Node 22 is picked up from `.nvmrc` / `engines.node`
 3. No deploy config file is needed. Railway builds with `npm run build` and starts with `npm start` (`vite preview`), which reads `PORT` from the environment
-4. `/api/*` is proxied to the backend from `vite.config.js`. Set `API_PROXY_TARGET` in Railway Variables to the backend URL (the private URL `http://backend.railway.internal:5000` keeps traffic off the public edge). Nothing is hardcoded: if it is missing, `/api` answers `503` with a message naming the variable instead of falling back to `localhost`
+4. `/api/*` is proxied to the backend from `vite.config.js`. Set `API_PROXY_TARGET` in Railway Variables to the backend private URL `http://steadfast-beauty.railway.internal:5000` (keeps traffic off the public edge). Nothing is hardcoded: if it is missing, `/api` answers `503` with a message naming the variable instead of falling back to `localhost`
 
 Production behaviour of `vite preview`, configured in `vite.config.js`:
 
@@ -166,7 +168,43 @@ Admin backend routes are all protected by that token: `POST /api/workshops`,
 `DELETE /api/workshops/:id`, `POST /api/collaboration-requests/:id/approve`,
 `GET /api/registrations`, `GET /api/inquiries`, and `GET /api/collaboration-requests`.
 Without a token they answer `401`. Passphrase attempts are rate limited to
-8 per 15 minutes per IP.
+8 per 15 minutes per IP. The Payments tab lists every payment and its Railway
+PostgreSQL status.
+
+### Payments
+
+The paid workshop redirects to the IncuXai Education Trust platform for Razorpay
+checkout. Status is stored in Railway PostgreSQL and read by the admin console.
+
+Backend variables:
+
+| Variable | Example |
+| :--- | :--- |
+| `TRUST_PAYMENT_SECRET` | The secret registered with the trust platform for this app (must match on both sides) |
+| `TRUST_PAYMENT_URL` | `https://www.incuxaieducationtrust.org` |
+| `TRUST_PAYMENT_APP_ID` | `workshops` |
+| `PAYMENT_RETURN_URL` | `https://workshops.incuxai.com/payment/success` |
+| `PAYMENT_CANCEL_URL` | `https://workshops.incuxai.com/payment/cancel` |
+| `PAYMENT_WEBHOOK_URL` | `https://workshops.incuxai.com/api/payments/webhook` |
+
+Register the app on the trust platform so it can sign callbacks and issue success
+tokens:
+
+```bash
+node server/cli/payment-apps.js add workshops "IncuXai Workshops" \
+  --secret <SAME_SECRET_AS_TRUST_PAYMENT_SECRET> \
+  --callback https://workshops.incuxai.com/api/payments/webhook
+```
+
+Use a dedicated app id (`workshops`) and the same shared secret as
+`TRUST_PAYMENT_SECRET`. Do not reuse or rotate the `incuxai` app; that would break
+incuxai.com payments. The trust verifies this token with the app's `secretKey`, so
+the value must be byte-for-byte identical on both services.
+
+The full flow, routes, database notes, and the checklist for adding a new payment
+form are documented in `RAZORPAY_INTEGRATION.md`. A short implementation summary
+is in `PAYMENT_INTEGRATION_PLAN.md` and the two-site app/secret reference is in
+`PAYMENT_CONFIG.md`.
 
 ---
 
@@ -202,3 +240,32 @@ Without a token they answer `401`. Passphrase attempts are rate limited to
 3. **Accessibility**:
    - Keyboard accessible full-screen menu with Escape listener and scroll locking.
    - Dedicated `prefers-reduced-motion` toggle switch on navbar and OS detection.
+
+---
+
+## Config-driven workshop forms
+
+New workshops no longer need a new React component each time. An organiser can
+be interviewed with the `workshop-intake` skill, or can build the form in the
+admin console under **Form Builder**.
+
+- Admin forms live in `/admin` inside the passcode-gated console.
+- The builder is a five-step wizard: workshop details, steps and fields,
+  documents and accommodation, payment split, then review and publish.
+- Steps and fields can be reordered by dragging them or with the arrow buttons.
+- Preset fields include full name, email, phone, gender, department, year of
+  study, college and college location. Custom fields support text, email,
+  phone, number, date, paragraph, choice list and tick box.
+- Published forms are available at `/register/<slug>`.
+- Form configuration is stored in `workshop_forms`, `form_steps`,
+  `form_fields`, `workshop_documents` and `payment_components`. Participant
+  answers are stored in `registrations.intake_data` in Railway PostgreSQL.
+- Only payment components marked as charged online are added to the checkout
+  total, and the total is always calculated on the server.
+- The existing Nov 28 to 29 GenAI registration at `/gen-ai-workshop` is a
+  separate verified flow and is not affected.
+
+The interview skill lives at `.opencode/skills/workshop-intake/SKILL.md`. Its
+config reference is in `references/config-schema.md`, and the helper that saves
+a config through the admin API is in `scripts/create-workshop-form.mjs`. The
+helper reads `WORKSHOP_API_BASE` and `ADMIN_PASSCODE` from the environment.
