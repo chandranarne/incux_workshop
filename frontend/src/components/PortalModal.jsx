@@ -17,7 +17,17 @@ import {
   BookmarkCheck,
   Building,
   AlertCircle,
-  LogOut
+  LogOut,
+  FileSpreadsheet,
+  ExternalLink,
+  RefreshCw,
+  Download,
+  Settings,
+  CreditCard,
+  Check,
+  Search,
+  Copy,
+  CheckCircle
 } from 'lucide-react';
 import {
   fetchUpcomingWorkshops,
@@ -25,8 +35,35 @@ import {
   deleteWorkshop,
   registerForWorkshop,
   fetchAllRegistrations,
-  fetchCandidateRegistrations
+  fetchCandidateRegistrations,
+  fetchGoogleSheetsConfig,
+  saveGoogleSheetsConfig,
+  syncAllToGoogleSheets,
+  updateRegistrationPayment
 } from '../services/api';
+
+const downloadCsv = (data, filename) => {
+  if (!data || !data.length) return;
+  const headers = Object.keys(data[0]);
+  const csvRows = [
+    headers.join(','),
+    ...data.map(row =>
+      headers.map(field => {
+        const val = row[field] === null || row[field] === undefined ? '' : String(row[field]);
+        return `"${val.replace(/"/g, '""')}"`;
+      }).join(',')
+    )
+  ];
+  const blob = new Blob(["\uFEFF" + csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
 const CANDIDATE_KEY = 'incuxai_candidate_profile';
 const ADMIN_PROFILE = {
@@ -71,6 +108,18 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
   const [loading, setLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState({ type: '', text: '' });
 
+  // Google Sheets & Payments Admin state
+  const [sheetsConfig, setSheetsConfig] = useState({ webhookUrl: '', sheetUrl: '', lastSyncedAt: null });
+  const [syncingSheets, setSyncingSheets] = useState(false);
+  const [sheetsModalOpen, setSheetsModalOpen] = useState(false);
+  const [webhookInput, setWebhookInput] = useState('');
+  const [sheetUrlInput, setSheetUrlInput] = useState('');
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [copiedScript, setCopiedScript] = useState(false);
+  const [regFilter, setRegFilter] = useState('all'); // 'all' | 'paid' | 'pending'
+  const [regSearch, setRegSearch] = useState('');
+  const [updatingPaymentId, setUpdatingPaymentId] = useState('');
+
   // Post workshop form (Admin)
   const [newWorkshop, setNewWorkshop] = useState({
     title: '',
@@ -101,9 +150,17 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
       setWorkshops(wsList);
 
       if (isAdmin) {
-        const regs = await fetchAllRegistrations();
+        const [regs, sheets] = await Promise.all([
+          fetchAllRegistrations(),
+          fetchGoogleSheetsConfig()
+        ]);
         setAllRegistrations(regs);
         setMyRegistrations(regs);
+        if (sheets) {
+          setSheetsConfig(sheets);
+          setWebhookInput(sheets.webhookUrl || '');
+          setSheetUrlInput(sheets.sheetUrl || '');
+        }
       } else if (candidate.email) {
         const regs = await fetchCandidateRegistrations(candidate.email);
         setMyRegistrations(regs);
@@ -208,6 +265,110 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
     } catch (err) {
       notify('error', err.message);
     }
+  };
+
+  // --- Google Sheets Live Sync Handlers ---
+  const handleSyncSheets = async () => {
+    if (!sheetsConfig.webhookUrl) {
+      setSheetsModalOpen(true);
+      return;
+    }
+    setSyncingSheets(true);
+    try {
+      const res = await syncAllToGoogleSheets();
+      notify('success', `Live sync complete! ${res.syncedCount?.registrations || 0} candidates and ${res.syncedCount?.payments || 0} payments pushed to Google Sheets.`);
+      const updatedConfig = await fetchGoogleSheetsConfig();
+      setSheetsConfig(updatedConfig);
+    } catch (err) {
+      notify('error', `Sync failed: ${err.message}`);
+    } finally {
+      setSyncingSheets(false);
+    }
+  };
+
+  const handleSaveSheetsConfig = async (e) => {
+    e.preventDefault();
+    setSavingConfig(true);
+    try {
+      const res = await saveGoogleSheetsConfig({
+        webhookUrl: webhookInput.trim(),
+        sheetUrl: sheetUrlInput.trim()
+      });
+      setSheetsConfig(res.config);
+      setSheetsModalOpen(false);
+      notify('success', 'Google Sheets settings saved! You can now click "Sync to Google Sheet".');
+    } catch (err) {
+      notify('error', err.message || 'Failed to save settings');
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
+  const handleTogglePayment = async (reg) => {
+    const nextStatus = reg.paymentStatus === 'Paid' ? 'Pending' : 'Paid';
+    setUpdatingPaymentId(reg.id);
+    try {
+      await updateRegistrationPayment(reg.id, {
+        paymentStatus: nextStatus,
+        amount: reg.amount || 6000,
+        paymentMethod: nextStatus === 'Paid' ? 'UPI / Admin Verified' : 'Pending',
+        transactionId: nextStatus === 'Paid' ? `TXN-${Date.now()}` : 'PENDING'
+      });
+      notify('success', `Payment marked as ${nextStatus} for ${reg.candidateName}.`);
+      loadData();
+    } catch (err) {
+      notify('error', err.message);
+    } finally {
+      setUpdatingPaymentId('');
+    }
+  };
+
+  const exportRegistrationsCsv = () => {
+    if (!allRegistrations.length) {
+      notify('error', 'No candidate registrations to export.');
+      return;
+    }
+    const data = allRegistrations.map(r => ({
+      'Registration ID': r.id,
+      'Timestamp': new Date(r.registeredAt).toLocaleString('en-IN'),
+      'Candidate Name': r.candidateName,
+      'Candidate Email': r.candidateEmail,
+      'Phone': r.candidatePhone || 'Not provided',
+      'Institution': r.candidateInstitution || 'Not provided',
+      'Workshop Title': r.workshopTitle,
+      'Category': r.workshopCategory || '',
+      'Dates': r.workshopDates || '',
+      'Location': r.workshopLocation || '',
+      'Mode': r.workshopMode || '',
+      'Status': r.status || 'Confirmed',
+      'Payment Status': r.paymentStatus || (r.amount ? 'Paid' : 'Free'),
+      'Amount (INR)': r.amount || 0
+    }));
+    downloadCsv(data, `IncuxAI_Candidate_Registrations_${new Date().toISOString().slice(0, 10)}.csv`);
+    notify('success', 'Candidate registrations Excel/CSV sheet downloaded!');
+  };
+
+  const exportPaymentsCsv = () => {
+    const paidList = allRegistrations.filter(r => r.paymentStatus === 'Paid' || (r.amount && r.amount > 0));
+    if (!paidList.length) {
+      notify('error', 'No payment records to export.');
+      return;
+    }
+    const data = paidList.map(r => ({
+      'Payment Ref ID': `PAY-${r.id}`,
+      'Timestamp': new Date(r.registeredAt).toLocaleString('en-IN'),
+      'Candidate Name': r.candidateName,
+      'Candidate Email': r.candidateEmail,
+      'Phone': r.candidatePhone || 'Not provided',
+      'Institution': r.candidateInstitution || 'Not provided',
+      'Workshop Title': r.workshopTitle,
+      'Amount Paid (INR)': r.amount || 6000,
+      'Payment Status': r.paymentStatus || 'Completed',
+      'Payment Method': r.paymentMethod || 'UPI / Online',
+      'Transaction ID': r.transactionId || 'Confirmed'
+    }));
+    downloadCsv(data, `IncuxAI_Payments_Completed_${new Date().toISOString().slice(0, 10)}.csv`);
+    notify('success', 'Payments completed Excel/CSV sheet downloaded!');
   };
 
   return (
@@ -744,49 +905,387 @@ export default function PortalModal({ isOpen, onClose, isAdmin = false, onLogout
           )}
 
           {/* ========================================================= */}
-          {/* ADMIN VIEW: ALL CANDIDATE REGISTRATIONS                   */}
+          {/* ADMIN VIEW: ALL CANDIDATE REGISTRATIONS & PAYMENTS        */}
           {/* ========================================================= */}
           {isAdmin && activeTab === 'all-registrations' && (
             <div className="space-y-6">
-              <div>
-                <h4 className="font-headline font-bold text-2xl text-neutral-950 dark:text-[#F5F5F5]">
-                  All Candidate Registrations ({allRegistrations.length})
-                </h4>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  Comprehensive roster of students and candidates registered across workshops.
-                </p>
+              {/* Header with Title and Action Bar */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-headline font-bold text-2xl text-neutral-950 dark:text-[#F5F5F5] flex items-center gap-2.5">
+                    <span>Candidate Registrations &amp; Payments</span>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#FACC15]/20 text-neutral-900 dark:text-[#FACC15] border border-[#FACC15]/30">
+                      {allRegistrations.length} Total
+                    </span>
+                  </h4>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                    Live candidate roster synced with Google Sheets and downloadable for cohort records.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Google Sheets Sync Button */}
+                  <button
+                    onClick={handleSyncSheets}
+                    disabled={syncingSheets}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                    title="Push all database records to Google Sheet"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${syncingSheets ? 'animate-spin' : ''}`} />
+                    <span>{syncingSheets ? 'Syncing...' : 'Sync to Google Sheet'}</span>
+                  </button>
+
+                  {/* Open Live Google Sheet */}
+                  {sheetsConfig.sheetUrl && (
+                    <a
+                      href={sheetsConfig.sheetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1E293B] dark:hover:bg-[#334155] text-neutral-800 dark:text-emerald-400 font-mono font-bold text-xs flex items-center gap-1.5 border border-black/10 dark:border-emerald-500/30 transition-all"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                      <span>Open Google Sheet</span>
+                      <ExternalLink className="w-3 h-3 opacity-60" />
+                    </a>
+                  )}
+
+                  {/* Google Sheets Config / Settings */}
+                  <button
+                    onClick={() => {
+                      setWebhookInput(sheetsConfig.webhookUrl || '');
+                      setSheetUrlInput(sheetsConfig.sheetUrl || '');
+                      setSheetsModalOpen(true);
+                    }}
+                    className="p-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1A1A1A] dark:hover:bg-[#262626] text-neutral-700 dark:text-neutral-300 border border-black/10 dark:border-[#262626] transition-all cursor-pointer"
+                    title="Configure Google Sheets Webhook"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </button>
+
+                  {/* Download Registrations Excel */}
+                  <button
+                    onClick={exportRegistrationsCsv}
+                    className="px-3 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-[#141414] dark:hover:bg-[#1F1F1F] text-neutral-900 dark:text-neutral-200 font-mono font-bold text-xs flex items-center gap-1.5 border border-black/10 dark:border-[#333] transition-all cursor-pointer"
+                    title="Download Candidate Registrations Excel/CSV"
+                  >
+                    <Download className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Excel: Registrations</span>
+                  </button>
+
+                  {/* Download Payments Excel */}
+                  <button
+                    onClick={exportPaymentsCsv}
+                    className="px-3 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-[#141414] dark:hover:bg-[#1F1F1F] text-neutral-900 dark:text-neutral-200 font-mono font-bold text-xs flex items-center gap-1.5 border border-black/10 dark:border-[#333] transition-all cursor-pointer"
+                    title="Download Completed Payments Excel/CSV"
+                  >
+                    <CreditCard className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Excel: Payments</span>
+                  </button>
+                </div>
               </div>
 
-              {allRegistrations.length === 0 ? (
-                <div className="p-8 text-center rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626]">
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">No registrations recorded yet.</p>
+              {/* Google Sheets Live Status Banner */}
+              <div className="p-3.5 px-4 rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-2.5 h-2.5 rounded-full ${sheetsConfig.webhookUrl ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                  <div>
+                    <span className="font-bold text-neutral-900 dark:text-[#F5F5F5]">
+                      {sheetsConfig.webhookUrl ? 'Google Sheets Live Sync Connected' : 'Google Sheets Sync Not Configured'}
+                    </span>
+                    <span className="text-neutral-500 dark:text-neutral-400 ml-2 text-[11px]">
+                      {sheetsConfig.lastSyncedAt
+                        ? `(Last synced: ${new Date(sheetsConfig.lastSyncedAt).toLocaleString('en-IN')})`
+                        : sheetsConfig.webhookUrl
+                        ? '(Ready to sync — click "Sync to Google Sheet")'
+                        : '(Click Settings to connect your Google Sheet in 1 minute)'}
+                    </span>
+                  </div>
                 </div>
-              ) : (
-                <div className="overflow-x-auto rounded-2xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#141414] shadow-sm">
-                  <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-[#FDFCFA] dark:bg-[#0A0A0A] text-amber-600 dark:text-[#FACC15] border-b border-black/10 dark:border-[#262626]">
-                      <tr>
-                        <th className="p-3">Ref ID</th>
-                        <th className="p-3">Candidate</th>
-                        <th className="p-3">Email</th>
-                        <th className="p-3">Institution</th>
-                        <th className="p-3">Workshop</th>
-                        <th className="p-3">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-black/10 dark:divide-[#262626] text-neutral-950 dark:text-[#F5F5F5]">
-                      {allRegistrations.map((reg) => (
-                        <tr key={reg.id} className="hover:bg-[#FDFCFA]/50 dark:hover:bg-[#0A0A0A]/60">
-                          <td className="p-3 font-bold text-amber-600 dark:text-[#FACC15]">{reg.id}</td>
-                          <td className="p-3 font-semibold text-neutral-950 dark:text-[#F5F5F5]">{reg.candidateName}</td>
-                          <td className="p-3 text-neutral-500 dark:text-neutral-400">{reg.candidateEmail}</td>
-                          <td className="p-3">{reg.candidateInstitution}</td>
-                          <td className="p-3 font-medium">{reg.workshopTitle}</td>
-                          <td className="p-3 text-neutral-500 dark:text-neutral-400">{new Date(reg.registeredAt).toLocaleDateString()}</td>
+
+                {!sheetsConfig.webhookUrl && (
+                  <button
+                    onClick={() => setSheetsModalOpen(true)}
+                    className="px-3 py-1.5 rounded-lg bg-[#FACC15] text-[#0A0A0A] font-bold text-[11px] uppercase tracking-wider hover:bg-[#EAB308] cursor-pointer"
+                  >
+                    Setup Google Sheet
+                  </button>
+                )}
+              </div>
+
+              {/* Filters & Search Controls */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                  <button
+                    onClick={() => setRegFilter('all')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                      regFilter === 'all'
+                        ? 'bg-[#0A0A0A] text-[#FACC15] dark:bg-[#FACC15] dark:text-[#0A0A0A]'
+                        : 'bg-neutral-100 dark:bg-[#141414] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                    }`}
+                  >
+                    All Candidates ({allRegistrations.length})
+                  </button>
+                  <button
+                    onClick={() => setRegFilter('paid')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                      regFilter === 'paid'
+                        ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-black'
+                        : 'bg-neutral-100 dark:bg-[#141414] text-neutral-600 dark:text-neutral-400 hover:text-emerald-600'
+                    }`}
+                  >
+                    Payment Completed ({allRegistrations.filter(r => r.paymentStatus === 'Paid' || (r.amount && r.amount > 0)).length})
+                  </button>
+                  <button
+                    onClick={() => setRegFilter('pending')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                      regFilter === 'pending'
+                        ? 'bg-amber-600 text-white dark:bg-amber-400 dark:text-black'
+                        : 'bg-neutral-100 dark:bg-[#141414] text-neutral-600 dark:text-neutral-400 hover:text-amber-500'
+                    }`}
+                  >
+                    Payment Pending ({allRegistrations.filter(r => r.paymentStatus === 'Pending').length})
+                  </button>
+                </div>
+
+                <div className="relative w-full sm:w-64">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                  <input
+                    type="text"
+                    value={regSearch}
+                    onChange={(e) => setRegSearch(e.target.value)}
+                    placeholder="Search candidate, college, workshop..."
+                    className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] text-xs font-mono text-neutral-900 dark:text-neutral-200 outline-none focus:border-[#FACC15]"
+                  />
+                </div>
+              </div>
+
+              {/* Registrations & Payments Table */}
+              {(() => {
+                const filtered = allRegistrations.filter((reg) => {
+                  if (regFilter === 'paid' && reg.paymentStatus !== 'Paid' && !(reg.amount && reg.amount > 0)) {
+                    return false;
+                  }
+                  if (regFilter === 'pending' && reg.paymentStatus !== 'Pending') {
+                    return false;
+                  }
+                  if (regSearch.trim()) {
+                    const q = regSearch.toLowerCase();
+                    const matchName = (reg.candidateName || '').toLowerCase().includes(q);
+                    const matchEmail = (reg.candidateEmail || '').toLowerCase().includes(q);
+                    const matchInst = (reg.candidateInstitution || '').toLowerCase().includes(q);
+                    const matchWs = (reg.workshopTitle || '').toLowerCase().includes(q);
+                    const matchPhone = (reg.candidatePhone || '').toLowerCase().includes(q);
+                    if (!matchName && !matchEmail && !matchInst && !matchWs && !matchPhone) return false;
+                  }
+                  return true;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="p-8 text-center rounded-2xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626]">
+                      <p className="text-sm font-mono text-neutral-500 dark:text-neutral-400">
+                        No registrations match the selected filter.
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="overflow-x-auto rounded-2xl border border-black/10 dark:border-[#262626] bg-white dark:bg-[#141414] shadow-sm">
+                    <table className="w-full text-left text-xs font-mono">
+                      <thead className="bg-[#FDFCFA] dark:bg-[#0A0A0A] text-amber-600 dark:text-[#FACC15] border-b border-black/10 dark:border-[#262626]">
+                        <tr>
+                          <th className="p-3">Ref ID</th>
+                          <th className="p-3">Candidate</th>
+                          <th className="p-3">Contact</th>
+                          <th className="p-3">Institution</th>
+                          <th className="p-3">Workshop</th>
+                          <th className="p-3">Fee (₹)</th>
+                          <th className="p-3">Payment</th>
+                          <th className="p-3">Date</th>
+                          <th className="p-3 text-right">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-black/10 dark:divide-[#262626] text-neutral-950 dark:text-[#F5F5F5]">
+                        {filtered.map((reg) => {
+                          const isPaid = reg.paymentStatus === 'Paid' || (reg.amount && reg.amount > 0 && reg.paymentStatus !== 'Pending');
+                          const isPending = reg.paymentStatus === 'Pending';
+
+                          return (
+                            <tr key={reg.id} className="hover:bg-[#FDFCFA]/50 dark:hover:bg-[#0A0A0A]/60">
+                              <td className="p-3 font-bold text-amber-600 dark:text-[#FACC15] whitespace-nowrap">
+                                {reg.id}
+                              </td>
+                              <td className="p-3 font-semibold text-neutral-950 dark:text-[#F5F5F5] whitespace-nowrap">
+                                {reg.candidateName}
+                              </td>
+                              <td className="p-3 text-neutral-500 dark:text-neutral-400">
+                                <div>{reg.candidateEmail}</div>
+                                {reg.candidatePhone && reg.candidatePhone !== 'Not provided' && (
+                                  <div className="text-[10px] text-neutral-400 dark:text-neutral-500">
+                                    {reg.candidatePhone}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-3 text-neutral-600 dark:text-neutral-300">{reg.candidateInstitution}</td>
+                              <td className="p-3 font-medium max-w-xs truncate" title={reg.workshopTitle}>
+                                {reg.workshopTitle}
+                              </td>
+                              <td className="p-3 font-bold text-neutral-900 dark:text-neutral-200 whitespace-nowrap">
+                                {reg.amount ? `₹${Number(reg.amount).toLocaleString('en-IN')}` : 'Free'}
+                              </td>
+                              <td className="p-3 whitespace-nowrap">
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                                    isPaid
+                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                      : isPending
+                                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                      : 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20'
+                                  }`}
+                                >
+                                  {isPaid ? 'Paid' : isPending ? 'Pending' : 'Free / Confirmed'}
+                                </span>
+                              </td>
+                              <td className="p-3 text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
+                                {new Date(reg.registeredAt).toLocaleDateString()}
+                              </td>
+                              <td className="p-3 text-right whitespace-nowrap">
+                                <button
+                                  onClick={() => handleTogglePayment(reg)}
+                                  disabled={updatingPaymentId === reg.id}
+                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                                    isPaid
+                                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 dark:text-amber-300'
+                                      : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 dark:text-emerald-300'
+                                  }`}
+                                  title="Toggle between Paid and Pending"
+                                >
+                                  {updatingPaymentId === reg.id
+                                    ? 'Updating...'
+                                    : isPaid
+                                    ? 'Set Pending'
+                                    : 'Mark as Paid'}
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+
+              {/* Google Sheets Configuration Modal */}
+              {sheetsModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+                  <div className="w-full max-w-xl p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#141414] border border-black/10 dark:border-[#262626] shadow-2xl space-y-5">
+                    <div className="flex items-center justify-between pb-3 border-b border-black/10 dark:border-[#262626]">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">
+                          <FileSpreadsheet className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-headline font-bold text-lg text-neutral-900 dark:text-neutral-100">
+                            Connect Google Sheets Live Sync
+                          </h3>
+                          <p className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
+                            Real-time automatic sync for Candidate Registrations &amp; Payments.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setSheetsModalOpen(false)}
+                        className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Quick 3-step Instructions */}
+                    <div className="p-4 rounded-2xl bg-[#F8F8F5] dark:bg-[#0A0A0A] border border-black/5 dark:border-[#222] text-xs font-mono space-y-2 text-neutral-700 dark:text-neutral-300">
+                      <div className="font-bold text-amber-600 dark:text-[#FACC15] uppercase tracking-wider text-[10px]">
+                        Quick 1-Minute Setup Guide:
+                      </div>
+                      <ol className="list-decimal list-inside space-y-1 text-[11px] leading-relaxed">
+                        <li>
+                          Open{' '}
+                          <a
+                            href="https://sheets.new"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline text-amber-600 dark:text-[#FACC15] font-bold"
+                          >
+                            sheets.new
+                          </a>{' '}
+                          in a new tab to create a new Google Sheet.
+                        </li>
+                        <li>
+                          In top menu, click <strong>Extensions &gt; Apps Script</strong>.
+                        </li>
+                        <li>
+                          Replace the code with{' '}
+                          <span className="font-bold text-neutral-900 dark:text-white">
+                            scripts/google-apps-script.js
+                          </span>{' '}
+                          from this project.
+                        </li>
+                        <li>
+                          Click <strong>Deploy &gt; New deployment</strong> &gt; Select <strong>Web app</strong> &gt; set Who has access to <strong>Anyone</strong>.
+                        </li>
+                        <li>
+                          Copy the generated <strong>Web app URL</strong> (ends in <code>/exec</code>) and paste it below!
+                        </li>
+                      </ol>
+                    </div>
+
+                    <form onSubmit={handleSaveSheetsConfig} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-mono font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+                          Google Apps Script Web App URL *
+                        </label>
+                        <input
+                          type="url"
+                          required
+                          value={webhookInput}
+                          onChange={(e) => setWebhookInput(e.target.value)}
+                          placeholder="https://script.google.com/macros/s/.../exec"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F8F5] dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-xs font-mono text-neutral-900 dark:text-neutral-100 outline-none focus:border-[#FACC15]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-mono font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+                          Google Sheet Link (Optional — for 1-click opening)
+                        </label>
+                        <input
+                          type="url"
+                          value={sheetUrlInput}
+                          onChange={(e) => setSheetUrlInput(e.target.value)}
+                          placeholder="https://docs.google.com/spreadsheets/d/.../edit"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F8F5] dark:bg-[#0A0A0A] border border-black/10 dark:border-[#262626] text-xs font-mono text-neutral-900 dark:text-neutral-100 outline-none focus:border-[#FACC15]"
+                        />
+                      </div>
+
+                      <div className="pt-2 flex items-center justify-end gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setSheetsModalOpen(false)}
+                          className="px-4 py-2.5 rounded-xl text-xs font-mono text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={savingConfig || !webhookInput.trim()}
+                          className="px-5 py-2.5 rounded-xl bg-[#0A0A0A] dark:bg-[#FACC15] text-[#FACC15] dark:text-[#0A0A0A] font-headline font-bold text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer disabled:opacity-50"
+                        >
+                          {savingConfig ? 'Saving & Testing...' : 'Save & Test Connection'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
               )}
             </div>

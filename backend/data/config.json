@@ -43,5 +43,10 @@
       "tag": "Sustained Mastery",
       "summary": "Post-session capstones, code assessments, and guided pathways keep students learning far beyond the workshop hall."
     }
-  ]
+  ],
+  "googleSheets": {
+    "webhookUrl": "",
+    "sheetUrl": "",
+    "lastSyncedAt": null
+  }
 }

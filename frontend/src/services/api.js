@@ -299,3 +299,50 @@ export const fetchAllRegistrations = async () => {
     return [];
   }
 };
+
+// ==========================================
+// GOOGLE SHEETS LIVE SYNC & PAYMENTS API
+// ==========================================
+export const fetchGoogleSheetsConfig = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/admin/google-sheets`, { headers: adminHeaders() });
+    if (!res.ok) return { webhookUrl: '', sheetUrl: '', lastSyncedAt: null };
+    return await res.json();
+  } catch (err) {
+    return { webhookUrl: '', sheetUrl: '', lastSyncedAt: null };
+  }
+};
+
+export const saveGoogleSheetsConfig = async (config) => {
+  const res = await fetch(`${API_BASE}/admin/google-sheets/config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...adminHeaders() },
+    body: JSON.stringify(config)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to save Google Sheets settings');
+  return data;
+};
+
+export const syncAllToGoogleSheets = async () => {
+  const res = await fetch(`${API_BASE}/admin/google-sheets/sync`, {
+    method: 'POST',
+    headers: adminHeaders()
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || data.data?.error || 'Failed to sync to Google Sheets');
+  }
+  return data;
+};
+
+export const updateRegistrationPayment = async (id, paymentData) => {
+  const res = await fetch(`${API_BASE}/registrations/${id}/payment`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...adminHeaders() },
+    body: JSON.stringify(paymentData)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update payment status');
+  return data;
+};

@@ -12,7 +12,11 @@
     "candidateInstitution": "IIT Hyderabad",
     "candidatePhone": "7665061289",
     "registeredAt": "2026-10-26T12:21:53.070Z",
-    "status": "Confirmed"
+    "status": "Confirmed",
+    "paymentStatus": "Paid",
+    "amount": 6000,
+    "paymentMethod": "UPI (PhonePe)",
+    "transactionId": "TXN-82910391204"
   },
   {
     "id": "REG-1793011786043-224",
@@ -27,17 +31,29 @@
     "candidateInstitution": "IIT Hyderabad",
     "candidatePhone": "7665061289",
     "registeredAt": "2026-10-26T10:49:46.043Z",
-    "status": "Confirmed"
+    "status": "Confirmed",
+    "paymentStatus": "Paid",
+    "amount": 4500,
+    "paymentMethod": "UPI (GPay)",
+    "transactionId": "TXN-71930182391"
   },
   {
     "id": "REG-801",
     "workshopId": "WS-101",
     "workshopTitle": "Autonomous AI Agents & LangGraph Deep Dive",
+    "workshopCategory": "Agentic AI",
+    "workshopDates": "December 05-06, 2026",
+    "workshopLocation": "IIT Campus",
+    "workshopMode": "Offline",
     "candidateName": "Rahul Varma",
     "candidateEmail": "rahul@student.edu",
     "candidateInstitution": "IIT Hyderabad",
     "candidatePhone": "9848011223",
     "registeredAt": "2026-10-26T12:00:00Z",
-    "status": "Confirmed"
+    "status": "Confirmed",
+    "paymentStatus": "Pending",
+    "amount": 6000,
+    "paymentMethod": "UPI",
+    "transactionId": "UTR-PENDING"
   }
 ]

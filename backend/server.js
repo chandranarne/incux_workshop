@@ -180,6 +180,56 @@ const writeJson = (filename, data) => {
 };
 
 // ==========================================
+// GOOGLE SHEETS LIVE SYNC SERVICE
+// ==========================================
+const getGoogleSheetsConfig = () => {
+  let config = {
+    webhookUrl: process.env.GOOGLE_SHEET_WEBHOOK_URL || '',
+    sheetUrl: process.env.GOOGLE_SHEET_URL || '',
+    lastSyncedAt: null
+  };
+  try {
+    const cfg = readJson('config.json');
+    if (cfg && cfg.googleSheets) {
+      config = {
+        webhookUrl: cfg.googleSheets.webhookUrl || config.webhookUrl,
+        sheetUrl: cfg.googleSheets.sheetUrl || config.sheetUrl,
+        lastSyncedAt: cfg.googleSheets.lastSyncedAt || null
+      };
+    }
+  } catch (e) {
+    // Ignore error
+  }
+  return config;
+};
+
+const sendToGoogleSheets = async (payload) => {
+  const { webhookUrl } = getGoogleSheetsConfig();
+  if (!webhookUrl) {
+    return { skipped: true, reason: 'GOOGLE_SHEET_WEBHOOK_URL not configured' };
+  }
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      redirect: 'follow'
+    });
+    const text = await response.text();
+    let data = {};
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { raw: text };
+    }
+    return { success: response.ok, data };
+  } catch (err) {
+    console.warn('[Google Sheets Sync Error]:', err.message);
+    return { success: false, error: err.message };
+  }
+};
+
+// ==========================================
 // 1. HEALTH & METRICS ROUTES
 // ==========================================
 app.get('/api/health', (req, res) => {
@@ -632,6 +682,7 @@ app.post('/api/workshops/:id/register', async (req, res) => {
       return res.status(409).json({ error: 'You are already registered for this workshop!' });
     }
 
+    const price = Number(workshop.price || 0);
     const newReg = {
       id: `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       workshopId: id,
@@ -645,7 +696,11 @@ app.post('/api/workshops/:id/register', async (req, res) => {
       candidateInstitution: candidateInstitution ? candidateInstitution.trim() : 'Not provided',
       candidatePhone: candidatePhone ? candidatePhone.trim() : 'Not provided',
       registeredAt: new Date().toISOString(),
-      status: 'Confirmed'
+      status: 'Confirmed',
+      paymentStatus: price > 0 ? (req.body.paymentStatus || 'Paid') : 'Free',
+      amount: price,
+      paymentMethod: req.body.paymentMethod || (price > 0 ? 'UPI / Online' : 'Campus Sponsored'),
+      transactionId: req.body.transactionId || (price > 0 ? `TXN-${Date.now()}` : 'CONFIRMED')
     };
 
     if (isDatabaseConfigured) {
@@ -686,6 +741,12 @@ app.post('/api/workshops/:id/register', async (req, res) => {
       localWs.registered = (localWs.registered || 0) + 1;
       writeJson('upcoming_workshops.json', localWorkshops);
     }
+
+    // Auto-sync new registration to Google Sheets (Non-blocking)
+    sendToGoogleSheets({
+      action: 'sync_registration',
+      registration: newReg
+    }).catch(e => console.warn('[Google Sheet registration sync error]:', e.message));
 
     res.status(201).json({
       success: true,
@@ -926,6 +987,129 @@ app.get('/api/registrations', requireAdmin, async (req, res) => {
     res.json({ success: true, count: registrations.length, registrations });
   } catch (err) {
     res.status(500).json({ error: 'Failed to load registrations.' });
+  }
+});
+
+// ==========================================
+// GOOGLE SHEETS ADMIN ENDPOINTS & PAYMENTS
+// ==========================================
+app.get('/api/admin/google-sheets', requireAdmin, (req, res) => {
+  res.json({ success: true, ...getGoogleSheetsConfig() });
+});
+
+app.post('/api/admin/google-sheets/config', requireAdmin, async (req, res) => {
+  const { webhookUrl, sheetUrl } = req.body;
+  try {
+    const cfg = readJson('config.json');
+    cfg.googleSheets = {
+      webhookUrl: (webhookUrl || '').trim(),
+      sheetUrl: (sheetUrl || '').trim(),
+      lastSyncedAt: cfg.googleSheets?.lastSyncedAt || null
+    };
+    writeJson('config.json', cfg);
+
+    let testResult = null;
+    if (cfg.googleSheets.webhookUrl) {
+      testResult = await sendToGoogleSheets({ action: 'test' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Google Sheets configuration updated successfully.',
+      config: cfg.googleSheets,
+      testResult
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update Google Sheets configuration.' });
+  }
+});
+
+app.post('/api/admin/google-sheets/sync', requireAdmin, async (req, res) => {
+  try {
+    let registrations = [];
+    if (isDatabaseConfigured) {
+      try {
+        registrations = await prisma.registration.findMany({
+          orderBy: { registeredAt: 'desc' }
+        });
+      } catch (e) {
+        console.warn('[Prisma registrations fetch error]:', e.message);
+      }
+    }
+    if (!registrations || registrations.length === 0) {
+      registrations = readJson('registrations.json');
+    }
+
+    const payments = registrations
+      .filter(r => r.paymentStatus === 'Paid' || (r.amount && r.amount > 0))
+      .map(r => ({
+        paymentId: `PAY-${r.id}`,
+        timestamp: r.registeredAt,
+        candidateName: r.candidateName,
+        candidateEmail: r.candidateEmail,
+        candidatePhone: r.candidatePhone,
+        candidateInstitution: r.candidateInstitution,
+        workshopTitle: r.workshopTitle,
+        amount: r.amount || r.price || 0,
+        paymentStatus: 'Completed',
+        paymentMethod: r.paymentMethod || 'UPI / Online',
+        transactionId: r.transactionId || 'Confirmed'
+      }));
+
+    const result = await sendToGoogleSheets({
+      action: 'sync_all',
+      registrations,
+      payments
+    });
+
+    if (result.success) {
+      const cfg = readJson('config.json');
+      if (!cfg.googleSheets) cfg.googleSheets = {};
+      cfg.googleSheets.lastSyncedAt = new Date().toISOString();
+      if (result.data?.sheetUrl && !cfg.googleSheets.sheetUrl) {
+        cfg.googleSheets.sheetUrl = result.data.sheetUrl;
+      }
+      writeJson('config.json', cfg);
+    }
+
+    res.json({
+      success: result.success,
+      data: result.data,
+      error: result.error,
+      syncedCount: {
+        registrations: registrations.length,
+        payments: payments.length
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to sync data to Google Sheets.' });
+  }
+});
+
+app.patch('/api/registrations/:id/payment', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { paymentStatus, amount, paymentMethod, transactionId } = req.body;
+  try {
+    const registrations = readJson('registrations.json');
+    const reg = registrations.find(r => r.id === id);
+    if (!reg) return res.status(404).json({ error: 'Registration not found' });
+
+    if (paymentStatus) reg.paymentStatus = paymentStatus;
+    if (amount !== undefined) reg.amount = Number(amount);
+    if (paymentMethod) reg.paymentMethod = paymentMethod;
+    if (transactionId) reg.transactionId = transactionId;
+
+    writeJson('registrations.json', registrations);
+
+    // Sync updated record to Google Sheets
+    sendToGoogleSheets({
+      action: 'sync_registration',
+      registration: reg
+    }).catch(e => console.warn('[Google Sheet update error]:', e.message));
+
+    res.json({ success: true, message: 'Payment status updated.', registration: reg });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update payment status.' });
   }
 });
 
